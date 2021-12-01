@@ -8,35 +8,41 @@ namespace aoc
     {
         static void Main()
         {
+            var nums = File.ReadAllLines("input.txt").Select(long.Parse).ToArray();
+            var res = 0L;
+            
+            //
+            
+            Console.Out.WriteLine(res);
         }
         
         static void Main_1_2()
         {
-            var ns = File.ReadAllLines("day1.txt").Select(long.Parse).ToArray();
-            var x = ns[0] + ns[1] + ns[2];
-            var r = 0;
-            for (int i = 3; i < ns.Length; i++)
+            var nums = File.ReadAllLines("day1.txt").Select(long.Parse).ToArray();
+            var x = nums[0] + nums[1] + nums[2];
+            var res = 0L;
+            for (var i = 3; i < nums.Length; i++)
             {
-                var x2 = x + ns[i] - ns[i - 3];
+                var x2 = x + nums[i] - nums[i - 3];
                 if (x2 > x)
-                    r++;
+                    res++;
                 x = x2;
             }
 
-            Console.Out.WriteLine(r);
+            Console.Out.WriteLine(res);
         }
 
         static void Main_1_1()
         {
-            var ns = File.ReadAllLines("day1.txt").Select(long.Parse).ToArray();
-            var x = 0;
-            for (int i = 1; i < ns.Length; i++)
+            var nums = File.ReadAllLines("day1.txt").Select(long.Parse).ToArray();
+            var res = 0L;
+            for (var i = 1; i < nums.Length; i++)
             {
-                if (ns[i] > ns[i - 1])
-                    x++;
+                if (nums[i] > nums[i - 1])
+                    res++;
             }
 
-            Console.Out.WriteLine(x);
+            Console.Out.WriteLine(res);
         }
     }
 }
