@@ -10,14 +10,74 @@ namespace aoc
         static void Main()
         {
             var lines = File
-                .ReadAllLines("day3.txt")
-                .Select(long.Parse)
-                .ToArray();
+                .ReadAllLines("input.txt");
 
-            var res = 0L;
-
-            Console.Out.WriteLine(res);
         }
+
+        static void Main_4()
+        {
+            var lines = File.ReadAllLines("day4.txt");
+
+            var numbers = lines[0].Split(',').Select(long.Parse).ToArray();
+
+            var boards = new List<List<long[]>>();
+            var bsum = new List<long>();
+            var n2b = numbers.ToDictionary(x => x, _ => new List<int>());
+            var usedRows = new Dictionary<int, int[]>();
+            var usedCols = new Dictionary<int, int[]>();
+            for (int i = 2; i < lines.Length; i += 6)
+            {
+                var b = new List<long[]>();
+                for (int j = 0; j < 5; j++)
+                {
+                    b.Add(lines[i + j].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(long.Parse)
+                        .ToArray());
+                }
+
+                foreach (var line in b)
+                {
+                    foreach (var num in line)
+                    {
+                        n2b[num].Add(boards.Count);
+                    }
+                }
+
+                usedRows.Add(boards.Count, new int[5]);
+                usedCols.Add(boards.Count, new int[5]);
+                boards.Add(b);
+                bsum.Add(b.SelectMany(xx => xx).Sum());
+            }
+
+
+            var usedb = new HashSet<int>();
+            for (var ni = 0; ni < numbers.Length; ni++)
+            {
+                var number = numbers[ni];
+                var bs = n2b[number];
+                foreach (var bi in bs)
+                {
+                    for (int r = 0; r < 5; r++)
+                    {
+                        for (int c = 0; c < 5; c++)
+                        {
+                            var b = boards[bi];
+                            if (b[r][c] == number)
+                            {
+                                usedRows[bi][r]++;
+                                usedCols[bi][c]++;
+                                bsum[bi] -= number;
+                                if (usedRows[bi][r] == 5 || usedCols[bi][c] == 5)
+                                {
+                                    if (usedb.Add(bi))
+                                        Console.Out.WriteLine($"{bi} -> {number} = {bsum[bi] * number}");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
 
         static void Main_3_2()
         {
