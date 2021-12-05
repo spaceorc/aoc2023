@@ -20,6 +20,7 @@ namespace aoc
         public static bool operator !=(V a, V b) => !(a == b);
         public static V operator +(V a, V b) => new V(a.X + b.X, a.Y + b.Y);
         public static V operator *(V a, long k) => new V(a.X * k, a.Y * k);
+        public static V operator /(V a, long k) => new V(a.X / k, a.Y / k);
         public static V operator -(V a, V b) => new V(a.X - b.X, a.Y - b.Y);
         public static V operator -(V a) => new V(-a.X, -a.Y);
 

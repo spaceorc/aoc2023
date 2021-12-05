@@ -10,8 +10,85 @@ namespace aoc
         static void Main()
         {
             var lines = File
-                .ReadAllLines("input.txt");
+                .ReadAllLines("input.txt")
+                .ToArray();
 
+            var res = 0L;
+            Console.WriteLine(res);
+        }
+
+        static void Main_5_2()
+        {
+            var lines = File
+                .ReadAllLines("day5.txt")
+                .Select(l => l.Split(" -> "))
+                .Select(p => (p[0].Split(','), p[1].Split(',')))
+                .Select(p => (new V(long.Parse(p.Item1[0]), long.Parse(p.Item1[1])),
+                    new V(long.Parse(p.Item2[0]), long.Parse(p.Item2[1]))))
+                .ToArray();
+
+            var used = new Dictionary<V, int>();
+            foreach (var (a, b) in lines)
+            {
+                foreach (var p in Iterate(a, b))
+                    used[p] = used.GetOrDefault(p) + 1;
+            }
+            Console.Out.WriteLine(used.Count(x => x.Value > 1));
+
+            IEnumerable<V> Iterate(V a, V b)
+            {
+                var d = b - a;
+                if (d == new V(0, 0))
+                {
+                    yield return a;
+                    yield break;
+                }
+
+                var gcd = Helpers.Gcd(Math.Abs(d.X), Math.Abs(d.Y));
+                d /= gcd;
+
+                for (V v = a; v != b; v+=d)
+                    yield return v;
+                yield return b;
+            }
+        }
+
+        static void Main_5_1()
+        {
+            var lines = File
+                .ReadAllLines("day5.txt")
+                .Select(l => l.Split(" -> "))
+                .Select(p => (p[0].Split(','), p[1].Split(',')))
+                .Select(p => (new V(long.Parse(p.Item1[0]), long.Parse(p.Item1[1])),
+                    new V(long.Parse(p.Item2[0]), long.Parse(p.Item2[1]))))
+                .ToArray();
+
+            var used = new Dictionary<V, int>();
+            foreach (var (a, b) in lines)
+            {
+                if (a.X != b.X && a.Y != b.Y)
+                    continue;
+                foreach (var p in Iterate(a, b))
+                    used[p] = used.GetOrDefault(p) + 1;
+            }
+            Console.Out.WriteLine(used.Count(x => x.Value > 1));
+
+            IEnumerable<V> Iterate(V a, V b)
+            {
+                var d = b - a;
+                if (d == new V(0, 0))
+                {
+                    yield return a;
+                    yield break;
+                }
+
+                var gcd = Helpers.Gcd(Math.Abs(d.X), Math.Abs(d.Y));
+                d /= gcd;
+
+                for (V v = a; v != b; v+=d)
+                    yield return v;
+                yield return b;
+            }
         }
 
         static void Main_4()
