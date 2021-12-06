@@ -11,84 +11,53 @@ namespace aoc
         {
             var lines = File
                 .ReadAllLines("input.txt")
-                .ToArray();
+                .Select(long.Parse)
+                .ToList();
 
             var res = 0L;
+
             Console.WriteLine(res);
         }
-
-        static void Main_5_2()
+        
+        static void Main_6()
         {
-            var lines = File
-                .ReadAllLines("day5.txt")
-                .Select(l => l.Split(" -> "))
-                .Select(p => (p[0].Split(','), p[1].Split(',')))
-                .Select(p => (new V(long.Parse(p.Item1[0]), long.Parse(p.Item1[1])),
-                    new V(long.Parse(p.Item2[0]), long.Parse(p.Item2[1]))))
-                .ToArray();
+            var ns = File.ReadAllText("day6.txt").Trim().Split(",").Select(long.Parse).ToList();
 
-            var used = new Dictionary<V, int>();
-            foreach (var (a, b) in lines)
+            const int days = 256; // 80 for part 1
+            var counts = new long[9];
+            foreach (var n in ns)
+                counts[n]++;
+
+            for (var day = 0; day < days; day++)
             {
-                foreach (var p in Iterate(a, b))
-                    used[p] = used.GetOrDefault(p) + 1;
+                var zeros = counts[0];
+                for (var i = 0; i < counts.Length - 1; i++)
+                    counts[i] = counts[i + 1];
+                counts[6] += zeros;
+                counts[8] = zeros;
             }
-            Console.Out.WriteLine(used.Count(x => x.Value > 1));
 
-            IEnumerable<V> Iterate(V a, V b)
-            {
-                var d = b - a;
-                if (d == new V(0, 0))
-                {
-                    yield return a;
-                    yield break;
-                }
-
-                var gcd = Helpers.Gcd(Math.Abs(d.X), Math.Abs(d.Y));
-                d /= gcd;
-
-                for (V v = a; v != b; v+=d)
-                    yield return v;
-                yield return b;
-            }
+            Console.WriteLine(counts.Sum());
         }
 
-        static void Main_5_1()
+        static void Main_5()
         {
             var lines = File
                 .ReadAllLines("day5.txt")
-                .Select(l => l.Split(" -> "))
-                .Select(p => (p[0].Split(','), p[1].Split(',')))
-                .Select(p => (new V(long.Parse(p.Item1[0]), long.Parse(p.Item1[1])),
-                    new V(long.Parse(p.Item2[0]), long.Parse(p.Item2[1]))))
+                .Select(l => l.Split(new []{" -> ", ","}, StringSplitOptions.RemoveEmptyEntries).Select(long.Parse).ToArray())
+                .Select(p => (new V(p[0], p[1]), new V(p[2], p[3])))
                 .ToArray();
 
             var used = new Dictionary<V, int>();
             foreach (var (a, b) in lines)
             {
-                if (a.X != b.X && a.Y != b.Y)
-                    continue;
-                foreach (var p in Iterate(a, b))
+                // part 1
+                // if (a.X != b.X && a.Y != b.Y)
+                //     continue;
+                foreach (var p in Helpers.MakeLine(a, b))
                     used[p] = used.GetOrDefault(p) + 1;
             }
             Console.Out.WriteLine(used.Count(x => x.Value > 1));
-
-            IEnumerable<V> Iterate(V a, V b)
-            {
-                var d = b - a;
-                if (d == new V(0, 0))
-                {
-                    yield return a;
-                    yield break;
-                }
-
-                var gcd = Helpers.Gcd(Math.Abs(d.X), Math.Abs(d.Y));
-                d /= gcd;
-
-                for (V v = a; v != b; v+=d)
-                    yield return v;
-                yield return b;
-            }
         }
 
         static void Main_4()
@@ -102,21 +71,17 @@ namespace aoc
             var n2b = numbers.ToDictionary(x => x, _ => new List<int>());
             var usedRows = new Dictionary<int, int[]>();
             var usedCols = new Dictionary<int, int[]>();
-            for (int i = 2; i < lines.Length; i += 6)
+            for (var i = 2; i < lines.Length; i += 6)
             {
                 var b = new List<long[]>();
-                for (int j = 0; j < 5; j++)
-                {
+                for (var j = 0; j < 5; j++)
                     b.Add(lines[i + j].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(long.Parse)
                         .ToArray());
-                }
 
                 foreach (var line in b)
                 {
                     foreach (var num in line)
-                    {
                         n2b[num].Add(boards.Count);
-                    }
                 }
 
                 usedRows.Add(boards.Count, new int[5]);
@@ -133,9 +98,9 @@ namespace aoc
                 var bs = n2b[number];
                 foreach (var bi in bs)
                 {
-                    for (int r = 0; r < 5; r++)
+                    for (var r = 0; r < 5; r++)
                     {
-                        for (int c = 0; c < 5; c++)
+                        for (var c = 0; c < 5; c++)
                         {
                             var b = boards[bi];
                             if (b[r][c] == number)
@@ -165,11 +130,11 @@ namespace aoc
 
             var lines = original.ToList();
             var ox = "";
-            for (int j = 0; j < lines[0].Length; j++)
+            for (var j = 0; j < lines[0].Length; j++)
             {
                 var ones = 0;
                 var zeros = 0;
-                for (int i = 0; i < lines.Count; i++)
+                for (var i = 0; i < lines.Count; i++)
                 {
                     {
                         if (lines[i][j] == '1')
@@ -179,7 +144,7 @@ namespace aoc
                     }
                 }
 
-                for (int i = lines.Count - 1; i >= 0; i--)
+                for (var i = lines.Count - 1; i >= 0; i--)
                 {
                     if (ones < zeros && lines[i][j] == '1'
                         || zeros <= ones && lines[i][j] == '0')
@@ -198,11 +163,11 @@ namespace aoc
 
             lines = original.ToList();
             var co2 = "";
-            for (int j = 0; j < lines[0].Length; j++)
+            for (var j = 0; j < lines[0].Length; j++)
             {
                 var ones = 0;
                 var zeros = 0;
-                for (int i = 0; i < lines.Count; i++)
+                for (var i = 0; i < lines.Count; i++)
                 {
                     {
                         if (lines[i][j] == '1')
@@ -212,7 +177,7 @@ namespace aoc
                     }
                 }
 
-                for (int i = lines.Count - 1; i >= 0; i--)
+                for (var i = lines.Count - 1; i >= 0; i--)
                 {
                     if (ones >= zeros && lines[i][j] == '1'
                         || zeros > ones && lines[i][j] == '0')
@@ -244,9 +209,9 @@ namespace aoc
 
 
             var counts = new long[lines[0].Length];
-            for (int i = 0; i < lines.Length; i++)
+            for (var i = 0; i < lines.Length; i++)
             {
-                for (int j = 0; j < lines[i].Length; j++)
+                for (var j = 0; j < lines[i].Length; j++)
                 {
                     if (lines[i][j] == '1')
                         counts[j]++;

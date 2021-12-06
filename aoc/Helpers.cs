@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,7 +12,7 @@ namespace aoc
                 return result;
             return defaultValue;
         }
-        
+
         public static IEnumerable<int[]> Iterate(int n, int inputSize)
         {
             var connections = new int[n];
@@ -59,6 +60,23 @@ namespace aoc
             }
 
             return a + b;
+        }
+
+        public static IEnumerable<V> MakeLine(V a, V b)
+        {
+            var d = b - a;
+            if (d == new V(0, 0))
+            {
+                yield return a;
+                yield break;
+            }
+
+            var gcd = Gcd(Math.Abs(d.X), Math.Abs(d.Y));
+            d /= gcd;
+
+            for (var v = a; v != b; v += d)
+                yield return v;
+            yield return b;
         }
     }
 }
