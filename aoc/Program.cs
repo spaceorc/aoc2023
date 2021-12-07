@@ -9,14 +9,37 @@ namespace aoc
     {
         static void Main()
         {
-            var lines = File
+            var ns = File
                 .ReadAllLines("input.txt")
                 .Select(long.Parse)
                 .ToList();
 
-            var res = 0L;
+            
+            Console.WriteLine(0L);
+        }
 
-            Console.WriteLine(res);
+        static void Main_7()
+        {
+            var ns = File
+                .ReadAllText("day7.txt")
+                .Trim()
+                .Split(",")
+                .Select(int.Parse)
+                .ToList();
+
+            
+            var res = Enumerable.Range(ns.Min(), ns.Max() - ns.Min() + 1).Select(Calc2).ToArray();
+            Console.WriteLine(res.Min());
+
+            int Calc1(int o)
+            {
+                return ns.Sum(x => Math.Abs(x - o));
+            }
+            
+            long Calc2(int o)
+            {
+                return ns.Sum(x => (1L + Math.Abs(x - o))*Math.Abs(x - o)/2L);
+            }
         }
         
         static void Main_6()
