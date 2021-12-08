@@ -9,13 +9,90 @@ namespace aoc
     {
         static void Main()
         {
-            var ns = File
+            var lines = File
                 .ReadAllLines("input.txt")
-                .Select(long.Parse)
+                .Select(x => x.Split(","))
                 .ToList();
 
             
             Console.WriteLine(0L);
+        }
+
+        static void Main_8_2()
+        {
+            var lines = File
+                .ReadAllLines("day8.txt")
+                .Select(x => x.Split(" | "))
+                .Select(x => (x[0].Split(), x[1].Split()))
+                .ToList();
+
+            var nums = new[]
+            {
+                "abcefg".Select(c => c - 'a').ToHashSet(),
+                "cf".Select(c => c - 'a').ToHashSet(),
+                "acdeg".Select(c => c - 'a').ToHashSet(),
+                "acdfg".Select(c => c - 'a').ToHashSet(),
+                "bcdf".Select(c => c - 'a').ToHashSet(),
+                "abdfg".Select(c => c - 'a').ToHashSet(),
+                "abdefg".Select(c => c - 'a').ToHashSet(),
+                "acf".Select(c => c - 'a').ToHashSet(),
+                "abcdefg".Select(c => c - 'a').ToHashSet(),
+                "abcdfg".Select(c => c - 'a').ToHashSet(),
+            };
+            
+            var res = 0;
+            foreach (var (src, dst) in lines)
+                res += SolveOne(src, dst);
+
+            Console.WriteLine(res);
+
+            int SolveOne(string[] src, string[] dst)
+            {
+                foreach (var match in Enumerable.Range(0, 7).ToArray().Permutations())
+                {
+                    var good = src.Concat(dst)
+                        .Select(s => s.Select(c => match[c - 'a']).ToArray())
+                        .All(num => nums.Any(n => n.SetEquals(num)));
+
+                    if (!good)
+                        continue;
+                    
+                    foreach (string s in src)
+                    {
+                        var num = s.Select(c => match[c - 'a']).ToArray();
+                        var n = nums.Single(n => n.SetEquals(num));
+                        var ni = Array.IndexOf(nums, n);
+                        Console.Write(ni);
+                    }
+
+                    var r = 0;
+                    foreach (string s in dst)
+                    {
+                        var num = s.Select(c => match[c - 'a']).ToArray();
+                        var n = nums.Single(n => n.SetEquals(num));
+                        var ni = Array.IndexOf(nums, n);
+                        r = r * 10 + ni;
+                    }
+
+                    Console.WriteLine($" | {r}");
+                    return r;
+                }
+
+                throw new Exception("WTF");
+            }
+        }
+
+        static void Main_8_1()
+        {
+            var lines = File
+                .ReadAllLines("day8.txt")
+                .Select(x => x.Split(" | "))
+                .Select(x => (x[0].Split(), x[1].Split()))
+                .ToList();
+
+
+            var res = lines.Sum(line => line.Item2.Count(x => new[] { 2, 3, 4, 7 }.Contains(x.Length)));
+            Console.WriteLine(res);
         }
 
         static void Main_7()
