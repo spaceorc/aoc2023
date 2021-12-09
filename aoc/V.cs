@@ -29,5 +29,7 @@ namespace aoc
         public static long DProd(V a, V b) => a.X * b.X + a.Y * b.Y;
 
         public override string ToString() => $"{X} {Y}";
+
+        public static  V[] nears = new[] { new V(1, 0), new V(-1, 0), new V(0, 1), new V(0, -1) };
     }
 }

@@ -11,11 +11,66 @@ namespace aoc
         {
             var lines = File
                 .ReadAllLines("input.txt")
-                .Select(x => x.Split(","))
+                .Select(x => long.Parse(x))
                 .ToList();
 
-            
             Console.WriteLine(0L);
+        }
+        
+        static void Main_9_2()
+        {
+            var lines = File.ReadAllLines("day9.txt");
+
+            var map = new Map<int>(lines[0].Length, lines.Length);
+            foreach (var v in map.All())
+                map[v] = int.Parse(lines[(int)v.Y][(int)v.X].ToString());
+
+            var used = new Map<bool>(map.sizeX, map.sizeY);
+
+            var basins = new List<long>();
+            foreach (var v in map.All())
+            {
+                if (used[v] || map[v] == 9)
+                    continue;
+
+                var s = 1L;
+                var queue = new Queue<V>();
+                queue.Enqueue(v);
+                used[v] = true;
+                while (queue.Count > 0)
+                {
+                    var cur = queue.Dequeue();
+                    foreach (var n in map.Nears(cur))
+                    {
+                        if (map[n] != 9 && !used[n])
+                        {
+                            used[n] = true;
+                            queue.Enqueue(n);
+                            s++;
+                        }
+                    }
+                }
+
+                basins.Add(s);
+            }
+
+            basins.Sort();
+
+
+            Console.WriteLine(basins[^1] * basins[^2] * basins[^3]);
+        }
+
+        static void Main_9_1()
+        {
+            var lines = File.ReadAllLines("day9.txt");
+
+            var map = new Map<int>(lines[0].Length, lines.Length);
+            foreach (var v in map.All())
+                map[v] = int.Parse(lines[(int)v.Y][(int)v.X].ToString());
+
+
+            var r = map.All().Where(v => map.Nears(v).All(n => map[n] > map[v])).Sum(v => map[v] + 1);
+            Console.WriteLine(r);
         }
 
         static void Main_8_2()
@@ -39,7 +94,7 @@ namespace aoc
                 "abcdefg".Select(c => c - 'a').ToHashSet(),
                 "abcdfg".Select(c => c - 'a').ToHashSet(),
             };
-            
+
             var res = 0;
             foreach (var (src, dst) in lines)
                 res += SolveOne(src, dst);
@@ -56,7 +111,7 @@ namespace aoc
 
                     if (!good)
                         continue;
-                    
+
                     foreach (string s in src)
                     {
                         var num = s.Select(c => match[c - 'a']).ToArray();
@@ -104,7 +159,7 @@ namespace aoc
                 .Select(int.Parse)
                 .ToList();
 
-            
+
             var res = Enumerable.Range(ns.Min(), ns.Max() - ns.Min() + 1).Select(Calc2).ToArray();
             Console.WriteLine(res.Min());
 
@@ -112,13 +167,13 @@ namespace aoc
             {
                 return ns.Sum(x => Math.Abs(x - o));
             }
-            
+
             long Calc2(int o)
             {
-                return ns.Sum(x => (1L + Math.Abs(x - o))*Math.Abs(x - o)/2L);
+                return ns.Sum(x => (1L + Math.Abs(x - o)) * Math.Abs(x - o) / 2L);
             }
         }
-        
+
         static void Main_6()
         {
             var ns = File.ReadAllText("day6.txt").Trim().Split(",").Select(long.Parse).ToList();
@@ -144,7 +199,8 @@ namespace aoc
         {
             var lines = File
                 .ReadAllLines("day5.txt")
-                .Select(l => l.Split(new []{" -> ", ","}, StringSplitOptions.RemoveEmptyEntries).Select(long.Parse).ToArray())
+                .Select(l =>
+                    l.Split(new[] { " -> ", "," }, StringSplitOptions.RemoveEmptyEntries).Select(long.Parse).ToArray())
                 .Select(p => (new V(p[0], p[1]), new V(p[2], p[3])))
                 .ToArray();
 
@@ -157,6 +213,7 @@ namespace aoc
                 foreach (var p in Helpers.MakeLine(a, b))
                     used[p] = used.GetOrDefault(p) + 1;
             }
+
             Console.Out.WriteLine(used.Count(x => x.Value > 1));
         }
 
