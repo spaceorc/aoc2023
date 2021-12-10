@@ -16,7 +16,78 @@ namespace aoc
 
             Console.WriteLine(0L);
         }
-        
+
+        static void Main_10()
+        {
+            var lines = File.ReadAllLines("day10.txt");
+
+            var closeToOpenMatch = new Dictionary<char, char>
+            {
+                { '>', '<' },
+                { ')', '(' },
+                { '}', '{' },
+                { ']', '[' },
+            };
+
+            var res1 = lines.Select(SolveOne1).Where(r => r != 0).Sum();
+            Console.WriteLine($"res1 = {res1}");
+            
+            var res2 = lines.Select(SolveOne2).Where(r => r != 0).ToList();
+            res2.Sort();
+            Console.WriteLine($"res2 = {res2[res2.Count / 2]}");
+
+            long SolveOne1(string s)
+            {
+                var score = new Dictionary<char, long>
+                {
+                    { ')', 3 },
+                    { ']', 57 },
+                    { '}', 1197 },
+                    { '>', 25137 },
+                };
+
+                var stack = new Stack<char>();
+                foreach (var c in s)
+                {
+                    if (!closeToOpenMatch.TryGetValue(c, out var expectedOpen))
+                        stack.Push(c);
+                    else
+                    {
+                        var open = stack.Pop();
+                        if (expectedOpen != open)
+                            return score[c];
+                    }
+                }
+
+                return 0;
+            }
+            
+            long SolveOne2(string s)
+            {
+                var score = new Dictionary<char, long>
+                {
+                    { '(', 1 },
+                    { '[', 2 },
+                    { '{', 3 },
+                    { '<', 4 },
+                };
+                var stack = new Stack<char>();
+                foreach (var c in s)
+                {
+                    if (!closeToOpenMatch.TryGetValue(c, out var expectedOpen))
+                        stack.Push(c);
+                    else
+                    {
+                        var open = stack.Pop();
+                        if (expectedOpen != open)
+                            return 0;
+                    }
+                }
+
+                return stack.Aggregate(0L, (current, c) => current * 5 + score[c]);
+            }
+        }
+
         static void Main_9_2()
         {
             var lines = File.ReadAllLines("day9.txt");
