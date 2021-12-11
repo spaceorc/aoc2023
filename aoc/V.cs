@@ -30,6 +30,11 @@ namespace aoc
 
         public override string ToString() => $"{X} {Y}";
 
-        public static  V[] nears = new[] { new V(1, 0), new V(-1, 0), new V(0, 1), new V(0, -1) };
+        public static  V[] nears = { new V(1, 0), new V(-1, 0), new V(0, 1), new V(0, -1) };
+        public static  V[] nears8 =
+        {
+            new V(1, 0), new V(-1, 0), new V(0, 1), new V(0, -1),
+            new V(1, 1), new V(-1, -1), new V(-1, 1), new V(1, -1),
+        };
     }
 }

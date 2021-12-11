@@ -9,12 +9,64 @@ namespace aoc
     {
         static void Main()
         {
-            var lines = File
-                .ReadAllLines("input.txt")
-                .Select(x => long.Parse(x))
-                .ToList();
-
+            var lines = File.ReadAllLines("input.txt");
             Console.WriteLine(0L);
+        }
+
+        static void Main_11()
+        {
+            var lines = File.ReadAllLines("day11.txt");
+            var map = new Map<int>(lines[0].Length, lines.Length);
+            foreach (var v in map.All())
+                map[v] = int.Parse(lines[(int)v.Y][(int)v.X].ToString());
+
+            var total = 0L;
+            for (int i = 0;; i++)
+            {
+                var f = Sim();
+                total += f;
+                if (i == 99)
+                    Console.WriteLine($"part1={total}");
+                if (f == map.totalCount)
+                {
+                    Console.WriteLine($"part2={i + 1}");
+                    break;
+                }
+            }
+
+            long Sim()
+            {
+                var queue = new Queue<V>();
+                foreach (var v in map.All())
+                    queue.Enqueue(v);
+
+                while (queue.Count > 0)
+                {
+                    var v = queue.Dequeue();
+                    if (map[v] == -1)
+                        continue;
+                    map[v]++;
+                    if (map[v] > 9)
+                    {
+                        map[v] = -1;
+                        foreach (var nv in map.Nears8(v))
+                        {
+                            if (map[nv] <= 9)
+                                queue.Enqueue(nv);
+                        }
+                    }
+                }
+
+                var res = 0;
+                foreach (var v in map.All())
+                    if (map[v] == -1)
+                    {
+                        res++;
+                        map[v] = 0;
+                    }
+                
+                return res;
+            }
         }
 
         static void Main_10()
@@ -31,7 +83,7 @@ namespace aoc
 
             var res1 = lines.Select(SolveOne1).Where(r => r != 0).Sum();
             Console.WriteLine($"res1 = {res1}");
-            
+
             var res2 = lines.Select(SolveOne2).Where(r => r != 0).ToList();
             res2.Sort();
             Console.WriteLine($"res2 = {res2[res2.Count / 2]}");
@@ -61,7 +113,7 @@ namespace aoc
 
                 return 0;
             }
-            
+
             long SolveOne2(string s)
             {
                 var score = new Dictionary<char, long>

@@ -60,7 +60,12 @@ namespace aoc
 
         public IEnumerable<V> Nears(V v)
         {
-            return V.nears.Select(dv => v + dv).Where(n => Inside(n));
+            return V.nears.Select(dv => v + dv).Where(Inside);
+        }
+        
+        public IEnumerable<V> Nears8(V v)
+        {
+            return V.nears8.Select(dv => v + dv).Where(Inside);
         }
 
         public Map<T> Clone()
@@ -68,6 +73,11 @@ namespace aoc
             var clone = new Map<T>(sizeX, sizeY);
             Array.Copy(data, clone.data, totalCount);
             return clone;
+        }
+        
+        public void CopyTo(Map<T> other)
+        {
+            Array.Copy(data, other.data, totalCount);
         }
     }
 }
