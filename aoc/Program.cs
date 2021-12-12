@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace aoc
 {
@@ -9,8 +10,48 @@ namespace aoc
     {
         static void Main()
         {
-            var lines = File.ReadAllLines("input.txt");
+            var lines = File.ReadAllLines("input.txt")
+                .Select(x => x.Split("-"))
+                .ToArray();
+
             Console.WriteLine(0L);
+        }
+
+        static void Main_12()
+        {
+            var lines = File
+                .ReadAllLines("day12.txt")
+                .Select(x => x.Split("-"))
+                .ToArray();
+
+            var edges = lines
+                .Concat(lines.Select(x => x.Reverse().ToArray()))
+                .Where(x => x[1] != "start")
+                .ToLookup(x => x[0], x => x[1]);
+            
+            Console.WriteLine($"part1={Solve("start", new HashSet<string>(), true)}");
+            Console.WriteLine($"part2={Solve("start", new HashSet<string>(), false)}");
+
+            int Solve(string cur, ISet<string> used, bool reused)
+            {
+                var res = 0;
+                foreach (var next in edges[cur])
+                {
+                    if (next == "end")
+                        res++;
+                    else if (char.IsUpper(next[0]))
+                        res += Solve(next, used, reused);
+                    else if (used.Add(next))
+                    {
+                        res += Solve(next, used, reused);
+                        used.Remove(next);
+                    }
+                    else if (!reused)
+                        res += Solve(next, used, true);
+                }
+
+                return res;
+            }
         }
 
         static void Main_11()
@@ -64,7 +105,7 @@ namespace aoc
                         res++;
                         map[v] = 0;
                     }
-                
+
                 return res;
             }
         }
