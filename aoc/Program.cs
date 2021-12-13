@@ -10,11 +10,44 @@ namespace aoc
     {
         static void Main()
         {
-            var lines = File.ReadAllLines("input.txt")
-                .Select(x => x.Split("-"))
-                .ToArray();
-
+            var lines = File.ReadAllLines("input.txt");
             Console.WriteLine(0L);
+        }
+
+        static void Main_13()
+        {
+            var lines = File.ReadAllLines("day13.txt");
+
+            var dots = lines
+                .TakeWhile(line => !string.IsNullOrEmpty(line))
+                .Select(V.Parse)
+                .ToHashSet();
+
+            var instructions = lines
+                .SkipWhile(line => !string.IsNullOrEmpty(line))
+                .SkipWhile(string.IsNullOrEmpty)
+                .Select(line => line.Split(new[] { " ", "=" }, StringSplitOptions.RemoveEmptyEntries))
+                .Select(line => (dir: line[2], coord: int.Parse(line[3])))
+                .ToList();
+
+            foreach (var (dir, coord) in instructions)
+            {
+                dots = dir == "y"
+                    ? dots.Select(v => v.Y < coord ? v : new V(v.X, coord * 2 - v.Y)).ToHashSet()
+                    : dots.Select(v => v.X < coord ? v : new V(coord * 2 - v.X, v.Y)).ToHashSet();
+                Console.WriteLine(dots.Count);
+            }
+
+            var minY = dots.Select(x => x.Y).Min();
+            var maxY = dots.Select(x => x.Y).Max();
+            var minX = dots.Select(x => x.X).Min();
+            var maxX = dots.Select(x => x.X).Max();
+            for (var y = minY; y <= maxY; y++)
+            {
+                for (var x = minX; x <= maxX; x++)
+                    Console.Write(dots.Contains(new V(x, y)) ? "X" : " ");
+                Console.WriteLine();
+            }
         }
 
         static void Main_12()
@@ -28,7 +61,7 @@ namespace aoc
                 .Concat(lines.Select(x => x.Reverse().ToArray()))
                 .Where(x => x[1] != "start")
                 .ToLookup(x => x[0], x => x[1]);
-            
+
             Console.WriteLine($"part1={Solve("start", new HashSet<string>(), true)}");
             Console.WriteLine($"part2={Solve("start", new HashSet<string>(), false)}");
 

@@ -13,6 +13,21 @@ namespace aoc
             Y = y;
         }
 
+        public static V Parse(string s)
+        {
+            return Parse(s, ",");
+        }
+
+        public static V Parse(string s, params string[] sep)
+        {
+            return Parse(s.Split(sep, StringSplitOptions.RemoveEmptyEntries));
+        }
+
+        public static V Parse(string[] s)
+        {
+            return new V(long.Parse(s[0]), long.Parse(s[1]));
+        }
+
         public bool Equals(V other) => X == other.X && Y == other.Y;
         public override bool Equals(object obj) => obj is V other && Equals(other);
         public override int GetHashCode() => HashCode.Combine(X, Y);
