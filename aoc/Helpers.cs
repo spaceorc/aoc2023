@@ -6,13 +6,6 @@ namespace aoc
 {
     public static class Helpers
     {
-        public static V GetOrDefault<K, V>(this Dictionary<K, V> dict, K key, V defaultValue = default)
-        {
-            if (dict.TryGetValue(key, out var result))
-                return result;
-            return defaultValue;
-        }
-
         public static IEnumerable<int[]> Variants(int n)
         {
             var arr = new int[n];

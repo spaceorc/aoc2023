@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace aoc
 {
@@ -12,6 +11,58 @@ namespace aoc
         {
             var lines = File.ReadAllLines("input.txt");
             Console.WriteLine(0L);
+        }
+
+        static void Main_14()
+        {
+            var lines = File.ReadAllLines("day14.txt");
+            var polymer = lines[0];
+            var transforms = lines
+                .Skip(2)
+                .Select(x => x.Split(" -> "))
+                .ToDictionary(x => x[0], x => new[] { x[0][0] + x[1], x[1] + x[0][1] });
+
+            var pairs = new DefaultDict<string, long>();
+            for (var i = 0; i < polymer.Length - 1; i++)
+                pairs[polymer.Substring(i, 2)]++;
+
+            Solve(10);
+            Solve(40);
+
+            void Solve(int transformsCount)
+            {
+                var result = pairs;
+                for (var i = 0; i < transformsCount; i++)
+                    result = Transform(result);
+
+                var counts = new DefaultDict<char, long>();
+                foreach (var (pair, count) in result)
+                {
+                    foreach (var c in pair)
+                        counts[c] += count;
+                }
+                counts[polymer[0]]++;
+                counts[polymer[^1]]++;
+
+                Console.WriteLine((counts.Values.Max() - counts.Values.Min()) / 2);
+            }
+
+            DefaultDict<string, long> Transform(DefaultDict<string, long> source)
+            {
+                var result = new DefaultDict<string, long>();
+                foreach (var (pair, count) in source)
+                {
+                    if (!transforms.TryGetValue(pair, out var next))
+                        result[pair] = count;
+                    else
+                    {
+                        foreach (var n in next)
+                            result[n] += count;
+                    }
+                }
+
+                return result;
+            }
         }
 
         static void Main_13()
@@ -95,7 +146,7 @@ namespace aoc
                 map[v] = int.Parse(lines[(int)v.Y][(int)v.X].ToString());
 
             var total = 0L;
-            for (int i = 0;; i++)
+            for (var i = 0;; i++)
             {
                 var f = Sim();
                 total += f;
@@ -408,7 +459,7 @@ namespace aoc
                 // if (a.X != b.X && a.Y != b.Y)
                 //     continue;
                 foreach (var p in Helpers.MakeLine(a, b))
-                    used[p] = used.GetOrDefault(p) + 1;
+                    used[p] = used.GetValueOrDefault(p) + 1;
             }
 
             Console.Out.WriteLine(used.Count(x => x.Value > 1));
