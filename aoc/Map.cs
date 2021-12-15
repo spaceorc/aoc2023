@@ -58,6 +58,8 @@ namespace aoc
             }
         }
 
+        public V BottomRight => new (sizeX - 1, sizeY - 1);
+
         public IEnumerable<V> Nears(V v)
         {
             return V.nears.Select(dv => v + dv).Where(Inside);

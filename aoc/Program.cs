@@ -10,7 +10,55 @@ namespace aoc
         static void Main()
         {
             var lines = File.ReadAllLines("input.txt");
-            Console.WriteLine(0L);
+            Console.Out.WriteLine(0L);
+        }
+
+        static void Main_15()
+        {
+            var lines = File.ReadAllLines("day15.txt");
+            var map0 = new Map<long>(lines[0].Length, lines.Length);
+            foreach (var v in map0.All())
+                map0[v] = long.Parse(lines[(int)v.Y][(int)v.X].ToString());
+
+            Console.WriteLine($"part1={Solve(map0)}");
+            Console.WriteLine($"part1={Solve(Repeat(map0, 5))}");
+
+            long Solve(Map<long> map)
+            {
+                var queue = new PriorityQueue<V, long>();
+                queue.Enqueue(V.Zero, 0);
+                var used = new Dictionary<V, long> { { V.Zero, 0 } };
+                while (queue.Count > 0)
+                {
+                    var cur = queue.Dequeue();
+                    var curLen = used[cur];
+                    if (cur == map.BottomRight)
+                        return curLen;
+                    foreach (var next in map.Nears(cur))
+                    {
+                        var nextLen = curLen + map[next];
+                        if (!used.TryGetValue(next, out var prev) || prev > nextLen)
+                        {
+                            queue.Enqueue(next, nextLen);
+                            used[next] = nextLen;
+                        }
+                    }
+                }
+
+                throw new Exception("No path");
+            }
+
+            Map<long> Repeat(Map<long> src, int times)
+            {
+                var map = new Map<long>(src.sizeX * times, src.sizeY * times);
+                foreach (var v in map.All())
+                {
+                    var delta = v.X / src.sizeX + v.Y / src.sizeY;
+                    map[v] = (src[new V(v.X % src.sizeX, v.Y % src.sizeY)] + delta - 1) % 9 + 1;
+                }
+
+                return map;
+            }
         }
 
         static void Main_14()
@@ -41,6 +89,7 @@ namespace aoc
                     foreach (var c in pair)
                         counts[c] += count;
                 }
+
                 counts[polymer[0]]++;
                 counts[polymer[^1]]++;
 
