@@ -44,6 +44,9 @@ public struct V : IEquatable<V>
     public static long XProd(V a, V b) => a.X * b.Y - a.Y * b.X;
     public static long DProd(V a, V b) => a.X * b.X + a.Y * b.Y;
 
+
+    public V Dir => new V(Math.Sign(X), Math.Sign(Y));
+    
     public override string ToString() => $"{X} {Y}";
 
     public static  V[] nears = { new(1, 0), new(-1, 0), new(0, 1), new(0, -1) };

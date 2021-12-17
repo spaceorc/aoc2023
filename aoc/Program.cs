@@ -10,8 +10,56 @@ public class Program
     static void Main()
     {
         var lines = File.ReadAllLines("input.txt");
+
+        Console.WriteLine(0L);
+    }
+
+    static void Main_17()
+    {
+        var parts = File.ReadAllLines("day17.txt")[0].Split(new[]{"=", "..", ","},  StringSplitOptions.RemoveEmptyEntries);
+        var minx = long.Parse(parts[1]);
+        var maxx = long.Parse(parts[2]);
+        var miny = long.Parse(parts[4]);
+        var maxy = long.Parse(parts[5]);
+
+
+        var highest = 0L;
+        var count = 0;
+        for (var x = 0; x <= maxx; x++)
+        for (var y = miny; y <= 1000; y++)
+        {
+            var vel = new V(x, y);
+            if (Sim(vel, out var h))
+            {
+                count++;
+                if (h > highest)
+                {
+                    highest = h;
+                }
+            }
+        }
+
+        Console.Out.WriteLine($"part 1: highest={highest}");
+        Console.Out.WriteLine($"part 2: count={count}");
         
-        Console.Out.WriteLine(0L);
+        bool Sim(V vel, out long h)
+        {
+            h = 0;
+            var p = V.Zero;
+            while (true)
+            {
+                p += vel;
+                vel -= new V(Math.Sign(vel.X), 1);
+                if (p.Y > h)
+                    h = p.Y;
+                
+                if (p.X >= minx && p.X <= maxx && p.Y >= miny && p.Y <= maxy)
+                    return true;
+
+                if (p.X > maxx || p.Y < miny)
+                    return false;
+            }
+        }
     }
 
     static void Main_16()
