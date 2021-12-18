@@ -9,19 +9,55 @@ public class Program
 {
     static void Main()
     {
-        var lines = File.ReadAllLines("input.txt");
+        var lines = File
+            .ReadAllLines("input.txt");
 
         Console.WriteLine(0L);
     }
 
+    static void Main_18()
+    {
+        var lines = File
+            .ReadAllLines("day18.txt")
+            .Select(Snailfish.Number.Read)
+            .ToList();
+
+        var res = lines[0].Clone();
+        for (var i = 1; i < lines.Count; i++)
+        {
+            res = Snailfish.Number.Add(res, lines[i].Clone());
+            res.Reduce();
+        }
+
+        Console.WriteLine($"part 1: {res.Magnitude()}");
+
+        var max = 0L;
+        for (var i = 0; i < lines.Count - 1; i++)
+        for (var k = i + 1; k < lines.Count; k++)
+        {
+            var r = Snailfish.Number.Add(lines[i].Clone(), lines[k].Clone());
+            r.Reduce();
+            var m = r.Magnitude();
+            if (m > max)
+                max = m;
+            r = Snailfish.Number.Add(lines[k].Clone(), lines[i].Clone());
+            r.Reduce();
+            m = r.Magnitude();
+            if (m > max)
+                max = m;
+        }
+
+        Console.WriteLine($"part 2: {max}");
+    }
+
     static void Main_17()
     {
-        var parts = File.ReadAllLines("day17.txt")[0].Split(new[]{"=", "..", ","},  StringSplitOptions.RemoveEmptyEntries);
+        var parts = File.ReadAllLines("day17.txt")[0]
+            .Split(new[] { "=", "..", "," }, StringSplitOptions.RemoveEmptyEntries);
         var minx = long.Parse(parts[1]);
         var maxx = long.Parse(parts[2]);
         var miny = long.Parse(parts[4]);
         var maxy = long.Parse(parts[5]);
-
 
         var highest = 0L;
         var count = 0;
@@ -41,7 +77,7 @@ public class Program
 
         Console.Out.WriteLine($"part 1: highest={highest}");
         Console.Out.WriteLine($"part 2: count={count}");
-        
+
         bool Sim(V vel, out long h)
         {
             h = 0;
@@ -52,7 +88,7 @@ public class Program
                 vel -= new V(Math.Sign(vel.X), 1);
                 if (p.Y > h)
                     h = p.Y;
-                
+
                 if (p.X >= minx && p.X <= maxx && p.Y >= miny && p.Y <= maxy)
                     return true;
 
@@ -466,7 +502,7 @@ public class Program
                 if (!good)
                     continue;
 
-                foreach (string s in src)
+                foreach (var s in src)
                 {
                     var num = s.Select(c => match[c - 'a']).ToArray();
                     var n = nums.Single(n => n.SetEquals(num));
@@ -475,7 +511,7 @@ public class Program
                 }
 
                 var r = 0;
-                foreach (string s in dst)
+                foreach (var s in dst)
                 {
                     var num = s.Select(c => match[c - 'a']).ToArray();
                     var n = nums.Single(n => n.SetEquals(num));
