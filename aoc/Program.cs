@@ -10,10 +10,154 @@ public class Program
     static void Main()
     {
         var lines = File
-            .ReadAllLines("input.txt");
-
+            .ReadAllText("input.txt");
         Console.WriteLine(0L);
     }
+
+    static void Main_19()
+    {
+        var scans = File
+            .ReadAllText("day19.txt")
+            .Split("\n\n")
+            .Select(x => x.Split("\n").Where(l => !string.IsNullOrEmpty(l)).Skip(1).Select(V3.Parse).ToArray())
+            .ToList();
+
+
+        var matches = new Dictionary<int, List<(int to, (V3 shift, int dir))>>();
+
+        for (int i = 0; i < scans.Count; i++)
+        {
+            var list = new List<(int to, (V3 shift, int dir))>();
+            matches[i] = list;
+            for (int j = 0; j < scans.Count; j++)
+            {
+                if (i == j)
+                    continue;
+                var m = Match(scans[i], scans[j]);
+                if (m.Count == 1)
+                    list.Add((j, m[0]));
+                else if (m.Count != 0)
+                    throw new Exception();
+            }
+        }
+
+        var queue = new Queue<int>();
+        queue.Enqueue(0);
+        var rots = new Dictionary<int, List<(V3 shift, int dir)>>();
+        rots.Add(0, new List<(V3 shift, int dir)>());
+        while (queue.Count > 0)
+        {
+            var cur = queue.Dequeue();
+            var curRot = rots[cur];
+            foreach (var (to, r) in matches[cur])
+            {
+                if (rots.ContainsKey(to))
+                    continue;
+
+                var next = curRot.ToList();
+                next.Add(r);
+                rots[to] = next;
+                queue.Enqueue(to);
+            }
+        }
+
+        var beacons = new HashSet<V3>();
+        var scanners = new HashSet<V3>();
+        foreach (var (scanner, rr) in rots)
+        {
+            foreach (var v in scans[scanner])
+            {
+                var r = v;
+                for (int i = rr.Count - 1; i >= 0; i--)
+                    r = Rotations3.Rotate(r, rr[i].dir) + rr[i].shift;
+                beacons.Add(r);
+            }
+
+            {
+                var r = V3.Zero;
+                for (int i = rr.Count - 1; i >= 0; i--)
+                    r = Rotations3.Rotate(r, rr[i].dir) + rr[i].shift;
+                scanners.Add(r);
+            }
+        }
+
+        var maxDist = 0L;
+        foreach (var v1 in scanners)
+        foreach (var v2 in scanners)
+        {
+            var dist = (v1 - v2).MLen();
+            if (dist > maxDist)
+                maxDist = dist;
+        }
+
+        Console.Out.WriteLine(beacons.Count);
+        Console.Out.WriteLine(maxDist);
+
+
+        List<(V3 shift, int dir)> Match(V3[] a, V3[] b)
+        {
+            var res = new List<(V3 shift, int dir)>();
+            for (int dir = 0; dir < 24; dir++)
+                res.AddRange(MatchShift(a, Rotate(b, dir)).Select(v => (v, dir)));
+
+            return res;
+        }
+
+        List<V3> MatchShift(V3[] a, V3[] b)
+        {
+            var result = new List<V3>();
+            var aSet = a.ToHashSet();
+            var bSet = b.ToHashSet();
+            for (int i = 0; i < a.Length; i++)
+            for (int j = 0; j < b.Length; j++)
+            {
+                var shift = a[i] - b[j];
+                var common = 0;
+                var bad = false;
+                for (int k = 0; k < b.Length; k++)
+                {
+                    var b2 = b[k] + shift;
+                    if (aSet.Contains(b2))
+                        common++;
+                    else if (b2.CLen() <= 1000)
+                    {
+                        bad = true;
+                        break;
+                    }
+                }
+
+                var common2 = 0;
+                for (int k = 0; k < a.Length; k++)
+                {
+                    var a2 = a[k] - shift;
+                    if (bSet.Contains(a2))
+                        common2++;
+                    else if (a2.CLen() <= 1000)
+                    {
+                        bad = true;
+                        break;
+                    }
+                }
+
+                if (!bad)
+                {
+                    if (common != common2)
+                        throw new Exception("WTF???");
+
+                    if (common >= 12)
+                        result.Add(shift);
+                }
+            }
+
+            return result.Distinct().ToList();
+        }
+
+        V3[] Rotate(V3[] scan, int direction)
+        {
+            return scan.Select(v => Rotations3.Rotate(v, direction)).ToArray();
+        }
+    }
+
 
     static void Main_18()
     {

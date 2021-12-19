@@ -6,7 +6,7 @@ namespace aoc;
 
 public static class Helpers
 {
-    public static IEnumerable<int[]> Variants(int n)
+    public static IEnumerable<int[]> Variants(int n, int v)
     {
         var arr = new int[n];
         var found = true;
@@ -17,7 +17,7 @@ public static class Helpers
             for (int i = 0; i < n; i++)
             {
                 arr[i]++;
-                if (arr[i] == n)
+                if (arr[i] == v)
                 {
                     arr[i] = 0;
                     continue;
