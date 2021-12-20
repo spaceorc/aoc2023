@@ -55,4 +55,6 @@ public struct V : IEquatable<V>
         new(1, 0), new(-1, 0), new(0, 1), new(0, -1),
         new(1, 1), new(-1, -1), new(-1, 1), new(1, -1),
     };
+
+    public bool InRange(Range r) => X >= r.MinX && X <= r.MaxX && Y >= r.MinY && Y <= r.MaxY;
 }

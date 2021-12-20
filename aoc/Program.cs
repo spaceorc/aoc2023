@@ -10,8 +10,60 @@ public class Program
     static void Main()
     {
         var lines = File
-            .ReadAllText("input.txt");
+            .ReadAllLines("input.txt");
+
         Console.WriteLine(0L);
+    }
+
+    static void Main_20()
+    {
+        var lines = File
+            .ReadAllLines("day20.txt");
+
+        var mask = lines[0];
+        var rawMap = lines.Skip(2).ToArray();
+        
+        var map = new HashSet<V>();
+        var range = new Range(V.Zero, new V(rawMap[0].Length - 1, rawMap.Length - 1));
+        foreach (var v in range.All())
+        {
+            if (rawMap[v.Y][(int)v.X] == '#')
+                map.Add(v);
+        }
+
+        Console.WriteLine($"part 1: {TransformMany(map, range, 2).Count}");
+        Console.WriteLine($"part 2: {TransformMany(map, range, 50).Count}");
+
+        HashSet<V> TransformMany(HashSet<V> map, Range range, int count)
+        {
+            for (var i = 0; i < count; i++)
+                (map, range) = Transform(map, range, outOfRangeBit: i & 1);
+            return map;
+        }
+
+        (HashSet<V> newMap, Range newRange) Transform(HashSet<V> map, Range range, int outOfRangeBit)
+        {
+            var newMap = new HashSet<V>();
+            var newRange = range.Grow(1);
+            foreach (var v in newRange.All())
+            {
+                var n = 0;
+                for (var dy = -1; dy <= 1; dy++)
+                for (var dx = -1; dx <= 1; dx++)
+                {
+                    var nv = v + new V(dx, dy);
+                    n <<= 1;
+                    if (map.Contains(nv))
+                        n |= 1;
+                    else if (!nv.InRange(range))
+                        n |= outOfRangeBit;
+                }
+
+                if (mask[n] == '#')
+                    newMap.Add(v);
+            }
+            return (newMap, newRange);
+        }
     }
 
     static void Main_19()
@@ -25,11 +77,11 @@ public class Program
 
         var matches = new Dictionary<int, List<(int to, (V3 shift, int dir))>>();
 
-        for (int i = 0; i < scans.Count; i++)
+        for (var i = 0; i < scans.Count; i++)
         {
             var list = new List<(int to, (V3 shift, int dir))>();
             matches[i] = list;
-            for (int j = 0; j < scans.Count; j++)
+            for (var j = 0; j < scans.Count; j++)
             {
                 if (i == j)
                     continue;
@@ -68,14 +120,14 @@ public class Program
             foreach (var v in scans[scanner])
             {
                 var r = v;
-                for (int i = rr.Count - 1; i >= 0; i--)
+                for (var i = rr.Count - 1; i >= 0; i--)
                     r = Rotations3.Rotate(r, rr[i].dir) + rr[i].shift;
                 beacons.Add(r);
             }
 
             {
                 var r = V3.Zero;
-                for (int i = rr.Count - 1; i >= 0; i--)
+                for (var i = rr.Count - 1; i >= 0; i--)
                     r = Rotations3.Rotate(r, rr[i].dir) + rr[i].shift;
                 scanners.Add(r);
             }
@@ -97,7 +149,7 @@ public class Program
         List<(V3 shift, int dir)> Match(V3[] a, V3[] b)
         {
             var res = new List<(V3 shift, int dir)>();
-            for (int dir = 0; dir < 24; dir++)
+            for (var dir = 0; dir < 24; dir++)
                 res.AddRange(MatchShift(a, Rotate(b, dir)).Select(v => (v, dir)));
 
             return res;
@@ -108,13 +160,13 @@ public class Program
             var result = new List<V3>();
             var aSet = a.ToHashSet();
             var bSet = b.ToHashSet();
-            for (int i = 0; i < a.Length; i++)
-            for (int j = 0; j < b.Length; j++)
+            for (var i = 0; i < a.Length; i++)
+            for (var j = 0; j < b.Length; j++)
             {
                 var shift = a[i] - b[j];
                 var common = 0;
                 var bad = false;
-                for (int k = 0; k < b.Length; k++)
+                for (var k = 0; k < b.Length; k++)
                 {
                     var b2 = b[k] + shift;
                     if (aSet.Contains(b2))
@@ -127,7 +179,7 @@ public class Program
                 }
 
                 var common2 = 0;
-                for (int k = 0; k < a.Length; k++)
+                for (var k = 0; k < a.Length; k++)
                 {
                     var a2 = a[k] - shift;
                     if (bSet.Contains(a2))
