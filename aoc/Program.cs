@@ -15,6 +15,82 @@ public class Program
         Console.WriteLine(0L);
     }
 
+    static void Main_21_2()
+    {
+        var positions = File
+            .ReadAllLines("day21.txt")
+            .Select(x => x.Split(": ")[1])
+            .Select(int.Parse)
+            .ToArray();
+
+        var counts = new Dictionary<(int pos, int score, int opos, int oscore, int player), long>
+        {
+            { (positions[0], 0, positions[1], 0, 0), 1 }
+        };
+        
+        var queue = new PriorityQueue<(int pos, int score, int opos, int oscore, int player), int>();
+        queue.Enqueue(counts.First().Key, 0);
+        
+        while (queue.Count > 0)
+        {
+            var cur = queue.Dequeue();
+            var curCount = counts[cur];
+            var (pos, score, opos, oscore, player) = cur;
+
+            for (int i = 1; i <= 3; i++)
+            for (int j = 1; j <= 3; j++)
+            for (int k = 1; k <= 3; k++)
+            {
+                var nextPos = (pos + i + j + k - 1) % 10 + 1;
+                var nextScore = score + nextPos;
+                var nextKey = (opos, oscore, nextPos, nextScore, 1 - player);
+                if (counts.ContainsKey(nextKey))
+                    counts[nextKey] += curCount;
+                else
+                {
+                    counts[nextKey] = curCount;
+                    if (nextScore < 21)
+                        queue.Enqueue(nextKey, nextScore + oscore);
+                }
+            }
+        }
+
+        var w1 = counts.Where(x => x.Key.oscore >= 21 && x.Key.player == 0).Sum(x => x.Value);
+        var w2 = counts.Where(x => x.Key.oscore >= 21 && x.Key.player == 1).Sum(x => x.Value);
+
+        Console.WriteLine(Math.Max(w1, w2));
+    }
+
+    static void Main_21_1()
+    {
+        var positions = File
+            .ReadAllLines("day21.txt")
+            .Select(x => x.Split(": ")[1])
+            .Select(long.Parse)
+            .ToArray();
+
+        var dice = 1;
+        var player = 0;
+        var rolls = 0L;
+        var score = new long[2];
+        while (true)
+        {
+            var shift = dice + dice % 100 + 1 + (dice + 1) % 100 + 1;
+            dice = (dice + 2) % 100 + 1;
+            rolls += 3;
+            
+            positions[player] = (positions[player] + shift - 1) % 10 + 1;
+            score[player] += positions[player];
+            if (score[player] >= 1000)
+            {
+                Console.WriteLine(rolls * score[1 - player]);
+                return;
+            }
+
+            player = 1 - player;
+        }
+    }
+
     static void Main_20()
     {
         var lines = File
@@ -22,7 +98,7 @@ public class Program
 
         var mask = lines[0];
         var rawMap = lines.Skip(2).ToArray();
-        
+
         var map = new HashSet<V>();
         var range = new Range(V.Zero, new V(rawMap[0].Length - 1, rawMap.Length - 1));
         foreach (var v in range.All())
@@ -62,6 +138,7 @@ public class Program
                 if (mask[n] == '#')
                     newMap.Add(v);
             }
+
             return (newMap, newRange);
         }
     }
