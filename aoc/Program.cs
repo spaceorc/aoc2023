@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using static System.Math;
 
 namespace aoc;
 
@@ -13,6 +14,107 @@ public class Program
             .ReadAllLines("input.txt");
 
         Console.WriteLine(0L);
+    }
+    
+    static void Main_22_2()
+    {
+        var lines = File
+            .ReadAllLines("day22.txt")
+            .Select(x => x.Split(new[] { " ", "x=", "y=", "z=", ",", ".." }, StringSplitOptions.RemoveEmptyEntries))
+            .Select(x => (state: x[0], cube: new Cube(long.Parse(x[1]), long.Parse(x[2]), long.Parse(x[3]), long.Parse(x[4]), long.Parse(x[5]), long.Parse(x[6]))))
+            .ToArray();
+
+        var cubes = new List<Cube>();
+        foreach (var line in lines)
+        {
+            if (line.state == "on")
+            {
+                var cubesToAdd = new List<Cube> { line.cube };
+                while (cubesToAdd.Count > 0)
+                {
+                    for (var index = cubesToAdd.Count - 1; index >= 0; index--)
+                    {
+                        var broken = false;
+                        var cubeToAdd = cubesToAdd[index];
+                        for (var i = cubes.Count - 1; i >= 0; i--)
+                        {
+                            var cube = cubes[i];
+                            if (!cube.IntersectsWith(cubeToAdd))
+                                continue;
+                            if (cubeToAdd.Overlaps(cube))
+                            {
+                                cubes[i] = cubes[^1];
+                                cubes.RemoveAt(cubes.Count - 1);
+                                continue;
+                            }
+
+                            var (intersection, inCube, inCubeToAdd) = Cube.Intersect(cube, cubeToAdd);
+                            broken = true;
+                            cubes[i] = intersection!;
+                            cubes.AddRange(inCube);
+                            cubesToAdd[index] = cubesToAdd[^1];
+                            cubesToAdd.RemoveAt(cubesToAdd.Count - 1);
+                            cubesToAdd.AddRange(inCubeToAdd);
+                            break;
+                        }
+
+                        if (broken)
+                            break;
+
+                        cubes.Add(cubeToAdd);
+                        cubesToAdd.RemoveAt(index);
+                    }
+                }
+            }
+            else
+            {
+                for (var i = cubes.Count - 1; i >= 0; i--)
+                {
+                    var cube = cubes[i];
+                    if (!cube.IntersectsWith(line.cube))
+                        continue;
+                    
+                    cubes[i] = cubes[^1];
+                    cubes.RemoveAt(cubes.Count - 1);
+                    if (line.cube.Overlaps(cube))
+                        continue;
+
+                    cubes.AddRange(cube.Subtract(line.cube));
+                }
+            }
+        }
+
+        Console.WriteLine(cubes.Sum(c => c.Size()));
+    }
+
+    static void Main_22_1()
+    {
+        var lines = File
+            .ReadAllLines("day22.txt")
+            .Select(x => x.Split(new[] { " ", "x=", "y=", "z=", ",", ".." }, StringSplitOptions.RemoveEmptyEntries))
+            .Select(x => (state: x[0], minx: long.Parse(x[1]), maxx: long.Parse(x[2]), miny: long.Parse(x[3]),
+                maxy: long.Parse(x[4]), minz: long.Parse(x[5]), maxz: long.Parse(x[6])))
+            .ToArray();
+
+        var map = new HashSet<V3>();
+        foreach (var line in lines)
+        {
+            var (state, minx, maxx, miny, maxy, minz, maxz) = line;
+            if (Abs(line.maxx) > 50)
+                continue;
+            
+            for (var x = minx; x <= maxx; x++)
+            for (var y = miny; y <= maxy; y++)
+            for (var z = minz; z <= maxz; z++)
+            {
+                if (state == "on")
+                    map.Add(new V3(x, y, z));
+                else
+                    map.Remove(new V3(x, y, z));
+            }
+        }
+        
+        Console.WriteLine(map.Count);
     }
 
     static void Main_21_2()
@@ -27,10 +129,10 @@ public class Program
         {
             { (positions[0], 0, positions[1], 0, 0), 1 }
         };
-        
+
         var queue = new PriorityQueue<(int pos, int score, int opos, int oscore, int player), int>();
         queue.Enqueue(counts.First().Key, 0);
-        
+
         while (queue.Count > 0)
         {
             var cur = queue.Dequeue();
@@ -78,7 +180,7 @@ public class Program
             var shift = dice + dice % 100 + 1 + (dice + 1) % 100 + 1;
             dice = (dice + 2) % 100 + 1;
             rolls += 3;
-            
+
             positions[player] = (positions[player] + shift - 1) % 10 + 1;
             score[player] += positions[player];
             if (score[player] >= 1000)

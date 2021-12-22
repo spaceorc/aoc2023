@@ -60,4 +60,6 @@ public class V3 : IEquatable<V3>
 
     public V3 Rotate(int dir) => Rotations3.Rotate(this, dir);
     public V3 RotateBack(int dir) => Rotations3.RotateBack(this, dir);
+    
+    public bool InCube(Cube c) => X >= c.MinX && X <= c.MaxX && Y >= c.MinY && Y <= c.MaxY && Z >= c.MinZ && Z <= c.MaxZ;
 }
