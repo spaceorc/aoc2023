@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using static System.Math;
 
 namespace aoc;
@@ -10,18 +11,409 @@ public class Program
 {
     static void Main()
     {
+        Main_23_1();
+        Main_23_2();
+        return;
         var lines = File
             .ReadAllLines("input.txt");
-
         Console.WriteLine(0L);
     }
-    
+
+    static void Main_23_2()
+    {
+/*
+input:
+#############
+#...........#
+###C#A#B#C###
+  #D#C#B#A#
+  #D#B#A#C#
+  #D#D#B#A#
+  #########
+
+positions:
+#############
+#0123456789x#
+###a#b#c#d###
+  #A#B#C#D#
+  #e#f#g#h#
+  #E#F#G#H#
+  #########
+*/
+        const string pods = "aAeEbBfFcCgGdDhH";
+        var nears = new Dictionary<char, string>
+        {
+            { '0', "1" },
+            { '1', "02" },
+            { '2', "13a" },
+            { '3', "24" },
+            { '4', "35b" },
+            { '5', "46" },
+            { '6', "57c" },
+            { '7', "68" },
+            { '8', "79d" },
+            { '9', "8x" },
+            { 'x', "9" },
+            { 'a', "2A" },
+            { 'A', "ae" },
+            { 'e', "AE" },
+            { 'E', "e" },
+            { 'b', "4B" },
+            { 'B', "bf" },
+            { 'f', "BF" },
+            { 'F', "f" },
+            { 'c', "6C" },
+            { 'C', "cg" },
+            { 'g', "CG" },
+            { 'G', "g" },
+            { 'd', "8D" },
+            { 'D', "dh" },
+            { 'h', "DH" },
+            { 'H', "h" },
+        };
+        var energy = new long[] { 1, 1, 1, 1, 10, 10, 10, 10, 100, 100, 100, 100, 1000, 1000, 1000, 1000 };
+        var state = (lastMoved: -1, moved: "0000000000000000", posiitions: "bDgHcCfGadBhAeEF");
+
+        var queue = new PriorityQueue<(int lastMoved, string moved, string positions), long>();
+        queue.Enqueue(state, 0);
+        var used = new Dictionary<(int lastMoved, string moved, string positions), long>();
+        used[state] = 0;
+        while (queue.Count > 0)
+        {
+            var cur = queue.Dequeue();
+            var curEnergy = used[cur];
+            if (NormAll(cur.positions) == "AAAABBBBCCCCDDDD")
+            {
+                Console.WriteLine(curEnergy);
+                Console.WriteLine($"used={used.Count}");
+                break;
+            }
+
+            var nextStates = NextStates(cur.lastMoved, cur.moved, cur.positions);
+            foreach (var next in nextStates)
+            {
+                if (!used.TryGetValue(next, out var prevEnergy))
+                {
+                    used[next] = curEnergy + energy[next.lastMoved];
+                    queue.Enqueue(next, used[next]);
+                }
+                else if (curEnergy + energy[next.lastMoved] < prevEnergy)
+                {
+                    Console.WriteLine("WTF???");
+                    used[next] = curEnergy + energy[next.lastMoved];
+                    queue.Enqueue(next, used[next]);
+                }
+            }
+        }
+
+        List<(int lastMoved, string moved, string positions)> NextStates(int lastMoved, string moved,
+            string positions)
+        {
+            var result = new List<(int lastMoved, string moved, string positions)>();
+            char pos;
+            if (lastMoved == -1)
+            {
+                for (int p = 0; p < 16; p++)
+                {
+                    pos = positions[p];
+                    foreach (var near in nears[pos])
+                    {
+                        if (positions.Contains(near))
+                            continue;
+                        var nextMoved = moved[..p] + '1' + moved[(p + 1)..];
+                        var nextPositions = positions[..p] + near + positions[(p + 1)..];
+                        result.Add((p, nextMoved, nextPositions));
+                    }
+                }
+
+                return result;
+            }
+
+            pos = positions[lastMoved];
+            foreach (var near in nears[pos])
+            {
+                if (positions.Contains(near))
+                    continue;
+                if (pos is '2' or '4' or '6' or '8' && near is 'a' or 'b' or 'c' or 'd')
+                {
+                    if (Norm(pods[lastMoved]) != Norm(near))
+                        continue;
+
+                    var whoDeep = positions.IndexOf(Norm(near));
+                    if (whoDeep != -1 && Norm(pods[whoDeep]) != Norm(near))
+                        continue;
+
+                    whoDeep = positions.IndexOf(Norm2(near));
+                    if (whoDeep != -1 && Norm(pods[whoDeep]) != Norm(near))
+                        continue;
+
+                    whoDeep = positions.IndexOf(char.ToLower(Norm2(near)));
+                    if (whoDeep != -1 && Norm(pods[whoDeep]) != Norm(near))
+                        continue;
+                }
+
+                var nextPositions = positions[..lastMoved] + near + positions[(lastMoved + 1)..];
+                result.Add((lastMoved, moved, nextPositions));
+            }
+
+            if (pos is '2' or '4' or '6' or '8')
+                return result;
+
+            if (moved[lastMoved] == '2')
+            {
+                if (Norm(pos) != Norm(pods[lastMoved]))
+                    return result;
+
+                if (pos != Norm2(pos))
+                {
+                    var whoDeep = positions.IndexOf(Norm2(pos));
+                    if (whoDeep == -1)
+                        return result;
+
+                    if (pos != char.ToLower(Norm2(pos)))
+                    {
+                        whoDeep = positions.IndexOf(char.ToLower(Norm2(pos)));
+                        if (whoDeep == -1)
+                            return result;
+                        if (pos != Norm(pos))
+                        {
+                            whoDeep = positions.IndexOf(Norm(pos));
+                            if (whoDeep == -1)
+                                return result;
+                        }
+                    }
+                }
+            }
+
+            if (moved[lastMoved] == '1')
+            {
+                if (Norm(pos) is 'A' or 'B' or 'C' or 'D' && Norm(pos) != Norm(pods[lastMoved]))
+                    return result;
+            }
+
+
+            for (int i = 0; i < 16; i++)
+            {
+                if (i == lastMoved)
+                    continue;
+                if (moved[i] == '2')
+                    continue;
+
+                if (moved[i] == '1')
+                {
+                    var whoDeep = positions.IndexOf(Norm2(pods[i]));
+                    if (whoDeep != -1 && Norm(pods[whoDeep]) != Norm(pods[i]))
+                        continue;
+                    whoDeep = positions.IndexOf(char.ToLower(Norm2(pods[i])));
+                    if (whoDeep != -1 && Norm(pods[whoDeep]) != Norm(pods[i]))
+                        continue;
+                    whoDeep = positions.IndexOf(Norm(pods[i]));
+                    if (whoDeep != -1 && Norm(pods[whoDeep]) != Norm(pods[i]))
+                        continue;
+                    whoDeep = positions.IndexOf(char.ToLower(Norm(pods[i])));
+                    if (whoDeep != -1)
+                        continue;
+                }
+
+                pos = positions[i];
+                foreach (var near in nears[pos])
+                {
+                    if (positions.Contains(near))
+                        continue;
+
+                    var nextMoved = moved[..i] + (char)(moved[i] + 1) + moved[(i + 1)..];
+                    var nextPositions = positions[..i] + near + positions[(i + 1)..];
+                    result.Add((i, nextMoved, nextPositions));
+                }
+            }
+
+            return result;
+        }
+        
+        static string NormAll(string s)
+        {
+            return new string(s.Select(Norm).ToArray());
+        }
+
+        static char Norm(char c)
+        {
+            if (char.IsDigit(c))
+                return c;
+            if (c == 'x')
+                return c;
+            c = char.ToUpper(c);
+            if (c > 'D')
+                c = (char)(c - ('E' - 'A'));
+            return c;
+        }
+
+        static char Norm2(char c)
+        {
+            if (char.IsDigit(c))
+                return c;
+            if (c == 'x')
+                return c;
+            return (char)(Norm(c) + ('E' - 'A'));
+        }
+    }
+
+    static void Main_23_1()
+    {
+/*
+input:
+#############
+#...........#
+###C#A#B#C###
+  #D#D#B#A#
+  #########
+
+positions:
+#############
+#0123456789x#
+###a#b#c#d###
+  #A#B#C#D#
+  #########
+ */
+        var nears = new Dictionary<char, string>
+        {
+            { '0', "1" },
+            { '1', "02" },
+            { '2', "13a" },
+            { '3', "24" },
+            { '4', "35b" },
+            { '5', "46" },
+            { '6', "57c" },
+            { '7', "68" },
+            { '8', "79d" },
+            { '9', "8x" },
+            { 'x', "9" },
+            { 'a', "2A" },
+            { 'A', "a" },
+            { 'b', "4B" },
+            { 'B', "b" },
+            { 'c', "6C" },
+            { 'C', "c" },
+            { 'd', "8D" },
+            { 'D', "d" },
+        };
+        var pods = "aAbBcCdD";
+        var energy = new long[] { 1, 1, 10, 10, 100, 100, 1000, 1000 };
+        var state = (lastMoved: -1, moved: "00000000", posiitions: "bDcCadAB");
+        var queue = new PriorityQueue<(int lastMoved, string moved, string positions), long>();
+        queue.Enqueue(state, 0);
+        var used = new Dictionary<(int lastMoved, string moved, string positions), long>();
+        used[state] = 0;
+        while (queue.Count > 0)
+        {
+            var cur = queue.Dequeue();
+            var curEnergy = used[cur];
+            if (cur.positions.ToUpper() == "AABBCCDD")
+            {
+                Console.WriteLine(curEnergy);
+                Console.WriteLine($"used={used.Count}");
+                return;
+            }
+
+            var nextStates = NextStates(cur.lastMoved, cur.moved, cur.positions).ToArray();
+            foreach (var next in nextStates)
+            {
+                if (!used.TryGetValue(next, out var prevEnergy) || curEnergy + energy[next.lastMoved] < prevEnergy)
+                {
+                    used[next] = curEnergy + energy[next.lastMoved];
+                    queue.Enqueue(next, used[next]);
+                }
+            }
+        }
+
+        IEnumerable<(int lastMoved, string moved, string positions)> NextStates(int lastMoved, string moved,
+            string positions)
+        {
+            char pos;
+            if (lastMoved == -1)
+            {
+                for (int p = 0; p < 8; p++)
+                {
+                    pos = positions[p];
+                    foreach (var near in nears[pos])
+                    {
+                        if (positions.Contains(near))
+                            continue;
+                        var nextMoved = moved[..p] + '1' + moved[(p + 1)..];
+                        var nextPositions = positions[..p] + near + positions[(p + 1)..];
+                        yield return (p, nextMoved, nextPositions);
+                    }
+                }
+
+                yield break;
+            }
+
+            pos = positions[lastMoved];
+            foreach (var near in nears[pos])
+            {
+                if (positions.Contains(near))
+                    continue;
+                if (pos is '2' or '4' or '6' or '8' && near is 'a' or 'b' or 'c' or 'd')
+                {
+                    if (char.ToLower(pods[lastMoved]) != near)
+                        continue;
+
+                    var whoDeep = positions.IndexOf(char.ToUpper(near));
+                    if (whoDeep != -1 && char.ToLower(pods[whoDeep]) != near)
+                        continue;
+                }
+
+                var nextPositions = positions[..lastMoved] + near + positions[(lastMoved + 1)..];
+                yield return (lastMoved, moved, nextPositions);
+            }
+
+            if (pos is '2' or '4' or '6' or '8')
+                yield break;
+
+            if (moved[lastMoved] == '2')
+            {
+                if (pos != char.ToLower(pods[lastMoved]) && pos != char.ToUpper(pods[lastMoved]))
+                    yield break;
+            }
+
+            for (int i = 0; i < 8; i++)
+            {
+                if (i == lastMoved)
+                    continue;
+                if (moved[i] == '2')
+                    continue;
+
+                if (moved[i] == '1')
+                {
+                    var whoDeep = positions.IndexOf(char.ToUpper(pods[i]));
+                    if (whoDeep != -1 && char.ToLower(pods[whoDeep]) != char.ToLower(pods[i]))
+                        continue;
+                    whoDeep = positions.IndexOf(char.ToLower(pods[i]));
+                    if (whoDeep != -1)
+                        continue;
+                }
+
+                pos = positions[i];
+                foreach (var near in nears[pos])
+                {
+                    if (positions.Contains(near))
+                        continue;
+
+                    var nextMoved = moved[..i] + (char)(moved[i] + 1) + moved[(i + 1)..];
+                    var nextPositions = positions[..i] + near + positions[(i + 1)..];
+                    yield return (i, nextMoved, nextPositions);
+                }
+            }
+        }
+    }
+
     static void Main_22_2()
     {
         var lines = File
             .ReadAllLines("day22.txt")
             .Select(x => x.Split(new[] { " ", "x=", "y=", "z=", ",", ".." }, StringSplitOptions.RemoveEmptyEntries))
-            .Select(x => (state: x[0], cube: new Cube(long.Parse(x[1]), long.Parse(x[2]), long.Parse(x[3]), long.Parse(x[4]), long.Parse(x[5]), long.Parse(x[6]))))
+            .Select(x => (state: x[0],
+                cube: new Cube(long.Parse(x[1]), long.Parse(x[2]), long.Parse(x[3]), long.Parse(x[4]), long.Parse(x[5]),
+                    long.Parse(x[6]))))
             .ToArray();
 
         var cubes = new List<Cube>();
@@ -73,7 +465,7 @@ public class Program
                     var cube = cubes[i];
                     if (!cube.IntersectsWith(line.cube))
                         continue;
-                    
+
                     cubes[i] = cubes[^1];
                     cubes.RemoveAt(cubes.Count - 1);
                     if (line.cube.Overlaps(cube))
@@ -102,7 +494,7 @@ public class Program
             var (state, minx, maxx, miny, maxy, minz, maxz) = line;
             if (Abs(line.maxx) > 50)
                 continue;
-            
+
             for (var x = minx; x <= maxx; x++)
             for (var y = miny; y <= maxy; y++)
             for (var z = minz; z <= maxz; z++)
@@ -113,7 +505,7 @@ public class Program
                     map.Remove(new V3(x, y, z));
             }
         }
-        
+
         Console.WriteLine(map.Count);
     }
 
