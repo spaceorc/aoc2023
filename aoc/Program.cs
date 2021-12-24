@@ -11,12 +11,100 @@ public class Program
 {
     static void Main()
     {
-        Main_23_1();
-        Main_23_2();
-        return;
         var lines = File
             .ReadAllLines("input.txt");
+
         Console.WriteLine(0L);
+    }
+
+    static void Main_24()
+    {
+        var lines = File
+            .ReadAllLines("day24.txt")
+            .Select(x => x.Split())
+            .ToArray();
+
+        var res1 = new long[14];
+        var res2 = new long[14];
+        var cur = new List<(int inp, int val)>();
+        var inp = 0;
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (string.Join(" ", lines[i]) == "div z 1")
+            {
+                cur.Add((inp++, int.Parse(lines[i + 11][2])));
+            }
+            else if (string.Join(" ", lines[i]) == "div z 26")
+            {
+                var dif = int.Parse(lines[i + 1][2]) + cur[^1].val;
+                res1[cur[^1].inp] = 9 - Max(dif, 0);
+                res1[inp] = 9 + Min(dif, 0);
+                res2[cur[^1].inp] = 1 - Min(dif, 0);
+                res2[inp] = 1 + Max(dif, 0);
+                inp++;
+                cur.RemoveAt(cur.Count - 1);
+            }
+        }
+
+        var eval1 = Evaluate(res1);
+        if (eval1.failedInput != -1 || eval1.res != 0)
+            throw new Exception("Bad 1");
+        
+        var eval2 = Evaluate(res2);
+        if (eval2.failedInput != -1 || eval2.res != 0)
+            throw new Exception("Bad 2");
+        
+        Console.WriteLine($"part 1: {string.Join("", res1)}");
+        Console.WriteLine($"part 2: {string.Join("", res2)}");
+
+        (int failedInput, long res) Evaluate(long[] input)
+        {
+            var cur = 0;
+            var registers = new long[] { 0, 0, 0, 0 }; // w, x, y ,z
+            foreach (var line in lines)
+            {
+                var (op, register, value) = Args(line);
+                switch (op)
+                {
+                    case "inp":
+                        registers[register] = input[cur++];
+                        break;
+                    case "add":
+                        registers[register] += value;
+                        break;
+                    case "mul":
+                        registers[register] *= value;
+                        break;
+                    case "div":
+                        if (value == 0)
+                            return (cur - 1, long.MinValue);
+                        registers[register] /= value;
+                        break;
+                    case "mod":
+                        if (registers[register] < 0 || value <= 0)
+                            return (cur - 1, long.MinValue);
+                        registers[register] %= value;
+                        break;
+                    case "eql":
+                        registers[register] = registers[register] == value ? 1 : 0;
+                        break;
+                    default:
+                        throw new Exception($"Bad: {op}");
+                }
+            }
+
+            return (-1, registers[^1]);
+
+            (string op, int register, long b) Args(string[] line)
+            {
+                var value = line.Length >= 3
+                    ? line[2][0] >= 'w' && line[2][0] <= 'z'
+                        ? registers[line[2][0] - 'w']
+                        : int.Parse(line[2])
+                    : 0L;
+                return (line[0], line[1][0] - 'w', value);
+            }
+        }
     }
 
     static void Main_23_2()
@@ -229,7 +317,7 @@ positions:
 
             return result;
         }
-        
+
         static string NormAll(string s)
         {
             return new string(s.Select(Norm).ToArray());
