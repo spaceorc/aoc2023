@@ -12,9 +12,86 @@ public class Program
     static void Main()
     {
         var lines = File
-            .ReadAllLines("input.txt");
+            .ReadAllLines("day25.txt");
 
-        Console.WriteLine(0L);
+        var map = new Map<char>(lines[0].Length, lines.Length);
+        foreach (var v in map.All())
+            map[v] = lines[(int)v.Y][(int)v.X];
+
+        var i = 0L;
+        while (true)
+        {
+            var (moved, map1) = Sim(map);
+            i++;
+            if (!moved)
+                break;
+            map = map1;
+        }
+
+        Dump();
+        Console.WriteLine(i);
+
+        void Dump()
+        {
+            for (int y = 0; y < map.sizeY; y++)
+            {
+                for (int x = 0; x < map.sizeX; x++)
+                {
+                    Console.Write(map[new V(x, y)]);
+                }
+
+                Console.WriteLine();
+            }
+        }
+
+        (bool moved, Map<char> map) Sim(Map<char> map0)
+        {
+            var map = new Map<char>(map0.sizeX, map0.sizeY);
+            var moved = false;
+            foreach (var v in map0.All())
+            {
+                if (map0[v] == '>')
+                {
+                    var nv = new V((v.X + 1) % map0.sizeX, v.Y);
+                    if (map0[nv] == '.')
+                    {
+                        map[nv] = '>';
+                        map[v] = '.';
+                        moved = true;
+                    }
+                    else
+                    {
+                        map[v] = map0[v];
+                    }
+                }
+                else if (map[v] == 0)
+                    map[v] = map0[v];
+            }
+
+            map0 = map;
+            map = new Map<char>(map0.sizeX, map0.sizeY);
+            foreach (var v in map0.All())
+            {
+                if (map0[v] == 'v')
+                {
+                    var nv = new V(v.X, (v.Y + 1) % map0.sizeY);
+                    if (map0[nv] == '.')
+                    {
+                        map[nv] = 'v';
+                        map[v] = '.';
+                        moved = true;
+                    }
+                    else
+                    {
+                        map[v] = map0[v];
+                    }
+                }
+                else if (map[v] == 0)
+                    map[v] = map0[v];
+            }
+
+            return (moved, map);
+        }
     }
 
     static void Main_24()
@@ -49,11 +126,11 @@ public class Program
         var eval1 = Evaluate(res1);
         if (eval1.failedInput != -1 || eval1.res != 0)
             throw new Exception("Bad 1");
-        
+
         var eval2 = Evaluate(res2);
         if (eval2.failedInput != -1 || eval2.res != 0)
             throw new Exception("Bad 2");
-        
+
         Console.WriteLine($"part 1: {string.Join("", res1)}");
         Console.WriteLine($"part 2: {string.Join("", res2)}");
 
