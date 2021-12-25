@@ -11,6 +11,11 @@ public class Program
 {
     static void Main()
     {
+        Day24AlternativeSolution.RunDynProg();
+    }
+    
+    static void Main_25()
+    {
         var lines = File
             .ReadAllLines("day25.txt");
 
@@ -946,7 +951,6 @@ positions:
         }
     }
 
-
     static void Main_18()
     {
         var lines = File
@@ -1598,7 +1602,6 @@ positions:
             }
         }
     }
-
 
     static void Main_3_2()
     {
