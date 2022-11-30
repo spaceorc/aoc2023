@@ -30,7 +30,7 @@ public struct V : IEquatable<V>
     }
 
     public bool Equals(V other) => X == other.X && Y == other.Y;
-    public override bool Equals(object obj) => obj is V other && Equals(other);
+    public override bool Equals(object? obj) => obj is V other && Equals(other);
     public override int GetHashCode() => HashCode.Combine(X, Y);
     public static bool operator ==(V a, V b) => a.Equals(b);
     public static bool operator !=(V a, V b) => !(a == b);

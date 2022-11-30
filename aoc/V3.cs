@@ -33,8 +33,8 @@ public class V3 : IEquatable<V3>
         return new V3(long.Parse(s[0]), long.Parse(s[1]), long.Parse(s[2]));
     }
     
-    public bool Equals(V3 other) => X == other.X && Y == other.Y && Z == other.Z;
-    public override bool Equals(object obj) => obj is V3 other && Equals(other);
+    public bool Equals(V3? other) => !ReferenceEquals(other, null) && X == other.X && Y == other.Y && Z == other.Z;
+    public override bool Equals(object? obj) => obj is V3 other && Equals(other);
     public override int GetHashCode() => HashCode.Combine(X, Y, Z);
 
     public static bool operator ==(V3 a, V3 b) => a.Equals(b);
