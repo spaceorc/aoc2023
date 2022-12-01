@@ -12,16 +12,34 @@ public class Program
     static void Main()
     {
         var nums = File
-            .ReadAllLines("day1.txt")
+            .ReadAllLines("input.txt")
             .Select(x =>
             {
-                return long.Parse(x);
+                return x == "" ? 0L : long.Parse(x);
             })
             .ToArray();
         
         var res = 0L;
-        
-
         Console.Out.WriteLine(res);
+    }
+
+    static void Main_1_2()
+    {
+        Console.Out.WriteLine(File
+            .ReadAllText("day1.txt")
+            .Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(x => x.Split("\n").Select(long.Parse).ToArray().Sum())
+            .OrderDescending()
+            .Take(3)
+            .Sum());
+    }
+
+    static void Main_1_1()
+    {
+        Console.Out.WriteLine(File
+            .ReadAllText("day1.txt")
+            .Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(x => x.Split("\n").Select(long.Parse).ToArray().Sum())
+            .Max());
     }
 }
