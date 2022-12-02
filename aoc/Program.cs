@@ -11,16 +11,27 @@ public class Program
 {
     static void Main()
     {
-        var nums = File
-            .ReadAllLines("input.txt")
-            .Select(x =>
-            {
-                return x == "" ? 0L : long.Parse(x);
-            })
-            .ToArray();
-        
-        var res = 0L;
-        Console.Out.WriteLine(res);
+        Main_2_1();
+        Main_2_2();
+    }
+
+    static void Main_2_2()
+    {
+        Console.Out.WriteLine(File
+            .ReadAllLines("day2.txt")
+            .Select(x => (v1: x[0] - 'A', outcome: x[2] - 'X'))
+            .Select(x => (x.v1, v2: (x.v1 + x.outcome + 2) % 3))
+            .Select(x => x.v2 + 1 + (x.v2 - x.v1 + 4) % 3 * 3)
+            .Sum());
+    }
+
+    static void Main_2_1()
+    {
+        Console.Out.WriteLine(File
+            .ReadAllLines("day2.txt")
+            .Select(x => (v1: x[0] - 'A', v2: x[2] - 'X'))
+            .Select(x => x.v2 + 1 + (x.v2 - x.v1 + 4) % 3 * 3)
+            .Sum());
     }
 
     static void Main_1_2()
