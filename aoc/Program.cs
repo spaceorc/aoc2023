@@ -11,8 +11,42 @@ public class Program
 {
     static void Main()
     {
-        Main_2_1();
-        Main_2_2();
+        Main_3_1();
+        Main_3_2();
+    }
+
+    static void Main_3_2()
+    {
+        Console.Out.WriteLine(File
+            .ReadAllLines("day3.txt")
+            .Batch(3)
+            .Select(b => b.Aggregate(
+                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray(),
+                (x, y) => x.Intersect(y).ToArray()
+            ).Single())
+            .Select(c => c switch
+            {
+                >= 'a' and <= 'z' => c - 'a' + 1,
+                >= 'A' and <= 'Z' => c - 'A' + 27,
+                _ => throw new Exception()
+            }).Sum());
+    }
+
+    static void Main_3_1()
+    {
+        Console.Out.WriteLine(File
+            .ReadAllLines("day3.txt")
+            .Select(x => new [] {x[..(x.Length / 2)], x[(x.Length / 2)..]})
+            .Select(b => b.Aggregate(
+                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray(),
+                (x, y) => x.Intersect(y).ToArray()
+            ).Single())
+            .Select(c => c switch
+            {
+                >= 'a' and <= 'z' => c - 'a' + 1,
+                >= 'A' and <= 'Z' => c - 'A' + 27,
+                _ => throw new Exception()
+            }).Sum());
     }
 
     static void Main_2_2()

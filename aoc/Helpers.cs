@@ -86,6 +86,22 @@ public static class Helpers
             yield return indices.Select(x => items[x]).ToArray();
         } while (NextPermutation(indices));
     }
+
+    public static IEnumerable<T[]> Batch<T>(this IEnumerable<T> items, int batchSize)
+    {
+        var batch = new List<T>();
+        foreach (var item in items)
+        {
+            batch.Add(item);
+            if (batch.Count == batchSize)
+            {
+                yield return batch.ToArray();
+                batch.Clear();
+            }
+        }
+        if (batch.Count > 0)
+            yield return batch.ToArray();
+    }
         
     public static long Lcm(params long[] values)
     {
