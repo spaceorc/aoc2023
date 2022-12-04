@@ -11,8 +11,28 @@ public class Program
 {
     static void Main()
     {
-        Main_3_1();
-        Main_3_2();
+        Main_4_1();
+        Main_4_2();
+    }
+
+    static void Main_4_2()
+    {
+        Console.WriteLine(File
+            .ReadAllLines("day4.txt")
+            .Select(x => x.Split('-', ',').Select(long.Parse).ToArray())
+            .Select(x => new[] { (begin: x[0], end: x[1]), (begin: x[2], end: x[3]) })
+            .Count(x => x[0].begin <= x[1].end && x[0].end >= x[1].begin
+                        || x[1].begin <= x[0].end && x[1].end >= x[0].begin));
+    }
+
+    static void Main_4_1()
+    {
+        Console.WriteLine(File
+            .ReadAllLines("day4.txt")
+            .Select(x => x.Split('-', ',').Select(long.Parse).ToArray())
+            .Select(x => new[] { (begin: x[0], end: x[1]), (begin: x[2], end: x[3]) })
+            .Count(x => x[0].begin >= x[1].begin && x[0].end <= x[1].end
+                        || x[1].begin >= x[0].begin && x[1].end <= x[0].end));
     }
 
     static void Main_3_2()
@@ -36,7 +56,7 @@ public class Program
     {
         Console.Out.WriteLine(File
             .ReadAllLines("day3.txt")
-            .Select(x => new [] {x[..(x.Length / 2)], x[(x.Length / 2)..]})
+            .Select(x => new[] { x[..(x.Length / 2)], x[(x.Length / 2)..] })
             .Select(b => b.Aggregate(
                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray(),
                 (x, y) => x.Intersect(y).ToArray()
