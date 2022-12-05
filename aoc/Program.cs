@@ -11,8 +11,97 @@ public class Program
 {
     static void Main()
     {
-        Main_4_1();
-        Main_4_2();
+        Main_5_1();
+        Main_5_2();
+    }
+    
+    static void Main_5_2()
+    {
+        var lines = File
+            .ReadAllText("day5.txt")
+            .Split("\n\n");
+
+        var stackLines = lines[0]
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .SkipLast(1)
+            .Select(x => x.Batch(4).Select(c => c[1]).ToArray())
+            .ToArray();
+
+        var stackCount = stackLines[0].Length;
+        
+        var stacks = Enumerable
+            .Range(0, stackCount)
+            .Select(_ => new Stack<char>())
+            .ToArray();
+
+        for (var i = 0; i < stackCount; i++)
+        {
+            for (var k = stackLines.Length - 1; k >= 0; k--)
+            {
+                var towerLine = stackLines[k];
+                if (towerLine[i] != ' ')
+                    stacks[i].Push(towerLine[i]);
+            }
+        }
+        
+        var moves = lines[1]
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Split())
+            .Select(x => (num: long.Parse(x[1]), from: long.Parse(x[3]), to: long.Parse(x[5])))
+            .ToArray();
+
+        foreach (var (num, from, to) in moves)
+        {
+            var tmp = new Stack<char>();
+            for (var i = 0; i < num; i++)
+                tmp.Push(stacks[from - 1].Pop());
+            for (var i = 0; i < num; i++)
+                stacks[to - 1].Push(tmp.Pop());
+        }
+
+        Console.WriteLine(new string(stacks.Select(x => x.First()).ToArray()));
+    }
+
+    static void Main_5_1()
+    {
+        var lines = File
+            .ReadAllText("day5.txt")
+            .Split("\n\n");
+
+        var stackLines = lines[0]
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .SkipLast(1)
+            .Select(x => x.Batch(4).Select(c => c[1]).ToArray())
+            .ToArray();
+
+        var stackCount = stackLines[0].Length;
+        
+        var stacks = Enumerable
+            .Range(0, stackCount)
+            .Select(_ => new Stack<char>())
+            .ToArray();
+
+        for (var i = 0; i < stackCount; i++)
+        {
+            for (var k = stackLines.Length - 1; k >= 0; k--)
+            {
+                var towerLine = stackLines[k];
+                if (towerLine[i] != ' ')
+                    stacks[i].Push(towerLine[i]);
+            }
+        }
+        
+        var moves = lines[1]
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Split())
+            .Select(x => (num: long.Parse(x[1]), from: long.Parse(x[3]), to: long.Parse(x[5])))
+            .ToArray();
+
+        foreach (var (num, from, to) in moves)
+            for (var i = 0; i < num; i++)
+                stacks[to - 1].Push(stacks[from - 1].Pop());
+
+        Console.WriteLine(new string(stacks.Select(x => x.First()).ToArray()));
     }
 
     static void Main_4_2()
@@ -21,8 +110,7 @@ public class Program
             .ReadAllLines("day4.txt")
             .Select(x => x.Split('-', ',').Select(long.Parse).ToArray())
             .Select(x => new[] { (begin: x[0], end: x[1]), (begin: x[2], end: x[3]) })
-            .Count(x => x[0].begin <= x[1].end && x[0].end >= x[1].begin
-                        || x[1].begin <= x[0].end && x[1].end >= x[0].begin));
+            .Count(x => x[0].begin <= x[1].end && x[0].end >= x[1].begin));
     }
 
     static void Main_4_1()
