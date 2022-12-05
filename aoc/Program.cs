@@ -38,9 +38,9 @@ public class Program
         {
             for (var k = stackLines.Length - 1; k >= 0; k--)
             {
-                var towerLine = stackLines[k];
-                if (towerLine[i] != ' ')
-                    stacks[i].Push(towerLine[i]);
+                var stackLine = stackLines[k];
+                if (stackLine[i] != ' ')
+                    stacks[i].Push(stackLine[i]);
             }
         }
         
@@ -85,9 +85,9 @@ public class Program
         {
             for (var k = stackLines.Length - 1; k >= 0; k--)
             {
-                var towerLine = stackLines[k];
-                if (towerLine[i] != ' ')
-                    stacks[i].Push(towerLine[i]);
+                var stackLine = stackLines[k];
+                if (stackLine[i] != ' ')
+                    stacks[i].Push(stackLine[i]);
             }
         }
         
