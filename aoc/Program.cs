@@ -11,8 +11,8 @@ public class Program
 {
     static void Main()
     {
-        Main_6_1();
-        Main_6_2();
+        Main_5_1();
+        Main_5_2();
     }
 
     static void Main_6_2()
@@ -51,28 +51,13 @@ public class Program
             .ReadAllText("day5.txt")
             .Split("\n\n");
 
-        var stackLines = lines[0]
+        var stacks = lines[0]
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
             .SkipLast(1)
-            .Select(x => x.Batch(4).Select(c => c[1]).ToArray())
+            .RotateCW()
+            .EveryNth(4, startFrom: 1)
+            .Select(x => new Stack<char>(x.Where(c => c != ' ')))
             .ToArray();
-
-        var stackCount = stackLines[0].Length;
-
-        var stacks = Enumerable
-            .Range(0, stackCount)
-            .Select(_ => new Stack<char>())
-            .ToArray();
-
-        for (var i = 0; i < stackCount; i++)
-        {
-            for (var k = stackLines.Length - 1; k >= 0; k--)
-            {
-                var stackLine = stackLines[k];
-                if (stackLine[i] != ' ')
-                    stacks[i].Push(stackLine[i]);
-            }
-        }
 
         var moves = lines[1]
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
@@ -98,28 +83,13 @@ public class Program
             .ReadAllText("day5.txt")
             .Split("\n\n");
 
-        var stackLines = lines[0]
+        var stacks = lines[0]
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
             .SkipLast(1)
-            .Select(x => x.Batch(4).Select(c => c[1]).ToArray())
+            .RotateCW()
+            .EveryNth(4, startFrom: 1)
+            .Select(x => new Stack<char>(x.Where(c => c != ' ')))
             .ToArray();
-
-        var stackCount = stackLines[0].Length;
-
-        var stacks = Enumerable
-            .Range(0, stackCount)
-            .Select(_ => new Stack<char>())
-            .ToArray();
-
-        for (var i = 0; i < stackCount; i++)
-        {
-            for (var k = stackLines.Length - 1; k >= 0; k--)
-            {
-                var stackLine = stackLines[k];
-                if (stackLine[i] != ' ')
-                    stacks[i].Push(stackLine[i]);
-            }
-        }
 
         var moves = lines[1]
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
@@ -139,8 +109,8 @@ public class Program
         Console.WriteLine(File
             .ReadAllLines("day4.txt")
             .Select(x => x.Split('-', ',').Select(long.Parse).ToArray())
-            .Select(x => new[] { (begin: x[0], end: x[1]), (begin: x[2], end: x[3]) })
-            .Count(x => x[0].begin <= x[1].end && x[0].end >= x[1].begin));
+            .Select(x => new[] { new R(x[0], x[1]), new R(x[2], x[3]) })
+            .Count(x => x[0].Overlaps(x[1])));
     }
 
     static void Main_4_1()
@@ -148,9 +118,8 @@ public class Program
         Console.WriteLine(File
             .ReadAllLines("day4.txt")
             .Select(x => x.Split('-', ',').Select(long.Parse).ToArray())
-            .Select(x => new[] { (begin: x[0], end: x[1]), (begin: x[2], end: x[3]) })
-            .Count(x => x[0].begin >= x[1].begin && x[0].end <= x[1].end
-                        || x[1].begin >= x[0].begin && x[1].end <= x[0].end));
+            .Select(x => new[] { new R(x[0], x[1]), new R(x[2], x[3]) })
+            .Count(x => x[0].Contains(x[1]) || x[1].Contains(x[0])));
     }
 
     static void Main_3_2()
