@@ -11,10 +11,40 @@ public class Program
 {
     static void Main()
     {
-        Main_5_1();
-        Main_5_2();
+        Main_6_1();
+        Main_6_2();
     }
-    
+
+    static void Main_6_2()
+    {
+        const int count = 14;
+        
+        var input = File.ReadAllLines("day6.txt")[0];
+        for (var i = 0; i < input.Length; i++)
+        {
+            if (input.Substring(i, count).ToHashSet().Count == count)
+            {
+                Console.WriteLine(i + count);
+                return;
+            }
+        }
+    }
+
+    static void Main_6_1()
+    {
+        const int count = 4;
+        
+        var input = File.ReadAllLines("day6.txt")[0];
+        for (var i = 0; i < input.Length; i++)
+        {
+            if (input.Substring(i, count).ToHashSet().Count == count)
+            {
+                Console.WriteLine(i + count);
+                return;
+            }
+        }
+    }
+
     static void Main_5_2()
     {
         var lines = File
@@ -28,7 +58,7 @@ public class Program
             .ToArray();
 
         var stackCount = stackLines[0].Length;
-        
+
         var stacks = Enumerable
             .Range(0, stackCount)
             .Select(_ => new Stack<char>())
@@ -43,7 +73,7 @@ public class Program
                     stacks[i].Push(stackLine[i]);
             }
         }
-        
+
         var moves = lines[1]
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
             .Select(x => x.Split())
@@ -75,7 +105,7 @@ public class Program
             .ToArray();
 
         var stackCount = stackLines[0].Length;
-        
+
         var stacks = Enumerable
             .Range(0, stackCount)
             .Select(_ => new Stack<char>())
@@ -90,7 +120,7 @@ public class Program
                     stacks[i].Push(stackLine[i]);
             }
         }
-        
+
         var moves = lines[1]
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
             .Select(x => x.Split())
