@@ -11,8 +11,8 @@ public class Program
 {
     static void Main()
     {
-        Main_5_1();
-        Main_5_2();
+        Main_2_1();
+        Main_2_2();
     }
 
     static void Main_6_2()
@@ -61,11 +61,10 @@ public class Program
 
         var moves = lines[1]
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Select(x => x.Split())
-            .Select(x => (num: long.Parse(x[1]), from: long.Parse(x[3]), to: long.Parse(x[5])))
+            .Select(x => x.Parse<(string, long num, string, long from, string, long to)>())
             .ToArray();
 
-        foreach (var (num, from, to) in moves)
+        foreach (var (_, num, _, from, _, to) in moves)
         {
             var tmp = new Stack<char>();
             for (var i = 0; i < num; i++)
@@ -93,11 +92,10 @@ public class Program
 
         var moves = lines[1]
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Select(x => x.Split())
-            .Select(x => (num: long.Parse(x[1]), from: long.Parse(x[3]), to: long.Parse(x[5])))
+            .Select(x => x.Parse<(string, long num, string, long from, string, long to)>())
             .ToArray();
 
-        foreach (var (num, from, to) in moves)
+        foreach (var (_, num, _, from, _, to) in moves)
             for (var i = 0; i < num; i++)
                 stacks[to - 1].Push(stacks[from - 1].Pop());
 
@@ -108,18 +106,16 @@ public class Program
     {
         Console.WriteLine(File
             .ReadAllLines("day4.txt")
-            .Select(x => x.Split('-', ',').Select(long.Parse).ToArray())
-            .Select(x => new[] { new R(x[0], x[1]), new R(x[2], x[3]) })
-            .Count(x => x[0].Overlaps(x[1])));
+            .Select(x => x.Parse<(R, R)>())
+            .Count(x => x.Item1.Overlaps(x.Item2)));
     }
 
     static void Main_4_1()
     {
         Console.WriteLine(File
             .ReadAllLines("day4.txt")
-            .Select(x => x.Split('-', ',').Select(long.Parse).ToArray())
-            .Select(x => new[] { new R(x[0], x[1]), new R(x[2], x[3]) })
-            .Count(x => x[0].Contains(x[1]) || x[1].Contains(x[0])));
+            .Select(x => x.Parse<(R, R)>())
+            .Count(x => x.Item1.Contains(x.Item2) || x.Item2.Contains(x.Item1)));
     }
 
     static void Main_3_2()
@@ -160,7 +156,8 @@ public class Program
     {
         Console.Out.WriteLine(File
             .ReadAllLines("day2.txt")
-            .Select(x => (v1: x[0] - 'A', outcome: x[2] - 'X'))
+            .Select(x => x.Parse<(char v1, char outcome)>())
+            .Select(x => (v1: x.v1 - 'A', outcome: x.outcome - 'X'))
             .Select(x => (x.v1, v2: (x.v1 + x.outcome + 2) % 3))
             .Select(x => x.v2 + 1 + (x.v2 - x.v1 + 4) % 3 * 3)
             .Sum());
@@ -170,7 +167,8 @@ public class Program
     {
         Console.Out.WriteLine(File
             .ReadAllLines("day2.txt")
-            .Select(x => (v1: x[0] - 'A', v2: x[2] - 'X'))
+            .Select(x => x.Parse<(char v1, char v2)>())
+            .Select(x => (v1: x.v1 - 'A', v2: x.v2 - 'X'))
             .Select(x => x.v2 + 1 + (x.v2 - x.v1 + 4) % 3 * 3)
             .Sum());
     }
