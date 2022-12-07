@@ -11,14 +11,79 @@ public class Program
 {
     static void Main()
     {
-        Main_2_1();
-        Main_2_2();
+        Main_7();
+    }
+
+    class Entry
+    {
+        public Entry(bool isDir, Entry? parent)
+        {
+            IsDir = isDir;
+            Parent = parent;
+            FlattenDirs = parent?.FlattenDirs ?? new List<Entry>();
+            if (isDir)
+                FlattenDirs.Add(this);
+        }
+
+        public List<Entry> FlattenDirs { get; }
+        public bool IsDir { get; }
+        public Entry? Parent { get; }
+        public long Size { get; set; }
+        public Dictionary<string, Entry> Children { get; } = new();
+    }
+
+    static void Main_7()
+    {
+        var lines = File
+            .ReadAllLines("day7.txt")
+            .Select(x => x.Split())
+            .ToArray();
+
+        var root = new Entry(true, null);
+        var cur = root;
+        foreach (var line in lines)
+        {
+            if (line[0] == "$")
+            {
+                if (line[1] == "cd")
+                {
+                    cur = line[2] switch
+                    {
+                        "/" => root,
+                        ".." => cur.Parent!,
+                        _ => cur.Children[line[2]]
+                    };
+                }
+            }
+            else
+            {
+                if (cur.Children.ContainsKey(line[1]))
+                    continue;
+                if (line[0] == "dir")
+                    cur.Children.Add(line[1], new Entry(true, cur));
+                else
+                {
+                    var size = long.Parse(line[0]);
+                    cur.Children.Add(line[1], new Entry(false, cur) { Size = size });
+                    for (var c = cur; c != null; c = c.Parent)
+                        c.Size += size;
+                }
+            }
+        }
+        
+        Console.WriteLine($"Part 1: {root.FlattenDirs.Where(x => x.Size <= 100000).Sum(x => x.Size)}");
+
+        var spaceLeft = 70000000L - root.Size;
+        var spaceToFree = 30000000L - spaceLeft;
+        var dirToRemove = root.FlattenDirs.OrderBy(x => x.Size).SkipWhile(x => x.Size < spaceToFree).First();
+
+        Console.Out.WriteLine($"Part 2: {dirToRemove.Size}");
     }
 
     static void Main_6_2()
     {
         const int count = 14;
-        
+
         var input = File.ReadAllLines("day6.txt")[0];
         for (var i = 0; i < input.Length; i++)
         {
@@ -33,7 +98,7 @@ public class Program
     static void Main_6_1()
     {
         const int count = 4;
-        
+
         var input = File.ReadAllLines("day6.txt")[0];
         for (var i = 0; i < input.Length; i++)
         {
