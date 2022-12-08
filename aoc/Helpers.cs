@@ -137,6 +137,26 @@ public static class Helpers
         }
         return result.ToArray();
     }
+    
+    public static List<string[]> Regions(this IEnumerable<string> lines)
+    {
+        var result = new List<string[]>();
+        var cur = new List<string>();
+        foreach (var line in lines)
+        {
+            if (line != "")
+                cur.Add(line);
+            else if (cur.Count > 0)
+            {
+                result.Add(cur.ToArray());
+                cur.Clear();
+            }
+        }
+        if (cur.Count > 0)
+            result.Add(cur.ToArray());
+
+        return result;
+    }
         
     public static long Lcm(params long[] values)
     {

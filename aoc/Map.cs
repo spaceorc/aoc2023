@@ -69,6 +69,30 @@ public class Map<T>
     {
         return V.nears8.Select(dv => v + dv).Where(Inside);
     }
+    
+    public IEnumerable<V> Column(int x)
+    {
+        for (int y = 0; y < sizeY; y++)
+            yield return new V(x, y);
+    }
+    
+    public IEnumerable<V[]> Columns()
+    {
+        for (int x = 0; x < sizeX; x++)
+            yield return Column(x).ToArray();
+    }
+    
+    public IEnumerable<V> Row(int y)
+    {
+        for (int x = 0; x < sizeX; x++)
+            yield return new V(x, y);
+    }
+    
+    public IEnumerable<V[]> Rows()
+    {
+        for (int y = 0; y < sizeY; y++)
+            yield return Row(y).ToArray();
+    }
 
     public Map<T> Clone()
     {

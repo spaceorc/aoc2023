@@ -11,15 +11,14 @@ public class Program
 {
     static void Main()
     {
-        Main_8_1();
-        Main_8_2();
+        Main_1_1();
+        Main_1_2();
     }
     
     static void Main_8_2()
     {
         var lines = File
-            .ReadAllLines("day8.txt")
-            .ToArray();
+            .ReadAllLines("day8.txt");
 
         var max = 0L;
         for (var y = 1; y < lines.Length - 1; y++)
@@ -68,8 +67,7 @@ public class Program
     static void Main_8_1()
     {
         var lines = File
-            .ReadAllLines("day8.txt")
-            .ToArray();
+            .ReadAllLines("day8.txt");
         
         var map = new Map<bool>(lines[0].Length, lines.Length);
         
@@ -222,22 +220,19 @@ public class Program
 
     static void Main_5_2()
     {
-        var lines = File
-            .ReadAllText("day5.txt")
-            .Split("\n\n");
+        var regions = File
+            .ReadAllLines("day5.txt")
+            .Regions();
 
-        var stacks = lines[0]
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+        var stacks = regions[0]
             .SkipLast(1)
             .RotateCW()
             .EveryNth(4, startFrom: 1)
             .Select(x => new Stack<char>(x.Where(c => c != ' ')))
             .ToArray();
 
-        var moves = lines[1]
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Select(x => x.Parse<(string, long num, string, long from, string, long to)>())
-            .ToArray();
+        var moves = regions[1]
+            .ParseAll<(string, long num, string, long from, string, long to)>();
 
         foreach (var (_, num, _, from, _, to) in moves)
         {
@@ -253,22 +248,19 @@ public class Program
 
     static void Main_5_1()
     {
-        var lines = File
-            .ReadAllText("day5.txt")
-            .Split("\n\n");
+        var regions = File
+            .ReadAllLines("day5.txt")
+            .Regions();
 
-        var stacks = lines[0]
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+        var stacks = regions[0]
             .SkipLast(1)
             .RotateCW()
             .EveryNth(4, startFrom: 1)
             .Select(x => new Stack<char>(x.Where(c => c != ' ')))
             .ToArray();
 
-        var moves = lines[1]
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Select(x => x.Parse<(string, long num, string, long from, string, long to)>())
-            .ToArray();
+        var moves = regions[1]
+            .ParseAll<(string, long num, string, long from, string, long to)>();
 
         foreach (var (_, num, _, from, _, to) in moves)
             for (var i = 0; i < num; i++)
@@ -331,7 +323,7 @@ public class Program
     {
         Console.Out.WriteLine(File
             .ReadAllLines("day2.txt")
-            .Select(x => x.Parse<(char v1, char outcome)>())
+            .ParseAll<(char v1, char outcome)>()
             .Select(x => (v1: x.v1 - 'A', outcome: x.outcome - 'X'))
             .Select(x => (x.v1, v2: (x.v1 + x.outcome + 2) % 3))
             .Select(x => x.v2 + 1 + (x.v2 - x.v1 + 4) % 3 * 3)
@@ -342,7 +334,7 @@ public class Program
     {
         Console.Out.WriteLine(File
             .ReadAllLines("day2.txt")
-            .Select(x => x.Parse<(char v1, char v2)>())
+            .ParseAll<(char v1, char v2)>()
             .Select(x => (v1: x.v1 - 'A', v2: x.v2 - 'X'))
             .Select(x => x.v2 + 1 + (x.v2 - x.v1 + 4) % 3 * 3)
             .Sum());
@@ -351,9 +343,9 @@ public class Program
     static void Main_1_2()
     {
         Console.Out.WriteLine(File
-            .ReadAllText("day1.txt")
-            .Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(x => x.Split("\n").Select(long.Parse).ToArray().Sum())
+            .ReadAllLines("day1.txt")
+            .Regions()
+            .Select(x => x.Select(long.Parse).Sum())
             .OrderDescending()
             .Take(3)
             .Sum());
@@ -362,9 +354,9 @@ public class Program
     static void Main_1_1()
     {
         Console.Out.WriteLine(File
-            .ReadAllText("day1.txt")
-            .Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(x => x.Split("\n").Select(long.Parse).ToArray().Sum())
+            .ReadAllLines("day1.txt")
+            .Regions()
+            .Select(x => x.Select(long.Parse).Sum())
             .Max());
     }
 }
