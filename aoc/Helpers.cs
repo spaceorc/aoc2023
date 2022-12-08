@@ -157,7 +157,44 @@ public static class Helpers
 
         return result;
     }
-        
+
+    public static Map<T> ToMap<T>(this IEnumerable<string> lines)
+    {
+        return lines.ToMap(c =>
+        {
+            if (typeof(T) == typeof(char))
+                return (T)(object)c;
+            if (typeof(T) == typeof(int))
+                return (T)(object)(c - '0');
+            if (typeof(T) == typeof(long))
+                return (T)(object)(long)(c - '0');
+            throw new InvalidOperationException($"Unsupported type {typeof(T)}");
+        });
+    }
+
+    public static Map<T> ToMap<T>(this IEnumerable<string> lines, Func<char, T> selector)
+    {
+        var linesArr = lines as IList<string> ?? lines.ToArray();
+        var result = new Map<T>(linesArr[0].Length, linesArr.Count);
+        for (int y = 0; y < result.sizeY; y++)
+        for (int x = 0; x < result.sizeX; x++)
+        {
+            result[new V(x, y)] = selector(linesArr[y][x]);
+        }
+
+        return result;
+    }
+
+    public static IEnumerable<T> TakeUntil<T>(this IEnumerable<T> items, Func<T, bool> predicate)
+    {
+        foreach (var item in items)
+        {
+            yield return item;
+            if (predicate(item))
+                break;
+        }
+    }
+
     public static long Lcm(params long[] values)
     {
         return values.Aggregate(1L, Lcm);

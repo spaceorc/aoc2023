@@ -11,115 +11,86 @@ public class Program
 {
     static void Main()
     {
-        Main_1_1();
-        Main_1_2();
+        Main_8_1();
+        Main_8_2();
     }
-    
+
     static void Main_8_2()
     {
-        var lines = File
-            .ReadAllLines("day8.txt");
+        var map = File
+            .ReadAllLines("day8.txt")
+            .ToMap<int>();
 
-        var max = 0L;
-        for (var y = 1; y < lines.Length - 1; y++)
-        for (var x = 1; x < lines[0].Length - 1; x++)
-        {
-            var r = 1L;
-            var c = 0L;
-            for (var x2 = x + 1; x2 < lines[0].Length; x2++)
-            {
-                c++;
-                if (lines[y][x2] >= lines[y][x])
-                    break;
-            }
-            r *= c;
-            c = 0L;
-            for (var x2 = x - 1; x2 >= 0; x2--)
-            {
-                c++;
-                if (lines[y][x2] >= lines[y][x])
-                    break;
-            }
-            r *= c;
-            c = 0L;
-            for (var y2 = y + 1; y2 < lines.Length; y2++)
-            {
-                c++;
-                if (lines[y2][x] >= lines[y][x])
-                    break;
-            }
-            r *= c;
-            c = 0L;
-            for (var y2 = y - 1; y2 >= 0; y2--)
-            {
-                c++;
-                if (lines[y2][x] >= lines[y][x])
-                    break;
-            }
-            r *= c;
-            if (r > max)
-                max = r;
-        }
+        var max = map
+            .AllButBorder()
+            .Select(v => map.Column(v.X).Skip((int)v.Y + 1).TakeUntil(n => map[n] >= map[v]).Count() *
+                         map.Column(v.X).Take((int)v.Y).Reverse().TakeUntil(n => map[n] >= map[v]).Count() *
+                         map.Row(v.Y).Skip((int)v.X + 1).TakeUntil(n => map[n] >= map[v]).Count() *
+                         map.Row(v.Y).Take((int)v.X).Reverse().TakeUntil(n => map[n] >= map[v]).Count())
+            .Max();
 
         Console.WriteLine(max);
     }
 
     static void Main_8_1()
     {
-        var lines = File
-            .ReadAllLines("day8.txt");
-        
-        var map = new Map<bool>(lines[0].Length, lines.Length);
-        
-        for (var y = 0; y < map.sizeY; y++)
+        var map = File
+            .ReadAllLines("day8.txt")
+            .ToMap<int>();
+
+        var visible = new Map<bool>(map.sizeX, map.sizeY);
+
+        foreach (var row in map.Rows())
         {
             var cur = -1;
-            for (var x = 0; x < map.sizeX; x++)
+            foreach (var v in row)
             {
-                var next = lines[y][x] - '0';
+                var next = map[v];
                 if (next > cur)
                 {
                     cur = next;
-                    map[new V(x, y)] = true;
+                    visible[v] = true;
                 }
             }
+
             cur = -1;
-            for (var x = map.sizeX - 1; x >= 0; x--)
+            foreach (var v in row.Reverse())
             {
-                var next = lines[y][x] - '0';
+                var next = map[v];
                 if (next > cur)
                 {
                     cur = next;
-                    map[new V(x, y)] = true;
+                    visible[v] = true;
                 }
             }
         }
 
-        for (var x = 0; x < map.sizeX; x++)
+        foreach (var column in map.Columns())
         {
             var cur = -1;
-            for (var y = 0; y < map.sizeY; y++)
+            foreach (var v in column)
             {
-                var next = lines[y][x] - '0';
+                var next = map[v];
                 if (next > cur)
                 {
                     cur = next;
-                    map[new V(x, y)] = true;
+                    visible[v] = true;
                 }
             }
+
             cur = -1;
-            for (var y = map.sizeX - 1; y >= 0; y--)
+            foreach (var v in column.Reverse())
             {
-                var next = lines[y][x] - '0';
+                var next = map[v];
                 if (next > cur)
                 {
                     cur = next;
-                    map[new V(x, y)] = true;
+                    visible[v] = true;
                 }
             }
         }
-        
-        Console.WriteLine(map.All().Count(v => map[v]));
+
+        Console.WriteLine(visible.All().Count(v => visible[v]));
     }
 
     class Entry

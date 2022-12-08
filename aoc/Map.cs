@@ -58,6 +58,15 @@ public class Map<T>
         }
     }
 
+    public IEnumerable<V> AllButBorder()
+    {
+        for (int y = 1; y < sizeY - 1; y++)
+        for (int x = 1; x < sizeX - 1; x++)
+        {
+            yield return new V(x, y);
+        }
+    }
+
     public V BottomRight => new (sizeX - 1, sizeY - 1);
 
     public IEnumerable<V> Nears(V v)
@@ -70,7 +79,7 @@ public class Map<T>
         return V.nears8.Select(dv => v + dv).Where(Inside);
     }
     
-    public IEnumerable<V> Column(int x)
+    public IEnumerable<V> Column(long x)
     {
         for (int y = 0; y < sizeY; y++)
             yield return new V(x, y);
@@ -82,7 +91,7 @@ public class Map<T>
             yield return Column(x).ToArray();
     }
     
-    public IEnumerable<V> Row(int y)
+    public IEnumerable<V> Row(long y)
     {
         for (int x = 0; x < sizeX; x++)
             yield return new V(x, y);
