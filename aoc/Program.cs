@@ -11,7 +11,117 @@ public class Program
 {
     static void Main()
     {
-        Main_7();
+        Main_8_1();
+        Main_8_2();
+    }
+    
+    static void Main_8_2()
+    {
+        var lines = File
+            .ReadAllLines("day8.txt")
+            .ToArray();
+
+        var max = 0L;
+        for (var y = 1; y < lines.Length - 1; y++)
+        for (var x = 1; x < lines[0].Length - 1; x++)
+        {
+            var r = 1L;
+            var c = 0L;
+            for (var x2 = x + 1; x2 < lines[0].Length; x2++)
+            {
+                c++;
+                if (lines[y][x2] >= lines[y][x])
+                    break;
+            }
+            r *= c;
+            c = 0L;
+            for (var x2 = x - 1; x2 >= 0; x2--)
+            {
+                c++;
+                if (lines[y][x2] >= lines[y][x])
+                    break;
+            }
+            r *= c;
+            c = 0L;
+            for (var y2 = y + 1; y2 < lines.Length; y2++)
+            {
+                c++;
+                if (lines[y2][x] >= lines[y][x])
+                    break;
+            }
+            r *= c;
+            c = 0L;
+            for (var y2 = y - 1; y2 >= 0; y2--)
+            {
+                c++;
+                if (lines[y2][x] >= lines[y][x])
+                    break;
+            }
+            r *= c;
+            if (r > max)
+                max = r;
+        }
+
+        Console.WriteLine(max);
+    }
+
+    static void Main_8_1()
+    {
+        var lines = File
+            .ReadAllLines("day8.txt")
+            .ToArray();
+        
+        var map = new Map<bool>(lines[0].Length, lines.Length);
+        
+        for (var y = 0; y < map.sizeY; y++)
+        {
+            var cur = -1;
+            for (var x = 0; x < map.sizeX; x++)
+            {
+                var next = lines[y][x] - '0';
+                if (next > cur)
+                {
+                    cur = next;
+                    map[new V(x, y)] = true;
+                }
+            }
+            cur = -1;
+            for (var x = map.sizeX - 1; x >= 0; x--)
+            {
+                var next = lines[y][x] - '0';
+                if (next > cur)
+                {
+                    cur = next;
+                    map[new V(x, y)] = true;
+                }
+            }
+        }
+
+        for (var x = 0; x < map.sizeX; x++)
+        {
+            var cur = -1;
+            for (var y = 0; y < map.sizeY; y++)
+            {
+                var next = lines[y][x] - '0';
+                if (next > cur)
+                {
+                    cur = next;
+                    map[new V(x, y)] = true;
+                }
+            }
+            cur = -1;
+            for (var y = map.sizeX - 1; y >= 0; y--)
+            {
+                var next = lines[y][x] - '0';
+                if (next > cur)
+                {
+                    cur = next;
+                    map[new V(x, y)] = true;
+                }
+            }
+        }
+        
+        Console.WriteLine(map.All().Count(v => map[v]));
     }
 
     class Entry
@@ -70,7 +180,7 @@ public class Program
                 }
             }
         }
-        
+
         Console.WriteLine($"Part 1: {root.FlattenDirs.Where(x => x.Size <= 100000).Sum(x => x.Size)}");
 
         var spaceLeft = 70000000L - root.Size;
