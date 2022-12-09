@@ -11,7 +11,7 @@ public class Program
 {
     static void Main()
     {
-        Main_6();
+        Main_1();
     }
 
     static void Main_9()
@@ -196,7 +196,7 @@ public class Program
         var spaceToFree = 30000000L - spaceLeft;
         var dirToRemove = root.FlattenDirs.OrderBy(x => x.Size).SkipWhile(x => x.Size < spaceToFree).First();
 
-        Console.Out.WriteLine($"Part 2: {dirToRemove.Size}");
+        Console.WriteLine($"Part 2: {dirToRemove.Size}");
     }
 
     static void Main_6()
@@ -287,7 +287,7 @@ public class Program
 
     static void Main_3_2()
     {
-        Console.Out.WriteLine(File
+        Console.WriteLine(File
             .ReadAllLines("day3.txt")
             .Batch(3)
             .Select(b => b.Aggregate(
@@ -304,7 +304,7 @@ public class Program
 
     static void Main_3_1()
     {
-        Console.Out.WriteLine(File
+        Console.WriteLine(File
             .ReadAllLines("day3.txt")
             .Select(x => new[] { x[..(x.Length / 2)], x[(x.Length / 2)..] })
             .Select(b => b.Aggregate(
@@ -321,7 +321,7 @@ public class Program
 
     static void Main_2_2()
     {
-        Console.Out.WriteLine(File
+        Console.WriteLine(File
             .ReadAllLines("day2.txt")
             .ParseAll<(char v1, char outcome)>()
             .Select(x => (v1: x.v1 - 'A', outcome: x.outcome - 'X'))
@@ -332,7 +332,7 @@ public class Program
 
     static void Main_2_1()
     {
-        Console.Out.WriteLine(File
+        Console.WriteLine(File
             .ReadAllLines("day2.txt")
             .ParseAll<(char v1, char v2)>()
             .Select(x => (v1: x.v1 - 'A', v2: x.v2 - 'X'))
@@ -340,23 +340,15 @@ public class Program
             .Sum());
     }
 
-    static void Main_1_2()
+    static void Main_1()
     {
-        Console.Out.WriteLine(File
+        var regions = File
             .ReadAllLines("day1.txt")
             .Regions()
-            .Select(x => x.Select(long.Parse).Sum())
-            .OrderDescending()
-            .Take(3)
-            .Sum());
-    }
+            .Select(r => r.ParseAll<long>().ToArray())
+            .ToArray();
 
-    static void Main_1_1()
-    {
-        Console.Out.WriteLine(File
-            .ReadAllLines("day1.txt")
-            .Regions()
-            .Select(x => x.Select(long.Parse).Sum())
-            .Max());
+        Console.WriteLine($"Part 1: {regions.Select(x => x.Sum()).Max()}");
+        Console.WriteLine($"Part 2: {regions.Select(x => x.Sum()).OrderDescending().Take(3).Sum()}");
     }
 }
