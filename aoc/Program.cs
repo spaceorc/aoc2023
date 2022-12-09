@@ -11,7 +11,7 @@ public class Program
 {
     static void Main()
     {
-        Main_9();
+        Main_6();
     }
 
     static void Main_9()
@@ -26,10 +26,8 @@ public class Program
 
         int Simulate(int knotsCount)
         {
-            var used = new HashSet<V>();
             var knots = Enumerable.Repeat(new V(), knotsCount).ToArray();
-            used.Add(knots.Last());
-
+            var used = new HashSet<V> { knots.Last() };
             foreach (var (dir, c) in lines)
             {
                 for (var i = 0; i < c; i++)
@@ -201,33 +199,22 @@ public class Program
         Console.Out.WriteLine($"Part 2: {dirToRemove.Size}");
     }
 
-    static void Main_6_2()
+    static void Main_6()
     {
-        const int count = 14;
-
         var input = File.ReadAllLines("day6.txt")[0];
-        for (var i = 0; i < input.Length; i++)
-        {
-            if (input.Substring(i, count).ToHashSet().Count == count)
-            {
-                Console.WriteLine(i + count);
-                return;
-            }
-        }
-    }
 
-    static void Main_6_1()
-    {
-        const int count = 4;
+        Console.WriteLine($"Part 1: {Solve(4)}");
+        Console.WriteLine($"Part 2: {Solve(14)}");
 
-        var input = File.ReadAllLines("day6.txt")[0];
-        for (var i = 0; i < input.Length; i++)
+        int Solve(int count)
         {
-            if (input.Substring(i, count).ToHashSet().Count == count)
+            for (var i = 0; i < input.Length; i++)
             {
-                Console.WriteLine(i + count);
-                return;
+                if (input.Substring(i, count).ToHashSet().Count == count)
+                    return i + count;
             }
+
+            throw new Exception("No solution");
         }
     }
 
