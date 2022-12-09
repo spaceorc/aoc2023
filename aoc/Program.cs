@@ -11,7 +11,7 @@ public class Program
 {
     static void Main()
     {
-        Main_1();
+        Main_4();
     }
 
     static void Main_9()
@@ -269,20 +269,15 @@ public class Program
         Console.WriteLine(new string(stacks.Select(x => x.First()).ToArray()));
     }
 
-    static void Main_4_2()
+    static void Main_4()
     {
-        Console.WriteLine(File
+        var lines = File
             .ReadAllLines("day4.txt")
             .Select(x => x.Parse<(R, R)>())
-            .Count(x => x.Item1.Overlaps(x.Item2)));
-    }
+            .ToArray();
 
-    static void Main_4_1()
-    {
-        Console.WriteLine(File
-            .ReadAllLines("day4.txt")
-            .Select(x => x.Parse<(R, R)>())
-            .Count(x => x.Item1.Contains(x.Item2) || x.Item2.Contains(x.Item1)));
+        Console.WriteLine($"Part 2: {lines.Count(x => x.Item1.Contains(x.Item2) || x.Item2.Contains(x.Item1))}");
+        Console.WriteLine($"Part 2: {lines.Count(x => x.Item1.Overlaps(x.Item2))}");
     }
 
     static void Main_3_2()
