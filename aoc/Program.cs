@@ -11,8 +11,53 @@ public class Program
 {
     static void Main()
     {
-        Main_8_1();
-        Main_8_2();
+        Main_9();
+    }
+
+    static void Main_9()
+    {
+        var lines = File
+            .ReadAllLines("day9.txt")
+            .ParseAll<(char dir, int c)>()
+            .ToArray();
+
+        Console.WriteLine($"Part 1: {Simulate(2)}");
+        Console.WriteLine($"Part 2: {Simulate(10)}");
+        
+        int Simulate(int knotsCount)
+        {
+            var used = new HashSet<V>();
+            var knots = Enumerable.Repeat(new V(), knotsCount).ToArray();
+            used.Add(knots.Last());
+
+            foreach (var (dir, c) in lines)
+            {
+                for (var i = 0; i < c; i++)
+                {
+                    knots[0] += dir switch
+                    {
+                        'R' => new V(1, 0),
+                        'L' => new V(-1, 0),
+                        'D' => new V(0, 1),
+                        'U' => new V(0, -1),
+                        _ => throw new Exception()
+                    };
+                    for (var k = 1; k < knots.Length; k++)
+                    {
+                        var delta = knots[k - 1] - knots[k];
+                        if (delta.CLen() > 1)
+                        {
+                            knots[k] += delta.Dir;
+                        }
+
+                    }
+
+                    used.Add(knots.Last());
+                }
+            }
+
+            return used.Count;
+        }
     }
 
     static void Main_8_2()

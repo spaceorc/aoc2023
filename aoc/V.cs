@@ -40,6 +40,7 @@ public struct V : IEquatable<V>
     public static V operator -(V a, V b) => new(a.X - b.X, a.Y - b.Y);
     public static V operator -(V a) => new(-a.X, -a.Y);
 
+    public long CLen() => Math.Max(Math.Abs(X), Math.Abs(Y));
     public long MLen() => Math.Abs(X) + Math.Abs(Y);
     public static long XProd(V a, V b) => a.X * b.Y - a.Y * b.X;
     public static long DProd(V a, V b) => a.X * b.X + a.Y * b.Y;
