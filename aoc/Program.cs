@@ -23,7 +23,7 @@ public class Program
 
         Console.WriteLine($"Part 1: {Simulate(2)}");
         Console.WriteLine($"Part 2: {Simulate(10)}");
-        
+
         int Simulate(int knotsCount)
         {
             var used = new HashSet<V>();
@@ -46,10 +46,7 @@ public class Program
                     {
                         var delta = knots[k - 1] - knots[k];
                         if (delta.CLen() > 1)
-                        {
                             knots[k] += delta.Dir;
-                        }
-
                     }
 
                     used.Add(knots.Last());
