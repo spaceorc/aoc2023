@@ -21,35 +21,29 @@ public class Program
             .Select(x => x.Split())
             .ToArray();
 
-        IEnumerable<(int cycle, int x)> Run()
+        IEnumerable<int> Run()
         {
             var x = 1;
-            var cycle = 1;
             foreach (var line in lines)
             {
-                yield return (cycle++, x);
+                yield return x;
                 if (line[0] == "addx")
                 {
-                    yield return (cycle++, x);
+                    yield return x;
                     x += int.Parse(line[1]);
                 }
             }
         }
 
-        var query = new HashSet<int> { 20, 60, 100, 140, 180, 220 };
-        Console.WriteLine($"Part 1: {Run().Where(n => query.Contains(n.cycle)).Sum(n => n.cycle * n.x)}");
-
-
-        var map = new Map<char>(40, 6);
-        foreach (var (cycle, x) in Run())
-        {
-            var v = new V((cycle - 1) % map.sizeX, (cycle - 1) / map.sizeX);
-            map[v] = Abs(v.X - x) <= 1 ? '#' : '.';
-        }
+        var checkSum = Run()
+            .Select((x, i) => x * (i + 1))
+            .TakeEvery(40, startFrom: 19)
+            .Sum();
+        Console.WriteLine($"Part 1: {checkSum}");
 
         Console.WriteLine("Part 2:");
-        foreach (var row in map.Rows())
-            Console.WriteLine(new string(map.ValuesAt(row).ToArray()));
+        foreach (var xs in Run().Batch(40))
+            Console.WriteLine(new string(xs.Select((x, i) => Abs(i % 40 - x) <= 1 ? '#' : '.').ToArray()));
     }
 
     static void Main_9()
@@ -265,7 +259,7 @@ public class Program
         var stacks = regions[0]
             .SkipLast(1)
             .RotateCW()
-            .EveryNth(4, startFrom: 1)
+            .TakeEvery(4, startFrom: 1)
             .Select(x => new Stack<char>(x.Where(c => c != ' ')))
             .ToArray();
 
@@ -293,7 +287,7 @@ public class Program
         var stacks = regions[0]
             .SkipLast(1)
             .RotateCW()
-            .EveryNth(4, startFrom: 1)
+            .TakeEvery(4, startFrom: 1)
             .Select(x => new Stack<char>(x.Where(c => c != ' ')))
             .ToArray();
 

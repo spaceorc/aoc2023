@@ -103,9 +103,14 @@ public static class Helpers
             yield return batch.ToArray();
     }
 
-    public static IEnumerable<T> EveryNth<T>(this IEnumerable<T> items, int n, int startFrom = 0)
+    public static IEnumerable<T> TakeEvery<T>(this IEnumerable<T> items, int n, int startFrom = 0)
     {
         return items.Skip(startFrom).Batch(n).Select(x => x.First());
+    }
+    
+    public static IEnumerable<(T, int)> WithIndex<T>(this IEnumerable<T> items)
+    {
+        return items.Select((v, i) => (v, i));
     }
     
     public static string[] Columns(this IEnumerable<string> lines)
