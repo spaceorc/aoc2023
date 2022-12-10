@@ -103,6 +103,11 @@ public class Map<T>
             yield return Row(y).ToArray();
     }
 
+    public IEnumerable<T> ValuesAt(IEnumerable<V> vs)
+    {
+        return vs.Select(v => this[v]);
+    }
+
     public Map<T> Clone()
     {
         var clone = new Map<T>(sizeX, sizeY);
