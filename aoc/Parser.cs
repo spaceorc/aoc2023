@@ -6,16 +6,15 @@ namespace aoc;
 
 public static class Parser
 {
-    public static IEnumerable<T> ParseAll<T>(this IEnumerable<string> lines, string separators = "- ;,")
+    public static T[] ParseAll<T>(this IEnumerable<string> lines, string separators = "- ;,")
     {
-        return lines.Select(x => Parse<T>(x, separators));
+        return lines.Select(x => Parse<T>(x, separators)).ToArray();
     }
 
     public static T Parse<T>(this string line, string separators = "- ;,")
     {
         var source = new Queue<string>(line.Split(separators.ToCharArray(), StringSplitOptions.RemoveEmptyEntries));
         return (T)ReadFrom(typeof(T), source);
-
     }
 
     private static object ReadFrom(Type type, Queue<string> source)

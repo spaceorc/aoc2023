@@ -11,13 +11,12 @@ public class Program
 {
     static void Main()
     {
-        Main_10();
+        Runner.RunFile("day10.txt", Solve_10);
     }
-
-    static void Main_10()
+    
+    static void Solve_10(string[] input)
     {
-        var lines = File
-            .ReadAllLines("day10.txt")
+        var lines = input
             .Select(x => x.Split())
             .ToArray();
 
@@ -45,14 +44,9 @@ public class Program
         foreach (var xs in Run().Batch(40))
             Console.WriteLine(new string(xs.Select((x, i) => Abs(i % 40 - x) <= 1 ? '#' : '.').ToArray()));
     }
-
-    static void Main_9()
+    
+    static void Solve_9((char dir, int c)[] lines)
     {
-        var lines = File
-            .ReadAllLines("day9.txt")
-            .ParseAll<(char dir, int c)>()
-            .ToArray();
-
         Console.WriteLine($"Part 1: {Simulate(2)}");
         Console.WriteLine($"Part 2: {Simulate(10)}");
 
@@ -86,13 +80,9 @@ public class Program
             return used.Count;
         }
     }
-
-    static void Main_8_2()
+    
+    static void Solve_8_2(Map<int> map)
     {
-        var map = File
-            .ReadAllLines("day8.txt")
-            .ToMap<int>();
-
         var max = map
             .AllButBorder()
             .Select(v => map.Column(v.X).Skip((int)v.Y + 1).TakeUntil(n => map[n] >= map[v]).Count() *
@@ -103,13 +93,9 @@ public class Program
 
         Console.WriteLine(max);
     }
-
-    static void Main_8_1()
+    
+    static void Solve_8_1(Map<int> map)
     {
-        var map = File
-            .ReadAllLines("day8.txt")
-            .ToMap<int>();
-
         var visible = new Map<bool>(map.sizeX, map.sizeY);
 
         foreach (var row in map.Rows())
@@ -165,32 +151,31 @@ public class Program
         Console.WriteLine(visible.All().Count(v => visible[v]));
     }
 
-    class Entry
+    class Day7Entry
     {
-        public Entry(bool isDir, Entry? parent)
+        public Day7Entry(bool isDir, Day7Entry? parent)
         {
             IsDir = isDir;
             Parent = parent;
-            FlattenDirs = parent?.FlattenDirs ?? new List<Entry>();
+            FlattenDirs = parent?.FlattenDirs ?? new List<Day7Entry>();
             if (isDir)
                 FlattenDirs.Add(this);
         }
 
-        public List<Entry> FlattenDirs { get; }
+        public List<Day7Entry> FlattenDirs { get; }
         public bool IsDir { get; }
-        public Entry? Parent { get; }
+        public Day7Entry? Parent { get; }
         public long Size { get; set; }
-        public Dictionary<string, Entry> Children { get; } = new();
+        public Dictionary<string, Day7Entry> Children { get; } = new();
     }
-
-    static void Main_7()
+    
+    static void Solve_7(string[] input)
     {
-        var lines = File
-            .ReadAllLines("day7.txt")
+        var lines = input
             .Select(x => x.Split())
             .ToArray();
 
-        var root = new Entry(true, null);
+        var root = new Day7Entry(true, null);
         var cur = root;
         foreach (var line in lines)
         {
@@ -211,11 +196,11 @@ public class Program
                 if (cur.Children.ContainsKey(line[1]))
                     continue;
                 if (line[0] == "dir")
-                    cur.Children.Add(line[1], new Entry(true, cur));
+                    cur.Children.Add(line[1], new Day7Entry(true, cur));
                 else
                 {
                     var size = long.Parse(line[0]);
-                    cur.Children.Add(line[1], new Entry(false, cur) { Size = size });
+                    cur.Children.Add(line[1], new Day7Entry(false, cur) { Size = size });
                     for (var c = cur; c != null; c = c.Parent)
                         c.Size += size;
                 }
@@ -230,10 +215,10 @@ public class Program
 
         Console.WriteLine($"Part 2: {dirToRemove.Size}");
     }
-
-    static void Main_6()
+    
+    static void Solve_6(string[] lines)
     {
-        var input = File.ReadAllLines("day6.txt")[0];
+        var input = lines[0];
 
         Console.WriteLine($"Part 1: {Solve(4)}");
         Console.WriteLine($"Part 2: {Solve(14)}");
@@ -249,22 +234,15 @@ public class Program
             throw new Exception("No solution");
         }
     }
-
-    static void Main_5_2()
+    
+    static void Solve_5_2(string[] stackLines, (string, long num, string, long from, string, long to)[] moves)
     {
-        var regions = File
-            .ReadAllLines("day5.txt")
-            .Regions();
-
-        var stacks = regions[0]
+        var stacks = stackLines
             .SkipLast(1)
             .RotateCW()
             .TakeEvery(4, startFrom: 1)
             .Select(x => new Stack<char>(x.Where(c => c != ' ')))
             .ToArray();
-
-        var moves = regions[1]
-            .ParseAll<(string, long num, string, long from, string, long to)>();
 
         foreach (var (_, num, _, from, _, to) in moves)
         {
@@ -278,21 +256,14 @@ public class Program
         Console.WriteLine(new string(stacks.Select(x => x.First()).ToArray()));
     }
 
-    static void Main_5_1()
+    static void Solve_5_1(string[] stackLines, (string, long num, string, long from, string, long to)[] moves)
     {
-        var regions = File
-            .ReadAllLines("day5.txt")
-            .Regions();
-
-        var stacks = regions[0]
+        var stacks = stackLines
             .SkipLast(1)
             .RotateCW()
             .TakeEvery(4, startFrom: 1)
             .Select(x => new Stack<char>(x.Where(c => c != ' ')))
             .ToArray();
-
-        var moves = regions[1]
-            .ParseAll<(string, long num, string, long from, string, long to)>();
 
         foreach (var (_, num, _, from, _, to) in moves)
             for (var i = 0; i < num; i++)
@@ -301,21 +272,15 @@ public class Program
         Console.WriteLine(new string(stacks.Select(x => x.First()).ToArray()));
     }
 
-    static void Main_4()
+    static void Solve_4((R, R)[] lines)
     {
-        var lines = File
-            .ReadAllLines("day4.txt")
-            .Select(x => x.Parse<(R, R)>())
-            .ToArray();
-
         Console.WriteLine($"Part 2: {lines.Count(x => x.Item1.Contains(x.Item2) || x.Item2.Contains(x.Item1))}");
         Console.WriteLine($"Part 2: {lines.Count(x => x.Item1.Overlaps(x.Item2))}");
     }
 
-    static void Main_3_2()
+    static void Solve_3_2(string[] lines)
     {
-        Console.WriteLine(File
-            .ReadAllLines("day3.txt")
+        Console.WriteLine(lines
             .Batch(3)
             .Select(b => b.Aggregate(
                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray(),
@@ -329,10 +294,9 @@ public class Program
             }).Sum());
     }
 
-    static void Main_3_1()
+    static void Solve_3_1(string[] lines)
     {
-        Console.WriteLine(File
-            .ReadAllLines("day3.txt")
+        Console.WriteLine(lines
             .Select(x => new[] { x[..(x.Length / 2)], x[(x.Length / 2)..] })
             .Select(b => b.Aggregate(
                 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray(),
@@ -346,35 +310,25 @@ public class Program
             }).Sum());
     }
 
-    static void Main_2_2()
+    static void Solve_2_2((char v1, char outcome)[] lines)
     {
-        Console.WriteLine(File
-            .ReadAllLines("day2.txt")
-            .ParseAll<(char v1, char outcome)>()
+        Console.WriteLine(lines
             .Select(x => (v1: x.v1 - 'A', outcome: x.outcome - 'X'))
             .Select(x => (x.v1, v2: (x.v1 + x.outcome + 2) % 3))
             .Select(x => x.v2 + 1 + (x.v2 - x.v1 + 4) % 3 * 3)
             .Sum());
     }
 
-    static void Main_2_1()
+    static void Solve_2_1((char v1, char v2)[] lines)
     {
-        Console.WriteLine(File
-            .ReadAllLines("day2.txt")
-            .ParseAll<(char v1, char v2)>()
+        Console.WriteLine(lines
             .Select(x => (v1: x.v1 - 'A', v2: x.v2 - 'X'))
             .Select(x => x.v2 + 1 + (x.v2 - x.v1 + 4) % 3 * 3)
             .Sum());
     }
 
-    static void Main_1()
+    static void Solve_1(params long[][] regions)
     {
-        var regions = File
-            .ReadAllLines("day1.txt")
-            .Regions()
-            .Select(r => r.ParseAll<long>().ToArray())
-            .ToArray();
-
         Console.WriteLine($"Part 1: {regions.Select(x => x.Sum()).Max()}");
         Console.WriteLine($"Part 2: {regions.Select(x => x.Sum()).OrderDescending().Take(3).Sum()}");
     }
