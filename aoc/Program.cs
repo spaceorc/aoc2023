@@ -11,70 +11,45 @@ public class Program
 {
     static void Main()
     {
-        Main_10_1();
-        Main_10_2();
+        Main_10();
     }
 
-    static void Main_10_2()
+    static void Main_10()
     {
         var lines = File
             .ReadAllLines("day10.txt")
             .Select(x => x.Split())
             .ToArray();
 
-        var x = 1;
-        var cycle = 1;
-        var map = new Map<char>(40, 6);
-        foreach (var line in lines)
+        IEnumerable<(int cycle, int x)> Run()
         {
-            NextCycle();
-            if (line[0] == "addx")
+            var x = 1;
+            var cycle = 1;
+            foreach (var line in lines)
             {
-                NextCycle();
-                x += int.Parse(line[1]);
-            }
-            
-            void NextCycle()
-            {
-                var v = new V((cycle - 1) % map.sizeX, (cycle - 1) / map.sizeX);
-                map[v] = Abs(v.X - x) <= 1 ? '#' : '.';
-                cycle++;
+                yield return (cycle++, x);
+                if (line[0] == "addx")
+                {
+                    yield return (cycle++, x);
+                    x += int.Parse(line[1]);
+                }
             }
         }
 
+        var query = new HashSet<int> { 20, 60, 100, 140, 180, 220 };
+        Console.WriteLine($"Part 1: {Run().Where(n => query.Contains(n.cycle)).Sum(n => n.cycle * n.x)}");
+
+
+        var map = new Map<char>(40, 6);
+        foreach (var (cycle, x) in Run())
+        {
+            var v = new V((cycle - 1) % map.sizeX, (cycle - 1) / map.sizeX);
+            map[v] = Abs(v.X - x) <= 1 ? '#' : '.';
+        }
+
+        Console.WriteLine("Part 2:");
         foreach (var row in map.Rows())
             Console.WriteLine(new string(map.ValuesAt(row).ToArray()));
-    }
-
-    static void Main_10_1()
-    {
-        var lines = File
-            .ReadAllLines("day10.txt")
-            .Select(x => x.Split())
-            .ToArray();
-
-        var x = 1;
-        var cycle = 1;
-        var query = new HashSet<int> { 20, 60, 100, 140, 180, 220 };
-        var res = 0;
-        foreach (var line in lines)
-        {
-            NextCycle();
-            if (line[0] == "addx")
-            {
-                NextCycle();
-                x += int.Parse(line[1]);
-            }
-
-            void NextCycle()
-            {
-                if (query.Contains(cycle))
-                    res += cycle * x;
-                cycle++;
-            }
-        }
-
-        Console.WriteLine(res);
     }
 
     static void Main_9()
