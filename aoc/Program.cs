@@ -16,24 +16,26 @@ public class Program
         Runner.RunFile("day11.txt", Solve_11_2);
     }
 
-    static void Solve_11_2(params string[][] regions)
+    record Monkey(int Index, long[] Items, char Op, string Arg, long DivisibleBy, long IfTrue, long IfFalse);
+
+    static void Solve_11_2([Template(@"Monkey {Index}:
+  Starting items: {Items}
+  Operation: new = old {Op} {Arg}
+  Test: divisible by {DivisibleBy}
+    If true: throw to monkey {IfTrue}
+    If false: throw to monkey {IfFalse}")]
+        params Monkey[] monkeysSource)
     {
-        var monkeys = regions
+        var monkeys = monkeysSource
             .Select(r =>
             {
-                var queue = new Queue<long>(r[1].Trim().Split(new[]{' ', ','}, StringSplitOptions.RemoveEmptyEntries).Skip(2).Select(long.Parse));
-                var ops = r[2].Trim().Split();
-                var arg = ops[5] == "old" ? -1 : long.Parse(ops[5]);
-                var op = ops[4][0];
-                var divisibleBy = long.Parse(r[3].Trim().Split()[3]);
-                var ifTrue = int.Parse(r[4].Trim().Split()[5]);
-                var ifFalse = int.Parse(r[5].Trim().Split()[5]);
-                return (queue, op, arg, divisibleBy, ifTrue, ifFalse);
+                var queue = new Queue<long>(r.Items);
+                return (queue, r.Op, Arg: r.Arg == "old" ? -1 : long.Parse(r.Arg), r.DivisibleBy, r.IfTrue, r.IfFalse);
             })
             .ToArray();
 
-        var modulus = monkeys.Select(m => m.divisibleBy).Aggregate((a, b) => a * b);
-        
+        var modulus = monkeys.Select(m => m.DivisibleBy).Aggregate((a, b) => a * b);
+
         var counters = new long[monkeys.Length];
 
         for (var i = 0; i < 10000; i++)
@@ -69,19 +71,19 @@ public class Program
         }
     }
 
-    static void Solve_11_1(params string[][] regions)
+    static void Solve_11_1([Template(@"Monkey {Index}:
+  Starting items: {Items}
+  Operation: new = old {Op} {Arg}
+  Test: divisible by {DivisibleBy}
+    If true: throw to monkey {IfTrue}
+    If false: throw to monkey {IfFalse}")]
+        params Monkey[] monkeysSource)
     {
-        var monkeys = regions
+        var monkeys = monkeysSource
             .Select(r =>
             {
-                var queue = new Queue<long>(r[1].Trim().Split(new[]{' ', ','}, StringSplitOptions.RemoveEmptyEntries).Skip(2).Select(long.Parse));
-                var ops = r[2].Trim().Split();
-                var arg = ops[5] == "old" ? -1 : long.Parse(ops[5]);
-                var op = ops[4][0];
-                var divisibleBy = long.Parse(r[3].Trim().Split()[3]);
-                var ifTrue = int.Parse(r[4].Trim().Split()[5]);
-                var ifFalse = int.Parse(r[5].Trim().Split()[5]);
-                return (queue, op, arg, divisibleBy, ifTrue, ifFalse);
+                var queue = new Queue<long>(r.Items);
+                return (queue, r.Op, Arg: r.Arg == "old" ? -1 : long.Parse(r.Arg), r.DivisibleBy, r.IfTrue, r.IfFalse);
             })
             .ToArray();
 
@@ -150,7 +152,7 @@ public class Program
         foreach (var xs in Run().Batch(40))
             Console.WriteLine(new string(xs.Select((x, i) => Abs(i % 40 - x) <= 1 ? '#' : '.').ToArray()));
     }
-    
+
     static void Solve_9((char dir, int c)[] lines)
     {
         Console.WriteLine($"Part 1: {Simulate(2)}");
@@ -186,7 +188,7 @@ public class Program
             return used.Count;
         }
     }
-    
+
     static void Solve_8_2(Map<int> map)
     {
         var max = map
@@ -199,7 +201,7 @@ public class Program
 
         Console.WriteLine(max);
     }
-    
+
     static void Solve_8_1(Map<int> map)
     {
         var visible = new Map<bool>(map.sizeX, map.sizeY);
@@ -274,7 +276,7 @@ public class Program
         public long Size { get; set; }
         public Dictionary<string, Day7Entry> Children { get; } = new();
     }
-    
+
     static void Solve_7(string[] input)
     {
         var lines = input
@@ -321,7 +323,7 @@ public class Program
 
         Console.WriteLine($"Part 2: {dirToRemove.Size}");
     }
-    
+
     static void Solve_6(string[] lines)
     {
         var input = lines[0];
@@ -340,7 +342,7 @@ public class Program
             throw new Exception("No solution");
         }
     }
-    
+
     static void Solve_5_2(string[] stackLines, (string, long num, string, long from, string, long to)[] moves)
     {
         var stacks = stackLines
