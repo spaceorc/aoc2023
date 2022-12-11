@@ -16,14 +16,14 @@ public class Program
         Runner.RunFile("day11.txt", Solve_11_2);
     }
 
-    static void Solve_11_2(string[] input)
+    static void Solve_11_2(params string[][] regions)
     {
-        var monkeys = input.Regions()
+        var monkeys = regions
             .Select(r =>
             {
                 var queue = new Queue<long>(r[1].Trim().Split(new[]{' ', ','}, StringSplitOptions.RemoveEmptyEntries).Skip(2).Select(long.Parse));
                 var ops = r[2].Trim().Split();
-                var arg = ops[5] == "old" ? 0 : long.Parse(ops[5]);
+                var arg = ops[5] == "old" ? -1 : long.Parse(ops[5]);
                 var op = ops[4][0];
                 var divisibleBy = long.Parse(r[3].Trim().Split()[3]);
                 var ifTrue = int.Parse(r[4].Trim().Split()[5]);
@@ -50,7 +50,7 @@ public class Program
                 {
                     counters[i]++;
                     var level = queue.Dequeue();
-                    var argValue = arg == 0 ? level : arg;
+                    var argValue = arg == -1 ? level : arg;
                     level = op switch
                     {
                         '+' => level + argValue,
@@ -69,9 +69,9 @@ public class Program
         }
     }
 
-    static void Solve_11_1(string[] input)
+    static void Solve_11_1(params string[][] regions)
     {
-        var monkeys = input.Regions()
+        var monkeys = regions
             .Select(r =>
             {
                 var queue = new Queue<long>(r[1].Trim().Split(new[]{' ', ','}, StringSplitOptions.RemoveEmptyEntries).Skip(2).Select(long.Parse));
@@ -87,7 +87,7 @@ public class Program
 
         var counters = new long[monkeys.Length];
 
-        for (var i = 0; i < 20; i++)
+        for (var i = 0; i < 1000; i++)
             NextRound();
 
         Console.Out.WriteLine(counters.OrderDescending().Take(2).Aggregate((a, b) => a * b));

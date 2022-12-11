@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace aoc;
 
@@ -23,7 +24,7 @@ public static class Runner
         var parameters = solve.Method.GetParameters();
         if (parameters.Length == 1 && parameters[0].ParameterType == typeof(string[]))
         {
-            solve.DynamicInvoke(new object?[] { source });
+            Invoke(solve, new object?[] { source });
             return;
         }
 
@@ -40,14 +41,20 @@ public static class Runner
             if (parameter.GetCustomAttribute<ParamArrayAttribute>() != null)
             {
                 var restRegions = regions.Skip(i).ToArray();
-                var separators = parameter.GetCustomAttribute<SplitAttribute>()?.Separators ?? "- ;,";
-                var parseAllGeneric =
-                    typeof(Parser).GetMethod(nameof(Parser.ParseAll), BindingFlags.Public | BindingFlags.Static)!;
 
                 var regionItemArrayType = parameter.ParameterType.GetElementType()!;
                 if (!regionItemArrayType.IsArray)
                     throw new Exception("Invalid param array element type - must be array");
 
+                if (regionItemArrayType == typeof(string[]))
+                {
+                    args.Add(restRegions);
+                    break;
+                }
+
+                var separators = parameter.GetCustomAttribute<SplitAttribute>()?.Separators ?? "- ;,";
+                var parseAllGeneric =
+                    typeof(Parser).GetMethod(nameof(Parser.ParseAll), BindingFlags.Public | BindingFlags.Static)!;
                 var parseAll = parseAllGeneric.MakeGenericMethod(regionItemArrayType.GetElementType()!);
 
                 var arg = Array.CreateInstance(regionItemArrayType, restRegions.Length);
@@ -80,6 +87,34 @@ public static class Runner
             }
         }
 
-        solve.DynamicInvoke(args.ToArray());
+        Invoke(solve, args.ToArray());
+    }
+
+    private static void Invoke(Delegate solve, object?[] args)
+    {
+        var parameters = solve.Method.GetParameters();
+        var dynamicMethod = new DynamicMethod(
+            Guid.NewGuid().ToString(),
+            typeof(void),
+            new[] { typeof(object?[]) },
+            typeof(Runner),
+            skipVisibility: true
+        );
+        var il = dynamicMethod.GetILGenerator();
+        for (var i = 0; i < parameters.Length; i++)
+        {
+            var parameter = parameters[i];
+            il.Emit(OpCodes.Ldarg_0); // [args]
+            il.Emit(OpCodes.Ldc_I4, i); // [args, i]
+            il.Emit(OpCodes.Ldelem, typeof(object)); // [args[i]]
+            if (parameter.ParameterType.IsValueType)
+                throw new Exception($"Unsupported parameter type {parameter.ParameterType}");
+            il.Emit(OpCodes.Castclass, parameter.ParameterType); // [(ParameterType)args[i]]
+        }
+        // [*args]
+        il.Emit(OpCodes.Call, solve.Method); // []
+        il.Emit(OpCodes.Ret); // []
+        
+        dynamicMethod.CreateDelegate<Action<object?[]>>()(args);
     }
 }
