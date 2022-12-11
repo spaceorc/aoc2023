@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using static System.Math;
 
@@ -11,9 +12,114 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day10.txt", Solve_10);
+        Runner.RunFile("day11.txt", Solve_11_1);
+        Runner.RunFile("day11.txt", Solve_11_2);
     }
-    
+
+    static void Solve_11_2(string[] input)
+    {
+        var monkeys = input.Regions()
+            .Select(r =>
+            {
+                var queue = new Queue<long>(r[1].Trim().Split(new[]{' ', ','}, StringSplitOptions.RemoveEmptyEntries).Skip(2).Select(long.Parse));
+                var ops = r[2].Trim().Split();
+                var arg = ops[5] == "old" ? 0 : long.Parse(ops[5]);
+                var op = ops[4][0];
+                var divisibleBy = long.Parse(r[3].Trim().Split()[3]);
+                var ifTrue = int.Parse(r[4].Trim().Split()[5]);
+                var ifFalse = int.Parse(r[5].Trim().Split()[5]);
+                return (queue, op, arg, divisibleBy, ifTrue, ifFalse);
+            })
+            .ToArray();
+
+        var modulus = monkeys.Select(m => m.divisibleBy).Aggregate((a, b) => a * b);
+        
+        var counters = new long[monkeys.Length];
+
+        for (var i = 0; i < 10000; i++)
+            NextRound();
+
+        Console.Out.WriteLine(counters.OrderDescending().Take(2).Aggregate((a, b) => a * b));
+
+        void NextRound()
+        {
+            var i = 0;
+            foreach (var (queue, op, arg, divisibleBy, ifTrue, ifFalse) in monkeys)
+            {
+                while (queue.Count > 0)
+                {
+                    counters[i]++;
+                    var level = queue.Dequeue();
+                    var argValue = arg == 0 ? level : arg;
+                    level = op switch
+                    {
+                        '+' => level + argValue,
+                        '*' => level * argValue,
+                        _ => throw new Exception()
+                    };
+                    level %= modulus;
+                    if (level % divisibleBy == 0)
+                        monkeys[ifTrue].queue.Enqueue(level);
+                    else
+                        monkeys[ifFalse].queue.Enqueue(level);
+                }
+
+                i++;
+            }
+        }
+    }
+
+    static void Solve_11_1(string[] input)
+    {
+        var monkeys = input.Regions()
+            .Select(r =>
+            {
+                var queue = new Queue<long>(r[1].Trim().Split(new[]{' ', ','}, StringSplitOptions.RemoveEmptyEntries).Skip(2).Select(long.Parse));
+                var ops = r[2].Trim().Split();
+                var arg = ops[5] == "old" ? -1 : long.Parse(ops[5]);
+                var op = ops[4][0];
+                var divisibleBy = long.Parse(r[3].Trim().Split()[3]);
+                var ifTrue = int.Parse(r[4].Trim().Split()[5]);
+                var ifFalse = int.Parse(r[5].Trim().Split()[5]);
+                return (queue, op, arg, divisibleBy, ifTrue, ifFalse);
+            })
+            .ToArray();
+
+        var counters = new long[monkeys.Length];
+
+        for (var i = 0; i < 20; i++)
+            NextRound();
+
+        Console.Out.WriteLine(counters.OrderDescending().Take(2).Aggregate((a, b) => a * b));
+
+        void NextRound()
+        {
+            var i = 0;
+            foreach (var (queue, op, arg, divisibleBy, ifTrue, ifFalse) in monkeys)
+            {
+                while (queue.Count > 0)
+                {
+                    counters[i]++;
+                    var level = queue.Dequeue();
+                    var argValue = arg == -1 ? level : arg;
+                    level = op switch
+                    {
+                        '+' => level + argValue,
+                        '*' => level * argValue,
+                        _ => throw new Exception()
+                    };
+                    level /= 3;
+                    if (level % divisibleBy == 0)
+                        monkeys[ifTrue].queue.Enqueue(level);
+                    else
+                        monkeys[ifFalse].queue.Enqueue(level);
+                }
+
+                i++;
+            }
+        }
+    }
+
     static void Solve_10(string[] input)
     {
         var lines = input
