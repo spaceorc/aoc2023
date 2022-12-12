@@ -67,36 +67,36 @@ public class Map<T>
         }
     }
 
-    public V BottomRight => new (sizeX - 1, sizeY - 1);
+    public V BottomRight => new(sizeX - 1, sizeY - 1);
 
     public IEnumerable<V> Nears(V v)
     {
         return V.nears.Select(dv => v + dv).Where(Inside);
     }
-        
+
     public IEnumerable<V> Nears8(V v)
     {
         return V.nears8.Select(dv => v + dv).Where(Inside);
     }
-    
+
     public IEnumerable<V> Column(long x)
     {
         for (int y = 0; y < sizeY; y++)
             yield return new V(x, y);
     }
-    
+
     public IEnumerable<V[]> Columns()
     {
         for (int x = 0; x < sizeX; x++)
             yield return Column(x).ToArray();
     }
-    
+
     public IEnumerable<V> Row(long y)
     {
         for (int x = 0; x < sizeX; x++)
             yield return new V(x, y);
     }
-    
+
     public IEnumerable<V[]> Rows()
     {
         for (int y = 0; y < sizeY; y++)
@@ -114,39 +114,29 @@ public class Map<T>
         Array.Copy(data, clone.data, totalCount);
         return clone;
     }
-        
+
     public void CopyTo(Map<T> other)
     {
         Array.Copy(data, other.data, totalCount);
     }
 
-    public IEnumerable<V>? FindPath(
-        Func<V, bool> startAt,
-        Func<V, bool> endAt,
+    public IEnumerable<BfsState> Bfs(
+        IEnumerable<V> startFrom,
         Func<V, IEnumerable<V>> nexts,
         Func<T, T, bool> acceptNext)
     {
         var queue = new Queue<V>();
-        var used = new Dictionary<V, V?>();
-        foreach (var v in All().Where(startAt))
+        var used = new Dictionary<V, (V? Prev, int Distance)>();
+        foreach (var v in startFrom)
         {
             queue.Enqueue(v);
-            used[v] = null;
+            used[v] = (null, 0);
         }
 
         while (queue.Count > 0)
         {
             var cur = queue.Dequeue();
-            if (endAt(cur))
-            {
-                var result = new List<V>();
-                for (V? c = cur; c != null; c = used[c.Value])
-                {
-                    result.Add(c.Value);
-                }
-                result.Reverse();
-                return result;
-            }
+            yield return new BfsState(cur, used);
 
             foreach (var next in nexts(cur))
             {
@@ -156,27 +146,45 @@ public class Map<T>
                 if (used.ContainsKey(next))
                     continue;
 
-                used[next] = cur;
+                used[next] = (cur, used[cur].Distance + 1);
                 queue.Enqueue(next);
             }
         }
-
-        return null;
     }
 
-    public IEnumerable<V>? FindPath4(
-        Func<V, bool> startAt,
-        Func<V, bool> endAt,
+    public IEnumerable<BfsState> Bfs(
+        V startFrom,
+        Func<V, IEnumerable<V>> nexts,
         Func<T, T, bool> acceptNext)
     {
-        return FindPath(startAt, endAt, Nears, acceptNext);
+        return Bfs(new[] { startFrom }, nexts, acceptNext);
     }
 
-    public IEnumerable<V>? FindPath8(
-        Func<V, bool> startAt,
-        Func<V, bool> endAt,
+    public IEnumerable<BfsState> Bfs4(
+        IEnumerable<V> startFrom,
         Func<T, T, bool> acceptNext)
     {
-        return FindPath(startAt, endAt, Nears8, acceptNext);
+        return Bfs(startFrom, Nears, acceptNext);
+    }
+
+    public IEnumerable<BfsState> Bfs4(
+        V startFrom,
+        Func<T, T, bool> acceptNext)
+    {
+        return Bfs(new[] { startFrom }, Nears, acceptNext);
+    }
+
+    public IEnumerable<BfsState> Bfs8(
+        IEnumerable<V> startFrom,
+        Func<T, T, bool> acceptNext)
+    {
+        return Bfs(startFrom, Nears8, acceptNext);
+    }
+
+    public IEnumerable<BfsState> Bfs8(
+        V startFrom,
+        Func<T, T, bool> acceptNext)
+    {
+        return Bfs(new[] { startFrom }, Nears8, acceptNext);
     }
 }

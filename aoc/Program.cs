@@ -23,16 +23,15 @@ public class Program
         map[s] = 'a';
         map[e] = 'z';
 
-        (map.FindPath4(
-            startAt: v => v == s,
-            endAt: v => v == e,
-            acceptNext: (c, n) => n - c > 1
-        )!.Count() - 1).Out("Part 1: ");
-        (map.FindPath4(
-            startAt: v => map[v] == 'a',
-            endAt: v => v == e,
-            acceptNext: (c, n) => n - c > 1
-        )!.Count() - 1).Out("Part 2: ");
+        map.Bfs4(s, (c, n) => n - c > 1)
+            .First(x => x.Pos == e)
+            .Distance
+            .Out("Part 1: ");
+
+        map.Bfs4(map.All().Where(v => map[v] == 'a'), (c, n) => n - c > 1)
+            .First(x => x.Pos == e)
+            .Distance
+            .Out("Part 2: ");
     }
 
     record Monkey(int Index, long[] Items, char Op, string Arg, long DivisibleBy, long IfTrue, long IfFalse);
