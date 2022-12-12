@@ -119,4 +119,64 @@ public class Map<T>
     {
         Array.Copy(data, other.data, totalCount);
     }
+
+    public IEnumerable<V>? FindPath(
+        Func<V, bool> startAt,
+        Func<V, bool> endAt,
+        Func<V, IEnumerable<V>> nexts,
+        Func<T, T, bool> acceptNext)
+    {
+        var queue = new Queue<V>();
+        var used = new Dictionary<V, V?>();
+        foreach (var v in All().Where(startAt))
+        {
+            queue.Enqueue(v);
+            used[v] = null;
+        }
+
+        while (queue.Count > 0)
+        {
+            var cur = queue.Dequeue();
+            if (endAt(cur))
+            {
+                var result = new List<V>();
+                for (V? c = cur; c != null; c = used[c.Value])
+                {
+                    result.Add(c.Value);
+                }
+                result.Reverse();
+                return result;
+            }
+
+            foreach (var next in nexts(cur))
+            {
+                if (acceptNext(this[cur], this[next]))
+                    continue;
+
+                if (used.ContainsKey(next))
+                    continue;
+
+                used[next] = cur;
+                queue.Enqueue(next);
+            }
+        }
+
+        return null;
+    }
+
+    public IEnumerable<V>? FindPath4(
+        Func<V, bool> startAt,
+        Func<V, bool> endAt,
+        Func<T, T, bool> acceptNext)
+    {
+        return FindPath(startAt, endAt, Nears, acceptNext);
+    }
+
+    public IEnumerable<V>? FindPath8(
+        Func<V, bool> startAt,
+        Func<V, bool> endAt,
+        Func<T, T, bool> acceptNext)
+    {
+        return FindPath(startAt, endAt, Nears8, acceptNext);
+    }
 }

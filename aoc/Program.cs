@@ -23,41 +23,16 @@ public class Program
         map[s] = 'a';
         map[e] = 'z';
 
-        FindPath(new[] { s }).Out("Part 1: ");
-        FindPath(map.All().Where(v => map[v] == 'a')).Out("Part 2: ");
-
-        int FindPath(IEnumerable<V> startFrom)
-        {
-            var queue = new Queue<V>();
-            var used = new Dictionary<V, int>();
-            foreach (var v in startFrom)
-            {
-                queue.Enqueue(v);
-                used[v] = 0;
-            }
-
-            while (queue.Count > 0)
-            {
-                var cur = queue.Dequeue();
-                var curLen = used[cur];
-                if (cur == e)
-                    return curLen;
-
-                foreach (var next in map.Nears(cur))
-                {
-                    if (map[next] - map[cur] > 1)
-                        continue;
-
-                    if (used.ContainsKey(next))
-                        continue;
-
-                    used[next] = curLen + 1;
-                    queue.Enqueue(next);
-                }
-            }
-
-            throw new Exception("No path");
-        }
+        (map.FindPath4(
+            startAt: v => v == s,
+            endAt: v => v == e,
+            acceptNext: (c, n) => n - c > 1
+        )!.Count() - 1).Out("Part 1: ");
+        (map.FindPath4(
+            startAt: v => map[v] == 'a',
+            endAt: v => v == e,
+            acceptNext: (c, n) => n - c > 1
+        )!.Count() - 1).Out("Part 2: ");
     }
 
     record Monkey(int Index, long[] Items, char Op, string Arg, long DivisibleBy, long IfTrue, long IfFalse);
