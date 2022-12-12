@@ -262,4 +262,11 @@ public static class Helpers
             yield return v;
         yield return b;
     }
+
+    public static T Out<T>(this T value, string prefix)
+    {
+        var valueString = Convert.ToString(value);
+        Console.WriteLine($"{prefix}{valueString}");
+        return value;
+    }
 }

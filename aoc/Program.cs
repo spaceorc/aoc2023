@@ -20,16 +20,14 @@ public class Program
     {
         var s = map.All().Single(v => map[v] == 'S');
         var e = map.All().Single(v => map[v] == 'E');
+        map[s] = 'a';
+        map[e] = 'z';
 
-        Console.WriteLine($"Part 1: {FindPath(startFrom: new[] { s }, sLevel: (char)('a' - 1))}");
-        Console.WriteLine($"Part 2: {FindPath(startFrom: map.All().Where(v => v == s || map[v] == 'a'), sLevel: (char)('a' - 1))}");
+        FindPath(new[] { s }).Out("Part 1: ");
+        FindPath(map.All().Where(v => map[v] == 'a')).Out("Part 2: ");
 
-        int FindPath(IEnumerable<V> startFrom, char sLevel)
+        int FindPath(IEnumerable<V> startFrom)
         {
-            var mapClone = map.Clone();
-            mapClone[s] = sLevel;
-            mapClone[e] = (char)('z' + 1);
-
             var queue = new Queue<V>();
             var used = new Dictionary<V, int>();
             foreach (var v in startFrom)
@@ -45,9 +43,9 @@ public class Program
                 if (cur == e)
                     return curLen;
 
-                foreach (var next in mapClone.Nears(cur))
+                foreach (var next in map.Nears(cur))
                 {
-                    if (mapClone[next] - mapClone[cur] > 1)
+                    if (map[next] - map[cur] > 1)
                         continue;
 
                     if (used.ContainsKey(next))
