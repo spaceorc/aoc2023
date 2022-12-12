@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Mime;
 using System.Numerics;
 using System.Text;
 using static System.Math;
@@ -12,8 +13,53 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day11.txt", Solve_11_1);
-        Runner.RunFile("day11.txt", Solve_11_2);
+        Runner.RunFile("day12.txt", Solve_12);
+    }
+
+    static void Solve_12(Map<char> map)
+    {
+        var s = map.All().Single(v => map[v] == 'S');
+        var e = map.All().Single(v => map[v] == 'E');
+
+        Console.WriteLine($"Part 1: {FindPath(startFrom: new[] { s }, sLevel: (char)('a' - 1))}");
+        Console.WriteLine($"Part 2: {FindPath(startFrom: map.All().Where(v => v == s || map[v] == 'a'), sLevel: (char)('a' - 1))}");
+
+        int FindPath(IEnumerable<V> startFrom, char sLevel)
+        {
+            var mapClone = map.Clone();
+            mapClone[s] = sLevel;
+            mapClone[e] = (char)('z' + 1);
+
+            var queue = new Queue<V>();
+            var used = new Dictionary<V, int>();
+            foreach (var v in startFrom)
+            {
+                queue.Enqueue(v);
+                used[v] = 0;
+            }
+
+            while (queue.Count > 0)
+            {
+                var cur = queue.Dequeue();
+                var curLen = used[cur];
+                if (cur == e)
+                    return curLen;
+
+                foreach (var next in mapClone.Nears(cur))
+                {
+                    if (mapClone[next] - mapClone[cur] > 1)
+                        continue;
+
+                    if (used.ContainsKey(next))
+                        continue;
+
+                    used[next] = curLen + 1;
+                    queue.Enqueue(next);
+                }
+            }
+
+            throw new Exception("No path");
+        }
     }
 
     record Monkey(int Index, long[] Items, char Op, string Arg, long DivisibleBy, long IfTrue, long IfFalse);
