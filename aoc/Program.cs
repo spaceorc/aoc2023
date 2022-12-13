@@ -5,6 +5,9 @@ using System.Linq;
 using System.Net.Mime;
 using System.Numerics;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using static System.Math;
 
 namespace aoc;
@@ -15,6 +18,7 @@ public class Program
     {
         Runner.RunFile("day13.txt", Solve_13_1);
         Runner.RunFile("day13.txt", Solve_13_2);
+        Runner.RunFile("day13.txt", Solve_13_2_alt);
     }
 
     abstract record EntryDay13 : IComparable<EntryDay13>
@@ -116,6 +120,37 @@ public class Program
         entries.Add(divider1);
         entries.Add(divider2);
         entries.Sort();
+        Console.Out.WriteLine((entries.IndexOf(divider1) + 1) * (entries.IndexOf(divider2) + 1));
+    }
+    
+    static void Solve_13_2_alt(params string[] input)
+    {
+        int Compare(JsonElement a, JsonElement b)
+        {
+            if (a.ValueKind == JsonValueKind.Number && b.ValueKind == JsonValueKind.Number)
+                return Comparer<int>.Default.Compare(a.GetInt32(), b.GetInt32());
+
+            var aList = a.ValueKind == JsonValueKind.Array ? a.EnumerateArray().ToList() : new List<JsonElement>{a};
+            var bList = b.ValueKind == JsonValueKind.Array ? b.EnumerateArray().ToList() : new List<JsonElement>{b};
+            for (int i = 0; i < Min(aList.Count, bList.Count); i++)
+            {
+                var res = Compare(aList[i], bList[i]);
+                if (res != 0)
+                    return res;
+            }
+
+            return Comparer<int>.Default.Compare(aList.Count, bList.Count);
+        }
+
+        var entries = input
+            .Where(x => !string.IsNullOrEmpty(x))
+            .Select(x => JsonDocument.Parse(x).RootElement)
+            .ToList();
+        var divider1 = JsonDocument.Parse("[[2]]").RootElement;
+        var divider2 = JsonDocument.Parse("[[6]]").RootElement;
+        entries.Add(divider1);
+        entries.Add(divider2);
+        entries.Sort(Compare);
         Console.Out.WriteLine((entries.IndexOf(divider1) + 1) * (entries.IndexOf(divider2) + 1));
     }
 
