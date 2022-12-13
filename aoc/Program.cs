@@ -13,7 +13,125 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day12.txt", Solve_12);
+        Runner.RunFile("day13.txt", Solve_13_1);
+        Runner.RunFile("day13.txt", Solve_13_2);
+    }
+
+    abstract record EntryDay13 : IComparable<EntryDay13>
+    {
+        public abstract int CompareTo(EntryDay13 other);
+
+        public static EntryDay13 Parse(string s)
+        {
+            var start = 0;
+            return Parse(s, ref start);
+        }
+
+        private static EntryDay13 Parse(string s, ref int cur)
+        {
+            if (s[cur] == '[')
+            {
+                var res = new ListEntryDay13(new List<EntryDay13>());
+                cur++;
+                while (s[cur] != ']')
+                {
+                    var item = Parse(s, ref cur);
+                    res.Entries.Add(item);
+                    if (s[cur] == ',')
+                    {
+                        cur++;
+                        continue;
+                    }
+
+                    if (s[cur] != ']')
+                        throw new Exception($"Bad list at {cur} - bad symbol {s[cur]}");
+                }
+
+                cur++;
+                return res;
+            }
+
+            if (!char.IsDigit(s[cur]))
+                throw new Exception($"Bad value at {cur} - bad symbol {s[cur]}");
+            var value = 0;
+            while (char.IsDigit(s[cur]))
+            {
+                value = value * 10 + (s[cur] - '0');
+                cur++;
+            }
+
+            return new ValueEntryDay13(value);
+        }
+    }
+
+    record ListEntryDay13(List<EntryDay13> Entries) : EntryDay13
+    {
+        public override int CompareTo(EntryDay13 other)
+        {
+            var otherList = other as ListEntryDay13 ?? new ListEntryDay13(new List<EntryDay13> { other });
+            for (int i = 0; i < Entries.Count; i++)
+            {
+                if (i < otherList.Entries.Count)
+                {
+                    var res = Entries[i].CompareTo(otherList.Entries[i]);
+                    if (res != 0)
+                        return res;
+                }
+                else
+                    return 1;
+            }
+
+            if (Entries.Count < otherList.Entries.Count)
+                return -1;
+
+            return 0;
+        }
+
+        public override string ToString()
+        {
+            return $"[{string.Join(",", Entries)}]";
+        }
+    }
+
+    record ValueEntryDay13(int Value) : EntryDay13
+    {
+        public override int CompareTo(EntryDay13 other)
+        {
+            if (other is ValueEntryDay13 valueEntry)
+                return Comparer<int>.Default.Compare(Value, valueEntry.Value);
+            return new ListEntryDay13(new List<EntryDay13> { this }).CompareTo(other);
+        }
+
+        public override string ToString()
+        {
+            return Value.ToString();
+        }
+    }
+
+    static void Solve_13_2(params EntryDay13[][] regions)
+    {
+        var entries = regions.SelectMany(x => x).ToList();
+        var divider1 = EntryDay13.Parse("[[2]]");
+        var divider2 = EntryDay13.Parse("[[6]]");
+        entries.Add(divider1);
+        entries.Add(divider2);
+        entries.Sort();
+        Console.Out.WriteLine((entries.IndexOf(divider1) + 1) * (entries.IndexOf(divider2) + 1));
+    }
+
+    static void Solve_13_1(params EntryDay13[][] regions)
+    {
+        var s = 0;
+        for (int i = 0; i < regions.Length; i++)
+        {
+            var left = regions[i][0];
+            var right = regions[i][1];
+            var res = left.CompareTo(right);
+            if (res == -1)
+                s += i + 1;
+        }
+
+        Console.Out.WriteLine(s);
     }
 
     static void Solve_12(Map<char> map)
@@ -277,22 +395,22 @@ public class Program
         Console.WriteLine(visible.All().Count(v => visible[v]));
     }
 
-    class Day7Entry
+    class EntryDay7
     {
-        public Day7Entry(bool isDir, Day7Entry? parent)
+        public EntryDay7(bool isDir, EntryDay7? parent)
         {
             IsDir = isDir;
             Parent = parent;
-            FlattenDirs = parent?.FlattenDirs ?? new List<Day7Entry>();
+            FlattenDirs = parent?.FlattenDirs ?? new List<EntryDay7>();
             if (isDir)
                 FlattenDirs.Add(this);
         }
 
-        public List<Day7Entry> FlattenDirs { get; }
+        public List<EntryDay7> FlattenDirs { get; }
         public bool IsDir { get; }
-        public Day7Entry? Parent { get; }
+        public EntryDay7? Parent { get; }
         public long Size { get; set; }
-        public Dictionary<string, Day7Entry> Children { get; } = new();
+        public Dictionary<string, EntryDay7> Children { get; } = new();
     }
 
     static void Solve_7(string[] input)
@@ -301,7 +419,7 @@ public class Program
             .Select(x => x.Split())
             .ToArray();
 
-        var root = new Day7Entry(true, null);
+        var root = new EntryDay7(true, null);
         var cur = root;
         foreach (var line in lines)
         {
@@ -322,11 +440,11 @@ public class Program
                 if (cur.Children.ContainsKey(line[1]))
                     continue;
                 if (line[0] == "dir")
-                    cur.Children.Add(line[1], new Day7Entry(true, cur));
+                    cur.Children.Add(line[1], new EntryDay7(true, cur));
                 else
                 {
                     var size = long.Parse(line[0]);
-                    cur.Children.Add(line[1], new Day7Entry(false, cur) { Size = size });
+                    cur.Children.Add(line[1], new EntryDay7(false, cur) { Size = size });
                     for (var c = cur; c != null; c = c.Parent)
                         c.Size += size;
                 }

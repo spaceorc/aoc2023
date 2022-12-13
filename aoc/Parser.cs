@@ -164,6 +164,11 @@ public static class Parser
     {
         if (type == typeof(string))
             return line;
+
+        var typeParseMethod = type.GetMethod("Parse", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) });
+        if (typeParseMethod != null)
+            return typeParseMethod.Invoke(null, new object?[] { line })!;
+                
         var source = new Queue<string>(line.Split(separators.ToCharArray(), StringSplitOptions.RemoveEmptyEntries));
         return ReadFrom(type, source);
     }
@@ -183,6 +188,10 @@ public static class Parser
                 throw new InvalidOperationException($"Invalid char {value}");
             return value[0];
         }
+        
+        var typeParseMethod = type.GetMethod("Parse", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) });
+        if (typeParseMethod != null)
+            return typeParseMethod.Invoke(null, new object?[] { source.Dequeue() })!;
 
         if (type.IsArray)
         {
