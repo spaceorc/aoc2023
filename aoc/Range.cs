@@ -4,7 +4,7 @@ namespace aoc;
 
 public class Range
 {
-    public Range(int minX, int minY, int maxX, int maxY)
+    public Range(long minX, long minY, long maxX, long maxY)
         : this(new V(minX, minY), new V(maxX, maxY))
     {
     }

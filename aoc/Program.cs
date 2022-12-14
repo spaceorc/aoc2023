@@ -16,9 +16,129 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day13.txt", Solve_13_1);
-        Runner.RunFile("day13.txt", Solve_13_2);
-        Runner.RunFile("day13.txt", Solve_13_2_alt);
+        Runner.RunFile("day14.txt", Solve_14_2);
+    }
+
+    static void Solve_14_2(string[] input)
+    {
+        var lines = input
+            .Select(x => x.Split(new[] { ' ', '-', '>' }, StringSplitOptions.RemoveEmptyEntries))
+            .Select(x => x.Select(i => i.Parse<V>()).ToArray())
+            .ToArray();
+
+        var map = new HashSet<V>();
+        foreach (var line in lines)
+        {
+            for (int i = 1; i < line.Length; i++)
+            {
+                var dv = (line[i] - line[i - 1]).Dir;
+                for (var v = line[i - 1]; v != line[i]; v += dv)
+                    map.Add(v);
+                map.Add(line[i]);
+            }
+        }
+
+        var floorY = map.Max(v => v.Y) + 2;
+
+        var count = 0;
+        while (NextDrop())
+            count++;
+
+        count.Out("");
+
+        bool NextDrop()
+        {
+            var v = new V(500, 0);
+            if (map.Contains(v))
+                return false;
+
+            while (true)
+            {
+                var next = v + new V(0, 1);
+                if (next.Y == floorY)
+                {
+                    map.Add(v);
+                    return true;
+                }
+
+                if (map.Contains(next))
+                {
+                    next = v + new V(-1, 1);
+                    if (map.Contains(next))
+                    {
+                        next = v + new V(1, 1);
+                        if (map.Contains(next))
+                        {
+                            map.Add(v);
+                            return true;
+                        }
+                    }
+                }
+
+                v = next;
+            }
+        }
+    }
+
+    static void Solve_14_1(string[] input)
+    {
+        var lines = input
+            .Select(x => x.Split(new[] { ' ', '-', '>' }, StringSplitOptions.RemoveEmptyEntries))
+            .Select(x => x.Select(i => i.Parse<V>()).ToArray())
+            .ToArray();
+
+        var map = new HashSet<V>();
+        foreach (var line in lines)
+        {
+            for (int i = 1; i < line.Length; i++)
+            {
+                var dv = (line[i] - line[i - 1]).Dir;
+                for (var v = line[i - 1]; v != line[i]; v += dv)
+                    map.Add(v);
+                map.Add(line[i]);
+            }
+        }
+
+        var minY = 0L;
+        var maxY = map.Max(v => v.Y);
+        var maxX = map.Max(v => v.X);
+        var minX = map.Min(v => v.X);
+        var mapRange = new Range(minX, minY, maxX, maxY);
+
+        var count = 0;
+        while (NextDrop())
+            count++;
+
+        count.Out("");
+
+        bool NextDrop()
+        {
+            var v = new V(500, 0);
+            if (map.Contains(v))
+                return false;
+
+            while (v.InRange(mapRange))
+            {
+                var next = v + new V(0, 1);
+                if (map.Contains(next))
+                {
+                    next = v + new V(-1, 1);
+                    if (map.Contains(next))
+                    {
+                        next = v + new V(1, 1);
+                        if (map.Contains(next))
+                        {
+                            map.Add(v);
+                            return true;
+                        }
+                    }
+                }
+
+                v = next;
+            }
+
+            return false;
+        }
     }
 
     abstract record EntryDay13 : IComparable<EntryDay13>
@@ -122,7 +242,7 @@ public class Program
         entries.Sort();
         Console.Out.WriteLine((entries.IndexOf(divider1) + 1) * (entries.IndexOf(divider2) + 1));
     }
-    
+
     static void Solve_13_2_alt(params string[] input)
     {
         int Compare(JsonElement a, JsonElement b)
@@ -130,8 +250,8 @@ public class Program
             if (a.ValueKind == JsonValueKind.Number && b.ValueKind == JsonValueKind.Number)
                 return Comparer<int>.Default.Compare(a.GetInt32(), b.GetInt32());
 
-            var aList = a.ValueKind == JsonValueKind.Array ? a.EnumerateArray().ToList() : new List<JsonElement>{a};
-            var bList = b.ValueKind == JsonValueKind.Array ? b.EnumerateArray().ToList() : new List<JsonElement>{b};
+            var aList = a.ValueKind == JsonValueKind.Array ? a.EnumerateArray().ToList() : new List<JsonElement> { a };
+            var bList = b.ValueKind == JsonValueKind.Array ? b.EnumerateArray().ToList() : new List<JsonElement> { b };
             for (int i = 0; i < Min(aList.Count, bList.Count); i++)
             {
                 var res = Compare(aList[i], bList[i]);
