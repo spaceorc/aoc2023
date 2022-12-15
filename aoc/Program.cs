@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Mime;
@@ -16,7 +17,92 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day14.txt", Solve_14_2);
+        Runner.RunFile("day15.txt", Solve_15_1);
+        Runner.RunFile("day15.txt", Solve_15_2);
+    }
+
+    record Sensor(long x, long y, long bx, long by)
+    {
+        public V Pos => new(x, y);
+        public V Beacon => new(bx, by);
+    }
+
+    static void Solve_15_2(string[] input)
+    {
+        var sensors = input.ParseAllWithTemplate<Sensor>("Sensor at x={x}, y={y}: closest beacon is at x={bx}, y={by}");
+        const int limit = 4000000;
+        for (int ty = 0; ty < limit; ty++)
+        {
+            var ranges = new List<R>();
+
+            foreach (var sensor in sensors)
+            {
+                var dist = sensor.Pos.MDistTo(sensor.Beacon);
+                var dy = Abs(ty - sensor.Pos.Y);
+                var dx = dist - dy;
+                if (dx < 0)
+                    continue;
+                var ts = new V(sensor.x - dx, ty);
+                var te = new V(sensor.x + dx, ty);
+                ranges.Add(new R(ts.X, te.X));
+            }
+
+            ranges = ranges.Pack();
+
+            var super = new R(0, limit);
+            for (int rr = ranges.Count - 1; rr >= 0; rr--)
+            {
+                if (ranges[rr].Overlaps(super))
+                    ranges[rr] = ranges[rr].IntersectWith(super);
+                else
+                    ranges.RemoveAt(rr);
+            }
+
+            if (ranges.Sum(x => x.Length) != super.Length)
+            {
+                if (ranges.Count != 2)
+                    throw new Exception();
+                if (ranges.Sum(x => x.Length) != super.Length - 1)
+                    throw new Exception();
+                var result = new V(ranges[0].End + 1, ty);
+                Console.Out.WriteLine(result);
+                Console.Out.WriteLine(result.X * limit + result.Y);
+                return;
+            }
+        }
+    }
+
+    static void Solve_15_1(string[] input)
+    {
+        var sensors = input.ParseAllWithTemplate<Sensor>("Sensor at x={x}, y={y}: closest beacon is at x={bx}, y={by}");
+        var ty = 2000000L;
+
+        var ranges = new List<R>();
+
+        foreach (var sensor in sensors)
+        {
+            var dist = sensor.Pos.MDistTo(sensor.Beacon);
+            var dy = Abs(ty - sensor.Pos.Y);
+            var dx = dist - dy;
+            if (dx < 0)
+                continue;
+            var ts = new V(sensor.x - dx, ty);
+            var te = new V(sensor.x + dx, ty);
+            if (sensor.by == ty)
+            {
+                if (ts == te)
+                    continue;
+                if (sensor.Beacon == ts)
+                    ts += new V(1, 0);
+                if (sensor.Beacon == te)
+                    te += new V(-1, 0);
+            }
+
+            ranges.Add(new R(ts.X, te.X));
+        }
+
+        ranges = ranges.Pack();
+        Console.Out.WriteLine(ranges.Sum(x => x.Length));
     }
 
     static void Solve_14_2(string[] input)
