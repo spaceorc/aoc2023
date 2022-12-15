@@ -27,12 +27,11 @@ public class Program
         public V Beacon => new(bx, by);
     }
 
-    static void Solve_15_2(string[] input)
+    static void Solve_15_2([Template("Sensor at x={x}, y={y}: closest beacon is at x={bx}, y={by}")] Sensor[] sensors)
     {
-        var sensors = input.ParseAllWithTemplate<Sensor>("Sensor at x={x}, y={y}: closest beacon is at x={bx}, y={by}");
         const int limit = 4000000;
         var super = new R(0, limit);
-        
+
         for (int ty = 0; ty < limit; ty++)
         {
             var ranges = new List<R>();
@@ -48,29 +47,27 @@ public class Program
                 var r = new R(sensor.x - dx, sensor.x + dx);
                 if (!r.Intersects(super))
                     continue;
-                
+
                 ranges.Add(r.IntersectWith(super));
             }
 
             ranges = ranges.Pack();
             if (ranges.Sum(x => x.Length) == super.Length)
                 continue;
-            
+
             if (ranges.Count != 2)
                 throw new Exception();
             if (ranges.Sum(x => x.Length) != super.Length - 1)
                 throw new Exception();
-            
+
             var result = new V(ranges[0].End + 1, ty);
             Console.Out.WriteLine($"pos = {result}, result = {result.X * limit + result.Y}");
             return;
         }
     }
 
-    static void Solve_15_1(string[] input)
+    static void Solve_15_1([Template("Sensor at x={x}, y={y}: closest beacon is at x={bx}, y={by}")] Sensor[] sensors)
     {
-        var sensors = input.ParseAllWithTemplate<Sensor>("Sensor at x={x}, y={y}: closest beacon is at x={bx}, y={by}");
-
         const long ty = 2000000L;
 
         var ranges = new List<R>();
@@ -82,7 +79,7 @@ public class Program
             var dx = dist - dy;
             if (dx < 0)
                 continue;
-            
+
             var s = sensor.x - dx;
             var e = sensor.x + dx;
             if (sensor.by == ty)
@@ -94,6 +91,7 @@ public class Program
                 if (sensor.bx == e)
                     e--;
             }
+
             ranges.Add(new R(s, e));
         }
 

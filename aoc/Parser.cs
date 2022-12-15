@@ -83,7 +83,7 @@ public static class Parser
     public static object ParseWithTemplate(Type type, string[] lines, string template)
     {
         return type.IsArray
-            ? lines.ParseAllWithTemplate(type, template)
+            ? lines.ParseAllWithTemplate(type.GetElementType()!, template)
             : lines.ParseRegionWithTemplate(type, template);
     }
 
