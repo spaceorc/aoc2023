@@ -6,7 +6,7 @@ namespace aoc;
 
 public record R(long Start, long End)
 {
-    public bool Overlaps(R other) => Start <= other.End && End >= other.Start;
+    public bool Intersects(R other) => Start <= other.End && End >= other.Start;
     public bool Touches(R other) => Start == other.End + 1 || End == other.Start - 1;
     public bool Contains(R other) => Start <= other.Start && End >= other.End;
 
@@ -29,7 +29,7 @@ public static class RExtensions
             var mergedCount = 0;
             for (var i = current + 1; i < ranges.Count; i++)
             {
-                if (ranges[i].Overlaps(ranges[current]) || ranges[i].Touches(ranges[current]))
+                if (ranges[i].Intersects(ranges[current]) || ranges[i].Touches(ranges[current]))
                 {
                     ranges[current] = ranges[current].UnionWith(ranges[i]);
                     mergedCount++;
