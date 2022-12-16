@@ -11,4 +11,5 @@ public class TemplateAttribute : Attribute
     }
 
     public string Template { get; }
+    public bool IsRegex { get; set; }
 }

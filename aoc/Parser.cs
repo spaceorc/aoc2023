@@ -54,9 +54,10 @@ public static class Parser
 
     public static object ParseParameterValue(ParameterInfo parameter, Type parameterType, string[] lines)
     {
-        var template = parameter.GetCustomAttribute<TemplateAttribute>()?.Template;
+        var templateAttribute = parameter.GetCustomAttribute<TemplateAttribute>();
+        var template = templateAttribute?.Template;
         if (template != null)
-            return ParseWithTemplate(parameterType, lines, template);
+            return ParseWithTemplate(parameterType, lines, template, templateAttribute!.IsRegex);
 
         if (parameterType.IsArray)
         {
@@ -80,46 +81,56 @@ public static class Parser
         throw new Exception($"Unsupported parameter type: {parameter}");
     }
 
-    public static object ParseWithTemplate(Type type, string[] lines, string template)
+    public static object ParseWithTemplate(Type type, string[] lines, string template, bool isRegex)
     {
         return type.IsArray
-            ? lines.ParseAllWithTemplate(type.GetElementType()!, template)
-            : lines.ParseRegionWithTemplate(type, template);
+            ? lines.ParseAllWithTemplate(type.GetElementType()!, template, isRegex)
+            : lines.ParseRegionWithTemplate(type, template,isRegex);
     }
 
-    public static T[] ParseAllWithTemplate<T>(this IEnumerable<string> lines, string template)
+    public static T[] ParseAllWithTemplate<T>(this IEnumerable<string> lines, string template, bool isRegex)
     {
-        return lines.Select(line => new[] { line }.ParseRegionWithTemplate<T>(template)).ToArray();
+        return lines.Select(line => new[] { line }.ParseRegionWithTemplate<T>(template,isRegex)).ToArray();
     }
 
-    public static object ParseAllWithTemplate(this IEnumerable<string> lines, Type type, string template)
+    public static object ParseAllWithTemplate(this IEnumerable<string> lines, Type type, string template, bool isRegex)
     {
         var linesArr = lines as IList<string> ?? lines.ToArray();
         var result = Array.CreateInstance(type, linesArr.Count);
 
         for (int i = 0; i < linesArr.Count; i++)
-            result.SetValue(new[] { linesArr[i] }.ParseRegionWithTemplate(type, template), i);
+            result.SetValue(new[] { linesArr[i] }.ParseRegionWithTemplate(type, template, isRegex), i);
 
         return result;
     }
 
-    public static T ParseRegionWithTemplate<T>(this IEnumerable<string> lines, string template)
+    public static T ParseRegionWithTemplate<T>(this IEnumerable<string> lines, string template, bool isRegex)
     {
-        return (T)lines.ParseRegionWithTemplate(typeof(T), template);
+        return (T)lines.ParseRegionWithTemplate(typeof(T), template, isRegex);
     }
 
-    public static object ParseRegionWithTemplate(this IEnumerable<string> lines, Type type, string template)
+    public static object ParseRegionWithTemplate(this IEnumerable<string> lines, Type type, string template, bool isRegex)
     {
         var region = string.Join("\n", lines);
-        var regex = new Regex(@"([\\$^()[\]:+*?])|({[^}]+})", RegexOptions.Compiled | RegexOptions.Singleline);
-        var templateRegexString = "^" + regex.Replace(template, m =>
+        Regex templateRegex;
+        if (isRegex)
         {
-            if (m.Value.Length == 1)
-                return "\\" + m.Value;
+            templateRegex = new Regex(template, RegexOptions.Compiled | RegexOptions.Singleline);
+        }
+        else
+        {
 
-            return $"(?<{m.Value.Substring(1, m.Value.Length - 2)}>.*)";
-        }) + "$";
-        var templateRegex = new Regex(templateRegexString, RegexOptions.Compiled | RegexOptions.Singleline);
+            var regex = new Regex(@"([\\$^()[\]:+*?])|({[^}]+})", RegexOptions.Compiled | RegexOptions.Singleline);
+            var templateRegexString = "^" + regex.Replace(template, m =>
+            {
+                if (m.Value.Length == 1)
+                    return "\\" + m.Value;
+
+                return $"(?<{m.Value.Substring(1, m.Value.Length - 2)}>.*)";
+            }) + "$";
+            templateRegex = new Regex(templateRegexString, RegexOptions.Compiled | RegexOptions.Singleline);
+        }
+
         var match = templateRegex.Match(region);
         if (!match.Success)
             throw new Exception("Template doesn't match");

@@ -17,22 +17,344 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day15.txt", Solve_15_1);
-        Runner.RunFile("day15.txt", Solve_15_2);
+        Runner.RunFile("day16.txt", Solve_16_1);
+        Runner.RunFile("day16.txt", Solve_16_2);
+        Runner.RunFile("day16.txt", Solve_16_2_slow);
     }
 
-    record Sensor(long x, long y, long bx, long by)
+    record ItemDay16(string from, int rate, string[] tos)
+    {
+        public override string ToString()
+        {
+            return $"{from} ({rate}) -> [{string.Join(", ", tos)}]";
+        }
+    }
+
+    static void Solve_16_2(
+        [Template(
+            "^Valve (?<from>.*) has flow rate=(?<rate>.*); tunnels? leads? to valves? (?<tos>.*)$",
+            IsRegex = true)]
+        ItemDay16[] input)
+    {
+        var indexes = input.OrderBy(x => x.from).Select((x, i) => (x.from, i)).ToDictionary(x => x.from, x => x.i);
+        var moves = input.ToDictionary(x => indexes[x.from], x => x.tos.Select(to => indexes[to]).ToArray())
+            .OrderBy(x => x.Key).Select(x => x.Value).ToArray();
+        var rates = input.ToDictionary(x => indexes[x.from], x => x.rate).OrderBy(x => x.Key).Select(x => x.Value)
+            .ToArray();
+
+        var pairMoves = new Dictionary<int, List<int>>();
+        for (var from1 = 0; from1 < moves.Length; from1++)
+        for (var from2 = from1; from2 < moves.Length; from2++)
+        {
+            var pairMovesFromPos = new HashSet<int>();
+            foreach (var to1 in moves[from1])
+            foreach (var to2 in moves[from2])
+                pairMovesFromPos.Add(MakePairPos(to1, to2));
+            pairMoves[MakePairPos(from1, from2)] = pairMovesFromPos.ToList();
+        }
+        
+        long MakeState(int pos1, int pos2, long mask)
+        {
+            if (pos1 > pos2)
+                (pos1, pos2) = (pos2, pos1);
+            return ((long)pos1 << 50) | ((long)pos2 << 56) | mask;
+        }
+
+        long MakeStateFromPairPos(int pairPos, long mask)
+        {
+            return ((long)pairPos << 50) | mask;
+        }
+
+        int MakePairPos(int pos1, int pos2)
+        {
+            if (pos1 > pos2)
+                (pos1, pos2) = (pos2, pos1);
+            return (pos2 << 6) | pos1;
+        }
+
+        void ParseState(long state, out int pos1, out int pos2, out int pairPos, out long mask)
+        {
+            mask = state & ((1L << 50) - 1);
+            pos1 = (int)((state >> 50) & 0b111111);
+            pos2 = (int)((state >> 56) & 0b111111);
+            pairPos = (int)(state >> 50);
+        }
+
+        long MakePriority(int rate, int timeLeft)
+        {
+            return (long)rate << 32 | (uint)timeLeft;
+        }
+
+        void ParsePriority(long priority, out int rate, out int timeLeft)
+        {
+            timeLeft = (int)(priority & 0xFFFFFFFF);
+            rate = (int)(priority >> 32);
+        }
+
+        bool IsClosed(long mask, int pos)
+        {
+            return (mask & (1L << pos)) == 0;
+        }
+
+        long Open(long mask, int pos)
+        {
+            return mask | (1L << pos);
+        }
+
+        var queue = new Queue<long>();
+        var used = new Dictionary<long, long>();
+        AddState(MakeState(0, 0, 0), MakePriority(0, 26));
+
+        void AddState(long state, long priority)
+        {
+            if (!used.TryGetValue(state, out var prevPriority) || prevPriority < priority)
+            {
+                queue.Enqueue(state);
+                used[state] = priority;
+            }
+        }
+
+        var maxRate = 0L;
+        var iteration = 0;
+        var sw = Stopwatch.StartNew();
+        while (queue.Count > 0)
+        {
+            if (iteration++ % 1000000 == 0)
+                Console.WriteLine($"used={used.Count}, queue={queue.Count}");
+
+            var curState = queue.Dequeue();
+            ParseState(curState, out var curPos1, out var curPos2, out var curPairPos, out var curMask);
+
+            var curPriority = used[curState];
+            ParsePriority(curPriority, out var curRate, out var curTimeLeft);
+            if (curRate > maxRate)
+            {
+                maxRate = curRate;
+                Console.WriteLine($"used={used.Count}, queue={queue.Count}, max={maxRate}");
+            }
+
+            if (curTimeLeft == 0)
+                continue;
+
+            foreach (var nextPairPos in pairMoves[curPairPos])
+            {
+                var nextState = MakeStateFromPairPos(nextPairPos, curMask);
+                var nextPriority = MakePriority(curRate, curTimeLeft - 1);
+                AddState(nextState, nextPriority);
+            }
+
+            if (IsClosed(curMask, curPos1))
+            {
+                var addRate1 = (curTimeLeft - 1) * rates[curPos1];
+                if (addRate1 > 0)
+                {
+                    foreach (var nextPos2 in moves[curPos2])
+                    {
+                        var nextState = MakeState(curPos1, nextPos2, Open(curMask, curPos1));
+                        var nextPriority = MakePriority(curRate + addRate1, curTimeLeft - 1);
+                        AddState(nextState, nextPriority);
+                    }
+
+                    if (curPos1 != curPos2 && IsClosed(curMask, curPos2))
+                    {
+                        var addRate2 = (curTimeLeft - 1) * rates[curPos2];
+                        if (addRate2 > 0)
+                        {
+                            var nextState = MakeStateFromPairPos(curPairPos, Open(Open(curMask, curPos1), curPos2));
+                            var nextPriority = MakePriority(curRate + addRate1 + addRate2, curTimeLeft - 1);
+                            AddState(nextState, nextPriority);
+                        }
+                    }
+                }
+            }
+
+            if (IsClosed(curMask, curPos2))
+            {
+                var addRate2 = (curTimeLeft - 1) * rates[curPos2];
+                if (addRate2 > 0)
+                {
+                    foreach (var nextPos1 in moves[curPos1])
+                    {
+                        var nextState = MakeState(nextPos1, curPos2, Open(curMask, curPos2));
+                        var nextPriority = MakePriority(curRate + addRate2, curTimeLeft - 1);
+                        AddState(nextState, nextPriority);
+                    }
+                }
+            }
+        }
+
+        sw.Elapsed.Out("Elapsed: ");
+        maxRate.Out("Part 2: ");
+    }
+
+    record State2Day16(string pos, string pos2, long openMask)
+    {
+        public static State2Day16 Create(string pos, string pos2, long openMask)
+        {
+            if (pos.CompareTo(pos2) > 0)
+            {
+                return new State2Day16(pos2, pos, openMask);
+            }
+
+            return new State2Day16(pos, pos2, openMask);
+        }
+    }
+
+    static void Solve_16_2_slow(
+        [Template(
+            "^Valve (?<from>.*) has flow rate=(?<rate>.*); (tunnels lead to valves|tunnel leads to valve) (?<tos>.*)$",
+            IsRegex = true)]
+        ItemDay16[] input)
+    {
+        var indexes = input.Select((x, i) => (x.from, i)).ToDictionary(x => x.from, x => x.i);
+
+        var map = input.ToDictionary(x => x.from);
+
+        var queue = new Queue<State2Day16>();
+        var start = State2Day16.Create("AA", "AA", 0L);
+        queue.Enqueue(start);
+
+        var used = new Dictionary<State2Day16, (int rate, int time)>();
+        used.Add(start, (0, 4));
+
+        var i = 0;
+        var sw = Stopwatch.StartNew();
+        while (queue.Count > 0)
+        {
+            if ((i++) % 1000000 == 0)
+            {
+                Console.Out.WriteLine($"q={queue.Count} u={used.Count}");
+            }
+
+            var cur = queue.Dequeue();
+            var (curRate, curTime) = used[cur];
+            if (curTime >= 30)
+                continue;
+
+            foreach (var (next, addRate) in Nexts())
+            {
+                if (!used.TryGetValue(next, out var prev) || prev.rate < curRate + addRate ||
+                    prev.rate == curRate + addRate && prev.time > curTime + 1)
+                {
+                    queue.Enqueue(next);
+                    used[next] = (curRate + addRate, curTime + 1);
+                }
+            }
+
+            IEnumerable<(State2Day16 next, int nextRate)> Nexts()
+            {
+                foreach (var to in map[cur.pos].tos)
+                {
+                    foreach (var to2 in map[cur.pos2].tos)
+                        yield return (State2Day16.Create(to, to2, cur.openMask), 0);
+
+                    var index2 = indexes[cur.pos2];
+                    if ((cur.openMask & (1L << index2)) == 0L)
+                    {
+                        var addRate = (30 - (curTime + 1)) * map[cur.pos2].rate;
+                        if (addRate > 0)
+                            yield return (State2Day16.Create(to, cur.pos2, cur.openMask | (1L << index2)), addRate);
+                    }
+                }
+
+                var index1 = indexes[cur.pos];
+                if ((cur.openMask & (1L << index1)) == 0L)
+                {
+                    var addRate = (30 - (curTime + 1)) * map[cur.pos].rate;
+                    if (addRate > 0)
+                    {
+                        foreach (var to2 in map[cur.pos2].tos)
+                            yield return (State2Day16.Create(cur.pos, to2, cur.openMask | (1L << index1)), addRate);
+
+                        var index2 = indexes[cur.pos2];
+                        if (index2 != index1 && (cur.openMask & (1L << index2)) == 0L)
+                        {
+                            var addRate2 = (30 - (curTime + 1)) * map[cur.pos2].rate;
+                            if (addRate2 > 0)
+                                yield return (cur with { openMask = cur.openMask | (1L << index1) | (1L << index2) },
+                                    addRate + addRate2);
+                        }
+                    }
+                }
+            }
+        }
+
+        sw.Elapsed.Out("Elapsed: ");
+        used.Max(x => x.Value.rate).Out("Part 2 (slow): ");
+    }
+
+    record StateDay16(string pos, long openMask);
+
+    static void Solve_16_1(
+        [Template(
+            "^Valve (?<from>.*) has flow rate=(?<rate>.*); (tunnels lead to valves|tunnel leads to valve) (?<tos>.*)$",
+            IsRegex = true)]
+        ItemDay16[] input)
+    {
+        var indexes = input.Select((x, i) => (x.from, i)).ToDictionary(x => x.from, x => x.i);
+
+        var map = input.ToDictionary(x => x.from);
+
+        var queue = new Queue<StateDay16>();
+        var start = new StateDay16("AA", 0L);
+        queue.Enqueue(start);
+
+        var used = new Dictionary<StateDay16, (int rate, int time)>();
+        used.Add(start, (0, 0));
+
+        while (queue.Count > 0)
+        {
+            var cur = queue.Dequeue();
+            var (curRate, curTime) = used[cur];
+            if (curTime >= 30)
+                continue;
+
+            var curMap = map[cur.pos];
+            foreach (var to in curMap.tos)
+            {
+                var next = cur with { pos = to };
+                if (!used.TryGetValue(next, out var prev) || prev.rate < curRate ||
+                    prev.rate == curRate && prev.time > curTime + 1)
+                {
+                    queue.Enqueue(next);
+                    used[next] = (curRate, curTime + 1);
+                }
+            }
+
+            var index = indexes[cur.pos];
+            if ((cur.openMask & (1L << index)) == 0L)
+            {
+                var addRate = (30 - (curTime + 1)) * curMap.rate;
+                if (addRate > 0)
+                {
+                    var next = cur with { openMask = cur.openMask | (1L << index) };
+                    if (!used.TryGetValue(next, out var prev) || prev.rate < curRate + addRate ||
+                        prev.rate == curRate + addRate && prev.time > curTime + 1)
+                    {
+                        queue.Enqueue(next);
+                        used[next] = (curRate + addRate, curTime + 1);
+                    }
+                }
+            }
+        }
+
+        used.Max(x => x.Value.rate).Out("Part 1: ");
+    }
+
+    record SensorDay15(long x, long y, long bx, long by)
     {
         public V Pos => new(x, y);
         public V Beacon => new(bx, by);
     }
 
-    static void Solve_15_2([Template("Sensor at x={x}, y={y}: closest beacon is at x={bx}, y={by}")] Sensor[] sensors)
+    static void Solve_15_2(
+        [Template("Sensor at x={x}, y={y}: closest beacon is at x={bx}, y={by}")]
+        SensorDay15[] sensors)
     {
         const int limit = 4000000;
         var super = new R(0, limit);
 
-        for (int ty = 0; ty < limit; ty++)
+        for (var ty = 0; ty < limit; ty++)
         {
             var ranges = new List<R>();
 
@@ -66,7 +388,9 @@ public class Program
         }
     }
 
-    static void Solve_15_1([Template("Sensor at x={x}, y={y}: closest beacon is at x={bx}, y={by}")] Sensor[] sensors)
+    static void Solve_15_1(
+        [Template("Sensor at x={x}, y={y}: closest beacon is at x={bx}, y={by}")]
+        SensorDay15[] sensors)
     {
         const long ty = 2000000L;
 
@@ -109,7 +433,7 @@ public class Program
         var map = new HashSet<V>();
         foreach (var line in lines)
         {
-            for (int i = 1; i < line.Length; i++)
+            for (var i = 1; i < line.Length; i++)
             {
                 var dv = (line[i] - line[i - 1]).Dir;
                 for (var v = line[i - 1]; v != line[i]; v += dv)
@@ -170,7 +494,7 @@ public class Program
         var map = new HashSet<V>();
         foreach (var line in lines)
         {
-            for (int i = 1; i < line.Length; i++)
+            for (var i = 1; i < line.Length; i++)
             {
                 var dv = (line[i] - line[i - 1]).Dir;
                 for (var v = line[i - 1]; v != line[i]; v += dv)
@@ -223,7 +547,7 @@ public class Program
 
     abstract record EntryDay13 : IComparable<EntryDay13>
     {
-        public abstract int CompareTo(EntryDay13 other);
+        public abstract int CompareTo(EntryDay13? other);
 
         public static EntryDay13 Parse(string s)
         {
@@ -270,10 +594,10 @@ public class Program
 
     record ListEntryDay13(List<EntryDay13> Entries) : EntryDay13
     {
-        public override int CompareTo(EntryDay13 other)
+        public override int CompareTo(EntryDay13? other)
         {
-            var otherList = other as ListEntryDay13 ?? new ListEntryDay13(new List<EntryDay13> { other });
-            for (int i = 0; i < Entries.Count; i++)
+            var otherList = other as ListEntryDay13 ?? new ListEntryDay13(new List<EntryDay13> { other! });
+            for (var i = 0; i < Entries.Count; i++)
             {
                 if (i < otherList.Entries.Count)
                 {
@@ -299,7 +623,7 @@ public class Program
 
     record ValueEntryDay13(int Value) : EntryDay13
     {
-        public override int CompareTo(EntryDay13 other)
+        public override int CompareTo(EntryDay13? other)
         {
             if (other is ValueEntryDay13 valueEntry)
                 return Comparer<int>.Default.Compare(Value, valueEntry.Value);
@@ -332,7 +656,7 @@ public class Program
 
             var aList = a.ValueKind == JsonValueKind.Array ? a.EnumerateArray().ToList() : new List<JsonElement> { a };
             var bList = b.ValueKind == JsonValueKind.Array ? b.EnumerateArray().ToList() : new List<JsonElement> { b };
-            for (int i = 0; i < Min(aList.Count, bList.Count); i++)
+            for (var i = 0; i < Min(aList.Count, bList.Count); i++)
             {
                 var res = Compare(aList[i], bList[i]);
                 if (res != 0)
@@ -357,7 +681,7 @@ public class Program
     static void Solve_13_1(params EntryDay13[][] regions)
     {
         var s = 0;
-        for (int i = 0; i < regions.Length; i++)
+        for (var i = 0; i < regions.Length; i++)
         {
             var left = regions[i][0];
             var right = regions[i][1];
