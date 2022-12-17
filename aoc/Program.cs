@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Mime;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -17,9 +18,285 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day16.txt", Solve_16_1);
-        Runner.RunFile("day16.txt", Solve_16_2);
-        Runner.RunFile("day16.txt", Solve_16_2_slow);
+        Runner.RunFile("day17.txt", Solve_17_2);
+    }
+
+    static void Solve_17_2(string[] lines)
+    {
+        var input = lines[0];
+
+        var figures = new[]
+        {
+            new V[] { new(0, 0), new(1, 0), new(2, 0), new(3, 0) },
+            new V[] { new(1, 0), new(0, 1), new(1, 1), new(2, 1), new(1, 2) },
+            new V[] { new(0, 0), new(1, 0), new(2, 0), new(2, 1), new(2, 2) },
+            new V[] { new(0, 0), new(0, 1), new(0, 2), new(0, 3) },
+            new V[] { new(0, 0), new(1, 0), new(1, 1), new(0, 1) },
+        };
+        var figureHeight = new[] { 1, 3, 3, 4, 2 };
+        var figureWidth = new[] { 4, 3, 3, 1, 2 };
+        var used = new HashSet<V>(Enumerable.Range(0, 7).Select(x => new V(x, 0)));
+        var maxY = 0L;
+
+        long fi = 0;
+        long fc = 0;
+        V curV = V.Zero;
+        Appear();
+
+        var fcc = 1000000000000L;
+
+        for (int i = 0; i < input.Length; i++)
+            Next(i);
+        var prevMaxY = maxY;
+        var prevFc = fc;
+        for (int i = 0; i < input.Length; i++)
+            Next(i);
+        Console.Out.WriteLine($"delta maxY={maxY - prevMaxY}");
+        Console.Out.WriteLine($"delta fc={fc - prevFc}");
+        Print();
+
+        var times = (fcc - fc) / (fc - prevFc);
+        var realMaxY = maxY + times * (maxY - prevMaxY);
+        fc += times * (fc - prevFc);
+
+        var old = maxY;
+        for (int i = 0; i < input.Length; i++)
+        {
+            Next(i);
+            if (fc == fcc)
+            {
+                Console.WriteLine(realMaxY + maxY - old);
+                return;
+            }
+        }
+        
+        
+        void Next(int index)
+        {
+            if (input[index] == '<')
+                PushLeft();
+            else
+                PushRight();
+            if (!PushDown())
+            {
+                Rest();
+                Appear();
+                fi = (fi + 1) % figures.Length;
+                fc++;
+            }
+        }
+
+        void PushRight()
+        {
+            if (curV.X + figureWidth[fi] == 7)
+                return;
+            foreach (var v in figures[fi])
+            {
+                var nv = curV + v + new V(1, 0);
+                if (used.Contains(nv))
+                    return;
+            }
+
+            curV += new V(1, 0);
+        }
+
+        void Rest()
+        {
+            foreach (var v in figures[fi])
+            {
+                used.Add(curV + v);
+                if (curV.Y + v.Y > maxY)
+                    maxY = curV.Y + v.Y;
+            }
+        }
+
+        bool PushDown()
+        {
+            foreach (var v in figures[fi])
+            {
+                var nv = curV + v + new V(0, -1);
+                if (used.Contains(nv))
+                    return false;
+            }
+
+            curV += new V(0, -1);
+            return true;
+        }
+
+        void PushLeft()
+        {
+            if (curV.X == 0)
+                return;
+            foreach (var v in figures[fi])
+            {
+                var nv = curV + v - new V(1, 0);
+                if (used.Contains(nv))
+                    return;
+            }
+
+            curV -= new V(1, 0);
+        }
+
+        void Appear()
+        {
+            curV = new V(2, maxY + 4);
+        }
+
+        void Print()
+        {
+            Console.WriteLine();
+            var my = Max(maxY, curV.Y + figureHeight[fi] - 1);
+            for (long y = my; y >= Max(0, my - 40); y--)
+            {
+                Console.Write("|");
+                for (int x = 0; x < 7; x++)
+                {
+                    var v = new V(x, y);
+                    if (used.Contains(v))
+                        Console.Write("#");
+                    else
+                    {
+                        if (figures[fi].Any(fv => curV + fv == v))
+                            Console.Write('@');
+                        else
+                            Console.Write(' ');
+                    }
+                }
+                Console.WriteLine("|");
+            }
+        }
+    }
+
+    static void Solve_17_1(string[] lines)
+    {
+        var input = lines[0];
+
+        var figures = new[]
+        {
+            new V[] { new(0, 0), new(1, 0), new(2, 0), new(3, 0) },
+            new V[] { new(1, 0), new(0, 1), new(1, 1), new(2, 1), new(1, 2) },
+            new V[] { new(0, 0), new(1, 0), new(2, 0), new(2, 1), new(2, 2) },
+            new V[] { new(0, 0), new(0, 1), new(0, 2), new(0, 3) },
+            new V[] { new(0, 0), new(1, 0), new(1, 1), new(0, 1) },
+        };
+        var figureHeight = new[] { 1, 3, 3, 4, 2 };
+        var figureWidth = new[] { 4, 3, 3, 1, 2 };
+        var used = new HashSet<V>(Enumerable.Range(0, 7).Select(x => new V(x, 0)));
+        var maxY = 0L;
+
+        var fi = 0;
+        var fc = 0;
+        V curV = V.Zero;
+        Appear();
+        // Print();
+
+        while (true)
+        {
+            for (int i = 0; i < input.Length; i++)
+            {
+                Next(i);
+                // Print();
+                if (fc == 2022)
+                {
+                    Console.WriteLine(maxY);
+                    return;
+                }
+            }
+        }
+        void Next(int index)
+        {
+            if (input[index] == '<')
+                PushLeft();
+            else
+                PushRight();
+            if (!PushDown())
+            {
+                Rest();
+                Appear();
+                fi = (fi + 1) % figures.Length;
+                fc++;
+            }
+        }
+
+        void PushRight()
+        {
+            if (curV.X + figureWidth[fi] == 7)
+                return;
+            foreach (var v in figures[fi])
+            {
+                var nv = curV + v + new V(1, 0);
+                if (used.Contains(nv))
+                    return;
+            }
+
+            curV += new V(1, 0);
+        }
+
+        void Rest()
+        {
+            foreach (var v in figures[fi])
+            {
+                used.Add(curV + v);
+                if (curV.Y + v.Y > maxY)
+                    maxY = curV.Y + v.Y;
+            }
+        }
+
+        bool PushDown()
+        {
+            foreach (var v in figures[fi])
+            {
+                var nv = curV + v + new V(0, -1);
+                if (used.Contains(nv))
+                    return false;
+            }
+
+            curV += new V(0, -1);
+            return true;
+        }
+
+        void PushLeft()
+        {
+            if (curV.X == 0)
+                return;
+            foreach (var v in figures[fi])
+            {
+                var nv = curV + v - new V(1, 0);
+                if (used.Contains(nv))
+                    return;
+            }
+
+            curV -= new V(1, 0);
+        }
+
+        void Appear()
+        {
+            curV = new V(2, maxY + 4);
+        }
+
+        void Print()
+        {
+            Console.WriteLine();
+            var my = Max(maxY, curV.Y + figureHeight[fi] - 1);
+            for (long y = my; y >= 0; y--)
+            {
+                Console.Write("|");
+                for (int x = 0; x < 7; x++)
+                {
+                    var v = new V(x, y);
+                    if (used.Contains(v))
+                        Console.Write("#");
+                    else
+                    {
+                        if (figures[fi].Any(fv => curV + fv == v))
+                            Console.Write('@');
+                        else
+                            Console.Write(' ');
+                    }
+                }
+                Console.WriteLine("|");
+            }
+        }
     }
 
     record ItemDay16(string from, int rate, string[] tos)
@@ -52,7 +329,7 @@ public class Program
                 pairMovesFromPos.Add(MakePairPos(to1, to2));
             pairMoves[MakePairPos(from1, from2)] = pairMovesFromPos.ToList();
         }
-        
+
         long MakeState(int pos1, int pos2, long mask)
         {
             if (pos1 > pos2)
