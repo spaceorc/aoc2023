@@ -18,10 +18,10 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day18.txt", Solve_18_1);
+        Runner.RunFile("day18.txt", Solve_18);
     }
 
-    static void Solve_18_1(V3[] cubes)
+    static void Solve_18(V3[] cubes)
     {
         long Surface(IEnumerable<V3> cs)
         {
