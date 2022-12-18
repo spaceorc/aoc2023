@@ -26,27 +26,20 @@ public class Program
         long Surface(IEnumerable<V3> cs)
         {
             var set = cs.ToHashSet();
-            return set.Sum(v => 6 - v.Neighbors().Count(n => set.Contains(n)));    
+            return set.Sum(v => 6 - v.Neighbors().Count(n => set.Contains(n)));
         }
-        
+
         Surface(cubes).Out("Part 1: ");
 
+        var cubesSet = cubes.ToHashSet();
         var range = cubes.BoundingBox();
-        var used = new HashSet<V3>(cubes);
-        var queue = new Queue<V3>(range.Border().Where(b => !used.Contains(b)));
-        used.UnionWith(queue);
-        
-        while (queue.Count > 0)
-        {
-            var cur = queue.Dequeue();
-            foreach (var n in cur.Neighbors().Where(n => range.Contains(n) && !used.Contains(n)))
-            {
-                used.Add(n);
-                queue.Enqueue(n);
-            }
-        }
+        var used = Helpers.Bfs(
+            range.Border().Except(cubes),
+            v => v.Neighbors().Where(n => range.Contains(n) && !cubesSet.Contains(n)))
+            .Select(s => s.State)
+            .Concat(cubes);
 
-        var holes = range.All().Where(v => !used.Contains(v));
+        var holes = range.All().Except(used);
 
         (Surface(cubes) - Surface(holes)).Out("Part 2: ");
     }
@@ -1011,12 +1004,12 @@ public class Program
         map[e] = 'z';
 
         map.Bfs4(s, (c, n) => n - c > 1)
-            .First(x => x.Pos == e)
+            .First(x => x.State == e)
             .Distance
             .Out("Part 1: ");
 
         map.Bfs4(map.All().Where(v => map[v] == 'a'), (c, n) => n - c > 1)
-            .First(x => x.Pos == e)
+            .First(x => x.State == e)
             .Distance
             .Out("Part 2: ");
     }

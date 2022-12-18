@@ -28,12 +28,13 @@ public static class Helpers
             }
         }
     }
-        
+
     public static IEnumerable<List<T>> Combinations<T>(this T[] items, int r)
     {
         int n = items.Length;
 
-        if (r > n) yield break;
+        if (r > n)
+            yield break;
 
         int[] indices = Enumerable.Range(0, r).ToArray();
 
@@ -41,16 +42,17 @@ public static class Helpers
 
         while (true)
         {
-            int i = indices.Length-1;
-            while(i>=0 && indices[i] == i + n - r)
-                i-=1;
+            int i = indices.Length - 1;
+            while (i >= 0 && indices[i] == i + n - r)
+                i -= 1;
 
-            if(i<0) yield break;
+            if (i < 0)
+                yield break;
 
             indices[i] += 1;
 
-            for(int j=i+1; j<r; j+=1)
-                indices[j] = indices[j-1] + 1;
+            for (int j = i + 1; j < r; j += 1)
+                indices[j] = indices[j - 1] + 1;
 
             yield return indices.Select(x => items[x]).ToList();
         }
@@ -77,7 +79,7 @@ public static class Helpers
 
         return true;
     }
-        
+
     public static IEnumerable<T[]> Permutations<T>(this T[] items)
     {
         int[] indices = Enumerable.Range(0, items.Length).ToArray();
@@ -99,6 +101,7 @@ public static class Helpers
                 batch.Clear();
             }
         }
+
         if (batch.Count > 0)
             yield return batch.ToArray();
     }
@@ -107,12 +110,12 @@ public static class Helpers
     {
         return items.Skip(startFrom).Batch(n).Select(x => x.First());
     }
-    
+
     public static IEnumerable<(T, int)> WithIndex<T>(this IEnumerable<T> items)
     {
         return items.Select((v, i) => (v, i));
     }
-    
+
     public static string[] Columns(this IEnumerable<string> lines)
     {
         var result = new List<string>();
@@ -122,27 +125,28 @@ public static class Helpers
 
         return result.ToArray();
     }
-    
+
     public static string[] RotateCW(this IEnumerable<string> lines)
     {
         return lines.Reverse().Columns();
     }
-    
+
     public static string[] RotateCCW(this IEnumerable<string> lines, int count = 1)
     {
         return lines.RotateCW(3 * count);
     }
-       
+
     public static string[] RotateCW(this IEnumerable<string> lines, int count)
     {
         var result = lines;
-        for (int i = 0; i < count%4; i++)
+        for (int i = 0; i < count % 4; i++)
         {
             result = result.RotateCW();
         }
+
         return result.ToArray();
     }
-    
+
     public static List<string[]> Regions(this IEnumerable<string> lines)
     {
         var result = new List<string[]>();
@@ -157,6 +161,7 @@ public static class Helpers
                 cur.Clear();
             }
         }
+
         if (cur.Count > 0)
             result.Add(cur.ToArray());
 
@@ -209,7 +214,7 @@ public static class Helpers
     {
         return a / Gcd(a, b) * b;
     }
-    
+
     public static int Lcm(params int[] values)
     {
         return values.Aggregate(1, Lcm);
@@ -268,5 +273,38 @@ public static class Helpers
         var valueString = Convert.ToString(value);
         Console.WriteLine($"{prefix}{valueString}");
         return value;
+    }
+
+    public static IEnumerable<BfsState<TState>> Bfs<TState>(
+        IEnumerable<TState> startFrom,
+        Func<TState, IEnumerable<TState>> getNextStates,
+        int maxDistance = int.MaxValue)
+        where TState : notnull
+    {
+        var queue = new Queue<TState>();
+        var used = new Dictionary<TState, BfsState<TState>>();
+        foreach (var state in startFrom)
+        {
+            queue.Enqueue(state);
+            used.Add(state, new BfsState<TState>(state, 0, null));
+        }
+
+        while (queue.Count > 0)
+        {
+            var cur = queue.Dequeue();
+            var curBfsState = used[cur];
+            yield return curBfsState;
+
+            if (curBfsState.Distance >= maxDistance)
+                continue;
+
+            foreach (var next in getNextStates(cur))
+            {
+                if (used.ContainsKey(next))
+                    continue;
+                used.Add(next, new BfsState<TState>(next, curBfsState.Distance + 1, curBfsState));
+                queue.Enqueue(next);
+            }
+        }
     }
 }

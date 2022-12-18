@@ -120,39 +120,15 @@ public class Map<T>
         Array.Copy(data, other.data, totalCount);
     }
 
-    public IEnumerable<BfsState> Bfs(
+    public IEnumerable<BfsState<V>> Bfs(
         IEnumerable<V> startFrom,
         Func<V, IEnumerable<V>> nexts,
         Func<T, T, bool> acceptNext)
     {
-        var queue = new Queue<V>();
-        var used = new Dictionary<V, (V? Prev, int Distance)>();
-        foreach (var v in startFrom)
-        {
-            queue.Enqueue(v);
-            used[v] = (null, 0);
-        }
-
-        while (queue.Count > 0)
-        {
-            var cur = queue.Dequeue();
-            yield return new BfsState(cur, used);
-
-            foreach (var next in nexts(cur))
-            {
-                if (acceptNext(this[cur], this[next]))
-                    continue;
-
-                if (used.ContainsKey(next))
-                    continue;
-
-                used[next] = (cur, used[cur].Distance + 1);
-                queue.Enqueue(next);
-            }
-        }
+        return Helpers.Bfs(startFrom, nexts);
     }
 
-    public IEnumerable<BfsState> Bfs(
+    public IEnumerable<BfsState<V>> Bfs(
         V startFrom,
         Func<V, IEnumerable<V>> nexts,
         Func<T, T, bool> acceptNext)
@@ -160,28 +136,28 @@ public class Map<T>
         return Bfs(new[] { startFrom }, nexts, acceptNext);
     }
 
-    public IEnumerable<BfsState> Bfs4(
+    public IEnumerable<BfsState<V>> Bfs4(
         IEnumerable<V> startFrom,
         Func<T, T, bool> acceptNext)
     {
         return Bfs(startFrom, Nears, acceptNext);
     }
 
-    public IEnumerable<BfsState> Bfs4(
+    public IEnumerable<BfsState<V>> Bfs4(
         V startFrom,
         Func<T, T, bool> acceptNext)
     {
         return Bfs(new[] { startFrom }, Nears, acceptNext);
     }
 
-    public IEnumerable<BfsState> Bfs8(
+    public IEnumerable<BfsState<V>> Bfs8(
         IEnumerable<V> startFrom,
         Func<T, T, bool> acceptNext)
     {
         return Bfs(startFrom, Nears8, acceptNext);
     }
 
-    public IEnumerable<BfsState> Bfs8(
+    public IEnumerable<BfsState<V>> Bfs8(
         V startFrom,
         Func<T, T, bool> acceptNext)
     {

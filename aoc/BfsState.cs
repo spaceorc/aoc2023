@@ -3,15 +3,13 @@ using System.Linq;
 
 namespace aoc;
 
-public record BfsState(V Pos, Dictionary<V, (V? Prev, int Distance)> PathMap)
+public record BfsState<TState>(TState State, int Distance, BfsState<TState>? Prev)
 {
-    public int Distance => PathMap[Pos].Distance;
-    
-    public IEnumerable<V> PathBack()
+    public IEnumerable<TState> PathBack()
     {
-        for (V? c = Pos; c != null; c = PathMap[c.Value].Prev)
-            yield return c.Value;
+        for (BfsState<TState>? c = this; c != null; c = c.Prev)
+            yield return c.State;
     }
 
-    public IEnumerable<V> Path() => PathBack().Reverse();
+    public IEnumerable<TState> Path() => PathBack().Reverse();
 }
