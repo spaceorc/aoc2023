@@ -7,6 +7,15 @@ namespace aoc;
 public class V3 : IEquatable<V3>
 {
     public static readonly V3 Zero = new V3(0, 0, 0);
+    public static readonly V3[] neighbors = 
+    {
+        new (1,0,0),
+        new (0,1,0),
+        new (0,0,1),
+        new (-1,0,0),
+        new (0,-1,0),
+        new (0,0,-1),
+    };
     public readonly long X;
     public readonly long Y;
     public readonly long Z;
@@ -57,6 +66,8 @@ public class V3 : IEquatable<V3>
     }
 
     public IEnumerable<V3> Nears() => NearsAndSelf().Where(x => x != this).ToArray();
+
+    public IEnumerable<V3> Neighbors() => neighbors.Select(n => this + n);
 
     public V3 Rotate(int dir) => Rotations3.Rotate(this, dir);
     public V3 RotateBack(int dir) => Rotations3.RotateBack(this, dir);

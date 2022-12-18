@@ -18,7 +18,37 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day17.txt", Solve_17_2);
+        Runner.RunFile("day18.txt", Solve_18_1);
+    }
+
+    static void Solve_18_1(V3[] cubes)
+    {
+        long Surface(IEnumerable<V3> cs)
+        {
+            var set = cs.ToHashSet();
+            return set.Sum(v => 6 - v.Neighbors().Count(n => set.Contains(n)));    
+        }
+        
+        Surface(cubes).Out("Part 1: ");
+
+        var range = cubes.BoundingBox();
+        var used = new HashSet<V3>(cubes);
+        var queue = new Queue<V3>(range.Border().Where(b => !used.Contains(b)));
+        used.UnionWith(queue);
+        
+        while (queue.Count > 0)
+        {
+            var cur = queue.Dequeue();
+            foreach (var n in cur.Neighbors().Where(n => range.Contains(n) && !used.Contains(n)))
+            {
+                used.Add(n);
+                queue.Enqueue(n);
+            }
+        }
+
+        var holes = range.All().Where(v => !used.Contains(v));
+
+        (Surface(cubes) - Surface(holes)).Out("Part 2: ");
     }
 
     static void Solve_17_2(string[] lines)
@@ -69,8 +99,8 @@ public class Program
                 return;
             }
         }
-        
-        
+
+
         void Next(int index)
         {
             if (input[index] == '<')
@@ -162,6 +192,7 @@ public class Program
                             Console.Write(' ');
                     }
                 }
+
                 Console.WriteLine("|");
             }
         }
@@ -203,6 +234,7 @@ public class Program
                 }
             }
         }
+
         void Next(int index)
         {
             if (input[index] == '<')
@@ -294,6 +326,7 @@ public class Program
                             Console.Write(' ');
                     }
                 }
+
                 Console.WriteLine("|");
             }
         }
