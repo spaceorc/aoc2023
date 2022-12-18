@@ -3,11 +3,11 @@ using System.Linq;
 
 namespace aoc;
 
-public record BfsState<TState>(TState State, int Distance, BfsState<TState>? Prev)
+public record BfsPathItem<TState>(TState State, int Distance, BfsPathItem<TState>? Prev)
 {
     public IEnumerable<TState> PathBack()
     {
-        for (BfsState<TState>? c = this; c != null; c = c.Prev)
+        for (var c = this; c != null; c = c.Prev)
             yield return c.State;
     }
 

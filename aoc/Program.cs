@@ -23,25 +23,29 @@ public class Program
 
     static void Solve_18(V3[] cubes)
     {
-        long Surface(IEnumerable<V3> cs)
+        long SurfaceSquare(IEnumerable<V3> cs)
         {
             var set = cs.ToHashSet();
-            return set.Sum(v => 6 - v.Neighbors().Count(n => set.Contains(n)));
+            return set.Sum(v => 6 - v.Neighbors().Count(set.Contains));
         }
 
-        Surface(cubes).Out("Part 1: ");
+        SurfaceSquare(cubes).Out("Part 1: ");
 
         var cubesSet = cubes.ToHashSet();
-        var range = cubes.BoundingBox();
-        var used = Helpers.Bfs(
-            range.Border().Except(cubes),
-            v => v.Neighbors().Where(n => range.Contains(n) && !cubesSet.Contains(n)))
-            .Select(s => s.State)
-            .Concat(cubes);
+        var range = cubes.BoundingBox().Grow(1);
+        var water = Helpers.Bfs(
+                startFrom: range.Border(),
+                getNextStates: v => v.Neighbors()
+                    .Where(n => range.Contains(n)
+                                && !cubesSet.Contains(n))
+            )
+            .Select(s => s.State);
+        
+        var holes = range.All()
+            .Except(water)
+            .Except(cubes);
 
-        var holes = range.All().Except(used);
-
-        (Surface(cubes) - Surface(holes)).Out("Part 2: ");
+        (SurfaceSquare(cubes) - SurfaceSquare(holes)).Out("Part 2: ");
     }
 
     static void Solve_17_2(string[] lines)

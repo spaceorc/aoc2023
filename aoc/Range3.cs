@@ -36,9 +36,9 @@ public class Range3
             yield return new V3(x, y, z);
     }
 
-    public List<V3> Border()
+    public HashSet<V3> Border()
     {
-        var border = new List<V3>();
+        var border = new HashSet<V3>();
         for (var x = MinX; x <= MaxX; x++)
         for (var y = MinY; y <= MaxY; y++)
         {
@@ -62,4 +62,8 @@ public class Range3
 
         return border;
     }
+
+    public Range3 Grow(long delta) => new(
+        MinX - delta, MinY - delta, MinZ - delta,
+        MaxX + delta, MaxY + delta, MaxZ + delta);
 }

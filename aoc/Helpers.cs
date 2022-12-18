@@ -275,18 +275,18 @@ public static class Helpers
         return value;
     }
 
-    public static IEnumerable<BfsState<TState>> Bfs<TState>(
+    public static IEnumerable<BfsPathItem<TState>> Bfs<TState>(
         IEnumerable<TState> startFrom,
         Func<TState, IEnumerable<TState>> getNextStates,
         int maxDistance = int.MaxValue)
         where TState : notnull
     {
         var queue = new Queue<TState>();
-        var used = new Dictionary<TState, BfsState<TState>>();
+        var used = new Dictionary<TState, BfsPathItem<TState>>();
         foreach (var state in startFrom)
         {
             queue.Enqueue(state);
-            used.Add(state, new BfsState<TState>(state, 0, null));
+            used.Add(state, new BfsPathItem<TState>(state, 0, null));
         }
 
         while (queue.Count > 0)
@@ -302,7 +302,7 @@ public static class Helpers
             {
                 if (used.ContainsKey(next))
                     continue;
-                used.Add(next, new BfsState<TState>(next, curBfsState.Distance + 1, curBfsState));
+                used.Add(next, new BfsPathItem<TState>(next, curBfsState.Distance + 1, curBfsState));
                 queue.Enqueue(next);
             }
         }
