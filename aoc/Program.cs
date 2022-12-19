@@ -6,10 +6,14 @@ using System.Linq;
 using System.Net.Mime;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using static System.Math;
 
 namespace aoc;
@@ -18,7 +22,162 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day18.txt", Solve_18);
+        Runner.RunFile("day19.txt", Solve_19);
+    }
+
+    record NumberDay19(int Ore, int Clay, int Obsidian, int Geode)
+    {
+        public static NumberDay19 operator -(NumberDay19 a) => new(-a.Ore, -a.Clay, -a.Obsidian, -a.Geode);
+
+        public static NumberDay19 operator +(NumberDay19 a, NumberDay19 b) =>
+            new(a.Ore + b.Ore, a.Clay + b.Clay, a.Obsidian + b.Obsidian, a.Geode + b.Geode);
+
+        public static NumberDay19 operator *(NumberDay19 a, int coeff) =>
+            new(a.Ore * coeff, a.Clay * coeff, a.Obsidian * coeff, a.Geode * coeff);
+
+        public static NumberDay19 operator *(int coeff, NumberDay19 a) =>
+            new(a.Ore * coeff, a.Clay * coeff, a.Obsidian * coeff, a.Geode * coeff);
+
+        public static NumberDay19 operator -(NumberDay19 a, NumberDay19 b) => a + (-b);
+
+        public bool IsNegative() => Ore < 0 || Clay < 0 || Obsidian < 0 || Geode < 0;
+
+        public bool Covers(NumberDay19 other) => !(this - other).IsNegative();
+
+        public override string ToString()
+        {
+            return $"{Ore}:{Clay}:{Obsidian}:{Geode}";
+        }
+    }
+
+    record BlueprintDay19(int Id, int OreRobotCostOre, int ClayRobotCostOre, int ObsidianRobotCostOre,
+        int ObsidianRobotCostClay,
+        int GeodeRobotCostOre, int GeodeRobotCostObsidian)
+    {
+        public NumberDay19 OreRobotCost => new(OreRobotCostOre, 0, 0, 0);
+        public NumberDay19 ClayRobotCost => new(ClayRobotCostOre, 0, 0, 0);
+        public NumberDay19 ObsidianRobotCost => new(ObsidianRobotCostOre, ObsidianRobotCostClay, 0, 0);
+        public NumberDay19 GeodeRobotCost => new(GeodeRobotCostOre, 0, GeodeRobotCostObsidian, 0);
+    }
+
+    static void Solve_19(
+        [Template("Blueprint {Id}: " +
+                  "Each ore robot costs {OreRobotCostOre} ore. " +
+                  "Each clay robot costs {ClayRobotCostOre} ore. " +
+                  "Each obsidian robot costs {ObsidianRobotCostOre} ore and {ObsidianRobotCostClay} clay. " +
+                  "Each geode robot costs {GeodeRobotCostOre} ore and {GeodeRobotCostObsidian} obsidian.")]
+        BlueprintDay19[] input)
+    {
+        SolveTime(input, 24).Sum(x => x.id * x.score).Out("Part 1: ");
+        SolveTime(input.Take(3).ToArray(), 32).Select(x => x.score).Aggregate((a, b) => a * b).Out("Part 2: ");
+
+        List<(int id, int score)> SolveTime(BlueprintDay19[] blueprints, int time)
+        {
+            var result = new List<(int id, int score)>();
+            var tasks = new List<Task>();
+            var b = 0;
+            for (int tt = 0; tt < Environment.ProcessorCount; tt++)
+            {
+                tasks.Add(Task.Run(() =>
+                {
+                    while (true)
+                    {
+                        var index = Interlocked.Increment(ref b) - 1;
+                        if (index >= blueprints.Length)
+                            return;
+                        var blueprint = blueprints[index];
+                        var score = Solve(
+                            blueprint: blueprint,
+                            turn: time,
+                            resources: new NumberDay19(0, 0, 0, 0),
+                            robots: new NumberDay19(1, 0, 0, 0),
+                            results: new Dictionary<(int, NumberDay19, NumberDay19), int>(),
+                            bestKnownResult: 0,
+                            forbidden: new NumberDay19(0, 0, 0, 0));
+                        lock(result)
+                            result.Add((blueprint.Id, score));
+                        Console.Out.WriteLine($"{blueprint.Id}: {score}");
+                    }
+                }));
+            }
+
+            Task.WaitAll(tasks.ToArray());
+            return result;
+        }
+
+        int Solve(BlueprintDay19 blueprint, int turn, NumberDay19 resources, NumberDay19 robots,
+            Dictionary<(int, NumberDay19, NumberDay19), int> results, int bestKnownResult, NumberDay19 forbidden)
+        {
+            if (turn == 0)
+                return resources.Geode > bestKnownResult ? resources.Geode : bestKnownResult;
+
+            var key = (turn, resources, robots);
+            if (results.ContainsKey(key))
+                return results[key];
+
+            var possibleGeodes = resources.Geode;
+            var possibleGeodeRobots = robots.Geode;
+            for (int i = 0; i < turn; i++)
+            {
+                possibleGeodes += possibleGeodeRobots;
+                possibleGeodeRobots++;
+            }
+            
+            if (possibleGeodes <= bestKnownResult)
+            {
+                results[key] = bestKnownResult;
+                return bestKnownResult;
+            }
+
+            var bestResult = bestKnownResult;
+            var canGeode = resources.Covers(blueprint.GeodeRobotCost);
+            var canObsidian = resources.Covers(blueprint.ObsidianRobotCost);
+            var canClay = resources.Covers(blueprint.ClayRobotCost);
+            var canOre = resources.Covers(blueprint.OreRobotCost);
+
+            if (canGeode && forbidden.Geode == 0)
+            {
+                var newResult = Solve(blueprint, turn - 1, resources - blueprint.GeodeRobotCost + robots,
+                    robots + new NumberDay19(0, 0, 0, 1), results, bestResult, new NumberDay19(0, 0, 0, 0));
+                if (newResult > bestResult)
+                    bestResult = newResult;
+            }
+
+            if (!canGeode && canObsidian && forbidden.Obsidian == 0)
+            {
+                var newResult = Solve(blueprint, turn - 1, resources - blueprint.ObsidianRobotCost + robots,
+                    robots + new NumberDay19(0, 0, 1, 0), results, bestResult, new NumberDay19(0, 0, 0, 0));
+                if (newResult > bestResult)
+                    bestResult = newResult;
+            }
+
+            if (!canGeode && canClay && forbidden.Clay == 0)
+            {
+                var newResult = Solve(blueprint, turn - 1, resources - blueprint.ClayRobotCost + robots,
+                    robots + new NumberDay19(0, 1, 0, 0), results, bestResult, new NumberDay19(0, 0, 0, 0));
+                if (newResult > bestResult)
+                    bestResult = newResult;
+            }
+
+            if (!canGeode && canOre && forbidden.Ore == 0)
+            {
+                var newResult = Solve(blueprint, turn - 1, resources - blueprint.OreRobotCost + robots,
+                    robots + new NumberDay19(1, 0, 0, 0), results, bestResult, new NumberDay19(0, 0, 0, 0));
+                if (newResult > bestResult)
+                    bestResult = newResult;
+            }
+
+            if (!canGeode)
+            {
+                var newResult = Solve(blueprint, turn - 1, resources + robots, robots, results, bestResult,
+                    new NumberDay19(canOre ? 1 : 0, canClay ? 1 : 0, canObsidian ? 1 : 0, canGeode ? 1 : 0));
+                if (newResult > bestResult)
+                    bestResult = newResult;
+            }
+
+            results[key] = bestResult;
+            return bestResult;
+        }
     }
 
     static void Solve_18(V3[] cubes)
@@ -40,7 +199,7 @@ public class Program
                                 && !cubesSet.Contains(n))
             )
             .Select(s => s.State);
-        
+
         var holes = range.All()
             .Except(water)
             .Except(cubes);
