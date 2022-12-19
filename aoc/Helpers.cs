@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 namespace aoc;
 
@@ -273,6 +274,16 @@ public static class Helpers
         var valueString = Convert.ToString(value);
         Console.WriteLine($"{prefix}{valueString}");
         return value;
+    }
+
+    public static long Product(this IEnumerable<long> items)
+    {
+        return items.Aggregate((a, b) => a * b);
+    }
+
+    public static int Product(this IEnumerable<int> items)
+    {
+        return items.Aggregate((a, b) => a * b);
     }
 
     public static IEnumerable<BfsPathItem<TState>> Bfs<TState>(

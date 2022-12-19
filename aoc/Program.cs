@@ -28,31 +28,16 @@ public class Program
     record NumberDay19(int Ore, int Clay, int Obsidian, int Geode)
     {
         public static NumberDay19 operator -(NumberDay19 a) => new(-a.Ore, -a.Clay, -a.Obsidian, -a.Geode);
-
-        public static NumberDay19 operator +(NumberDay19 a, NumberDay19 b) =>
-            new(a.Ore + b.Ore, a.Clay + b.Clay, a.Obsidian + b.Obsidian, a.Geode + b.Geode);
-
-        public static NumberDay19 operator *(NumberDay19 a, int coeff) =>
-            new(a.Ore * coeff, a.Clay * coeff, a.Obsidian * coeff, a.Geode * coeff);
-
-        public static NumberDay19 operator *(int coeff, NumberDay19 a) =>
-            new(a.Ore * coeff, a.Clay * coeff, a.Obsidian * coeff, a.Geode * coeff);
-
-        public static NumberDay19 operator -(NumberDay19 a, NumberDay19 b) => a + (-b);
-
+        public static NumberDay19 operator +(NumberDay19 a, NumberDay19 b) => new(a.Ore + b.Ore, a.Clay + b.Clay, a.Obsidian + b.Obsidian, a.Geode + b.Geode);
+        public static NumberDay19 operator *(NumberDay19 a, int k) => new(a.Ore * k, a.Clay * k, a.Obsidian * k, a.Geode * k);
+        public static NumberDay19 operator *(int k, NumberDay19 a) => new(a.Ore * k, a.Clay * k, a.Obsidian * k, a.Geode * k);
+        public static NumberDay19 operator -(NumberDay19 a, NumberDay19 b) => new(a.Ore - b.Ore, a.Clay - b.Clay, a.Obsidian - b.Obsidian, a.Geode - b.Geode);
         public bool IsNegative() => Ore < 0 || Clay < 0 || Obsidian < 0 || Geode < 0;
-
         public bool Covers(NumberDay19 other) => !(this - other).IsNegative();
-
-        public override string ToString()
-        {
-            return $"{Ore}:{Clay}:{Obsidian}:{Geode}";
-        }
+        public override string ToString() => $"{Ore}:{Clay}:{Obsidian}:{Geode}";
     }
 
-    record BlueprintDay19(int Id, int OreRobotCostOre, int ClayRobotCostOre, int ObsidianRobotCostOre,
-        int ObsidianRobotCostClay,
-        int GeodeRobotCostOre, int GeodeRobotCostObsidian)
+    record BlueprintDay19(int Id, int OreRobotCostOre, int ClayRobotCostOre, int ObsidianRobotCostOre, int ObsidianRobotCostClay, int GeodeRobotCostOre, int GeodeRobotCostObsidian)
     {
         public NumberDay19 OreRobotCost => new(OreRobotCostOre, 0, 0, 0);
         public NumberDay19 ClayRobotCost => new(ClayRobotCostOre, 0, 0, 0);
@@ -69,14 +54,14 @@ public class Program
         BlueprintDay19[] input)
     {
         SolveTime(input, 24).Sum(x => x.id * x.score).Out("Part 1: ");
-        SolveTime(input.Take(3).ToArray(), 32).Select(x => x.score).Aggregate((a, b) => a * b).Out("Part 2: ");
+        SolveTime(input.Take(3).ToArray(), 32).Select(x => x.score).Product().Out("Part 2: ");
 
         List<(int id, int score)> SolveTime(BlueprintDay19[] blueprints, int time)
         {
             var result = new List<(int id, int score)>();
             var tasks = new List<Task>();
             var b = 0;
-            for (int tt = 0; tt < Environment.ProcessorCount; tt++)
+            for (var t = 0; t < Environment.ProcessorCount; t++)
             {
                 tasks.Add(Task.Run(() =>
                 {
@@ -105,8 +90,14 @@ public class Program
             return result;
         }
 
-        int Solve(BlueprintDay19 blueprint, int turn, NumberDay19 resources, NumberDay19 robots,
-            Dictionary<(int, NumberDay19, NumberDay19), int> results, int bestKnownResult, NumberDay19 forbidden)
+        int Solve(
+            BlueprintDay19 blueprint, 
+            int turn, 
+            NumberDay19 resources,
+            NumberDay19 robots,
+            Dictionary<(int, NumberDay19, NumberDay19), int> results,
+            int bestKnownResult,
+            NumberDay19 forbidden)
         {
             if (turn == 0)
                 return resources.Geode > bestKnownResult ? resources.Geode : bestKnownResult;
@@ -117,7 +108,7 @@ public class Program
 
             var possibleGeodes = resources.Geode;
             var possibleGeodeRobots = robots.Geode;
-            for (int i = 0; i < turn; i++)
+            for (var i = 0; i < turn; i++)
             {
                 possibleGeodes += possibleGeodeRobots;
                 possibleGeodeRobots++;
@@ -226,16 +217,16 @@ public class Program
 
         long fi = 0;
         long fc = 0;
-        V curV = V.Zero;
+        var curV = V.Zero;
         Appear();
 
         var fcc = 1000000000000L;
 
-        for (int i = 0; i < input.Length; i++)
+        for (var i = 0; i < input.Length; i++)
             Next(i);
         var prevMaxY = maxY;
         var prevFc = fc;
-        for (int i = 0; i < input.Length; i++)
+        for (var i = 0; i < input.Length; i++)
             Next(i);
         Console.Out.WriteLine($"delta maxY={maxY - prevMaxY}");
         Console.Out.WriteLine($"delta fc={fc - prevFc}");
@@ -246,7 +237,7 @@ public class Program
         fc += times * (fc - prevFc);
 
         var old = maxY;
-        for (int i = 0; i < input.Length; i++)
+        for (var i = 0; i < input.Length; i++)
         {
             Next(i);
             if (fc == fcc)
@@ -332,10 +323,10 @@ public class Program
         {
             Console.WriteLine();
             var my = Max(maxY, curV.Y + figureHeight[fi] - 1);
-            for (long y = my; y >= Max(0, my - 40); y--)
+            for (var y = my; y >= Max(0, my - 40); y--)
             {
                 Console.Write("|");
-                for (int x = 0; x < 7; x++)
+                for (var x = 0; x < 7; x++)
                 {
                     var v = new V(x, y);
                     if (used.Contains(v))
@@ -373,13 +364,13 @@ public class Program
 
         var fi = 0;
         var fc = 0;
-        V curV = V.Zero;
+        var curV = V.Zero;
         Appear();
         // Print();
 
         while (true)
         {
-            for (int i = 0; i < input.Length; i++)
+            for (var i = 0; i < input.Length; i++)
             {
                 Next(i);
                 // Print();
@@ -466,10 +457,10 @@ public class Program
         {
             Console.WriteLine();
             var my = Max(maxY, curV.Y + figureHeight[fi] - 1);
-            for (long y = my; y >= 0; y--)
+            for (var y = my; y >= 0; y--)
             {
                 Console.Write("|");
-                for (int x = 0; x < 7; x++)
+                for (var x = 0; x < 7; x++)
                 {
                     var v = new V(x, y);
                     if (used.Contains(v))
