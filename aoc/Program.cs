@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Mime;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Runtime.Versioning;
@@ -22,11 +23,340 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day19.txt", Solve_19);
+        Runner.RunFile("day20.txt", Solve_20);
+    }
+    
+    static void Solve_20(long[] input)
+    {
+        long Solve(long[] numbers, long multiplier, int times)
+        {
+            numbers = numbers.Select(v => v * multiplier).ToArray();
+            var curPositions = Enumerable.Range(0, numbers.Length).ToArray(); // original index -> curPosition
+            var positionToIndex = Enumerable.Range(0, numbers.Length).ToArray(); // position -> original index
+            var zeroOriginalPos = Array.IndexOf(numbers, 0L);
+
+            for (var t = 0; t < times; t++)
+            for (var i = 0; i < numbers.Length; i++)
+            {
+                var value = numbers[i];
+                var curPos = curPositions[i];
+                var moves = (value % (numbers.Length - 1) + (numbers.Length - 1)) % (numbers.Length - 1);
+                for (var k = 0; k < moves; k++)
+                {
+                    // value with index i at pos curPos
+                    // switches with
+                    // value at position curPos + 1
+                    var nextPos = (curPos + 1) % numbers.Length;
+                    var nextI = positionToIndex[nextPos];
+                    curPositions[i] = nextPos;
+                    curPositions[nextI] = curPos;
+                    positionToIndex[curPos] = nextI;
+                    positionToIndex[nextPos] = i;
+                    curPos = nextPos;
+                }
+            }
+
+            var zeroPos = curPositions[zeroOriginalPos];
+
+            return numbers[positionToIndex[(zeroPos + 1000) % numbers.Length]]
+                   + numbers[positionToIndex[(zeroPos + 2000) % numbers.Length]]
+                   + numbers[positionToIndex[(zeroPos + 3000) % numbers.Length]];
+        }
+        
+        Solve(input, multiplier: 1, times: 1).Out("Part 1: ");
+        Solve(input, multiplier: 811589153, times: 10).Out("Part 2: ");
+    }
+
+    static void Solve_19_alt(
+        [Template("Blueprint {Id}: " +
+                  "Each ore robot costs {OreRobotCostOre} ore. " +
+                  "Each clay robot costs {ClayRobotCostOre} ore. " +
+                  "Each obsidian robot costs {ObsidianRobotCostOre} ore and {ObsidianRobotCostClay} clay. " +
+                  "Each geode robot costs {GeodeRobotCostOre} ore and {GeodeRobotCostObsidian} obsidian.")]
+        BlueprintDay19[] input)
+    {
+        var sw = Stopwatch.StartNew();
+        SolveTime(input, 24).Sum(x => x.id * x.score).Out($"Part 1 ({sw.ElapsedMilliseconds} ms): ");
+
+        sw = Stopwatch.StartNew();
+        SolveTime(input.Take(3).ToArray(), 32).Select(x => x.score).Product()
+            .Out($"Part 2 ({sw.ElapsedMilliseconds} ms): ");
+
+        List<(int id, int score)> SolveTime(BlueprintDay19[] blueprints, int time)
+        {
+            var result = new List<(int id, int score)>();
+            var tasks = new List<Task>();
+            var b = 0;
+            for (var t = 0; t < Environment.ProcessorCount; t++)
+            {
+                tasks.Add(Task.Run(() =>
+                {
+                    while (true)
+                    {
+                        var index = Interlocked.Increment(ref b) - 1;
+                        if (index >= blueprints.Length)
+                            return;
+                        var blueprint = blueprints[index];
+                        var score = Solve(blueprint, time);
+                        lock (result)
+                            result.Add((blueprint.Id, score));
+                        Console.Out.WriteLine($"{blueprint.Id}: {score}");
+                    }
+                }));
+            }
+
+            Task.WaitAll(tasks.ToArray());
+            // foreach (var blueprint in blueprints)
+            // {
+            //     var score = Solve(blueprint, time);
+            //     result.Add((blueprint.Id, score));
+            //     Console.Out.WriteLine($"{blueprint.Id}: {score}");
+            // }
+
+            return result;
+        }
+
+        int Solve(BlueprintDay19 blueprint, int totalTime)
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            ulong MakeQueueItem(
+                int turn,
+                ulong key)
+            {
+                return (ulong)turn << 52 | key;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            ulong MakeKey(
+                int ore,
+                int clay,
+                int obsidian,
+                int geode,
+                int oreRobots,
+                int clayRobots,
+                int obsidianRobots,
+                int geodeRobots)
+            {
+                return (ulong)ore << 45 // 7 bit
+                       | (ulong)clay << 38 // 7 bit
+                       | (ulong)obsidian << 31 // 7 bit
+                       | (ulong)geode << 24 // 7 bit
+                       | (ulong)oreRobots << 18 // 6 bit
+                       | (ulong)clayRobots << 12 // 6 bit
+                       | (ulong)obsidianRobots << 6 // 6 bit
+                       | (ulong)geodeRobots << 0; // 6 bit
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            ulong TryMakeKey(
+                int ore,
+                int clay,
+                int obsidian,
+                int geode,
+                int oreRobots,
+                int clayRobots,
+                int obsidianRobots,
+                int geodeRobots)
+            {
+                if (ore >= 1 << 7
+                    || clay >= 1 << 7
+                    || obsidian >= 1 << 7
+                    || geode >= 1 << 7
+                    || oreRobots >= 1 << 6
+                    || clayRobots >= 1 << 6
+                    || obsidianRobots >= 1 << 6
+                    || geodeRobots >= 1 << 6)
+                    return ulong.MaxValue;
+
+                return (ulong)ore << 45 // 7 bit
+                       | (ulong)clay << 38 // 7 bit
+                       | (ulong)obsidian << 31 // 7 bit
+                       | (ulong)geode << 24 // 7 bit
+                       | (ulong)oreRobots << 18 // 6 bit
+                       | (ulong)clayRobots << 12 // 6 bit
+                       | (ulong)obsidianRobots << 6 // 6 bit
+                       | (ulong)geodeRobots << 0; // 6 bit
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            ulong MakeKeyFromItem(ulong item)
+            {
+                return item & ((1UL << 52) - 1);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            void Deconstruct(
+                ulong item,
+                out int turn,
+                out int ore,
+                out int clay,
+                out int obsidian,
+                out int geode,
+                out int oreRobots,
+                out int clayRobots,
+                out int obsidianRobots,
+                out int geodeRobots)
+            {
+                geodeRobots = (int)((item >> 0) & ((1UL << 6) - 1));
+                obsidianRobots = (int)((item >> 6) & ((1UL << 6) - 1));
+                clayRobots = (int)((item >> 12) & ((1UL << 6) - 1));
+                oreRobots = (int)((item >> 18) & ((1UL << 6) - 1));
+                geode = (int)((item >> 24) & ((1UL << 7) - 1));
+                obsidian = (int)((item >> 31) & ((1UL << 7) - 1));
+                clay = (int)((item >> 38) & ((1UL << 7) - 1));
+                ore = (int)((item >> 45) & ((1UL << 7) - 1));
+                turn = (int)(item >> 52);
+            }
+
+            var startKey = MakeKey(0, 0, 0, 0, 1, 0, 0, 0);
+            var heap = new Heap();
+            heap.Add(MakeQueueItem(0, startKey));
+
+            var minTime = new Dictionary<ulong, int>();
+            minTime.Add(startKey, 0);
+
+            var maxTotalGeode = 0;
+            while (heap.Count > 0)
+            {
+                var cur = heap.DeleteMin();
+                Deconstruct(cur,
+                    out var turn,
+                    out var ore,
+                    out var clay,
+                    out var obsidian,
+                    out var geode,
+                    out var oreRobots,
+                    out var clayRobots,
+                    out var obsidianRobots,
+                    out var geodeRobots);
+                var curKey = MakeKeyFromItem(cur);
+                var curTime = minTime[curKey];
+                if (turn > curTime)
+                    continue;
+
+                if (geodeRobots > 0)
+                {
+                    var totalGeode = geode + (totalTime - curTime) * geodeRobots;
+                    if (totalGeode > maxTotalGeode)
+                        maxTotalGeode = totalGeode;
+                }
+
+                if (oreRobots > 0 && obsidianRobots > 0)
+                {
+                    var nextTimeDelta = Max(
+                        NextTime(blueprint.GeodeRobotCostOre, ore, oreRobots),
+                        NextTime(blueprint.GeodeRobotCostObsidian, obsidian, obsidianRobots));
+                    var nextTime = curTime + nextTimeDelta;
+                    if (nextTime < totalTime)
+                    {
+                        var nextKey = TryMakeKey(
+                            ore + nextTimeDelta * oreRobots - blueprint.GeodeRobotCostOre,
+                            clay + nextTimeDelta * clayRobots,
+                            obsidian + nextTimeDelta * obsidianRobots - blueprint.GeodeRobotCostObsidian,
+                            geode + nextTimeDelta * geodeRobots,
+                            oreRobots,
+                            clayRobots,
+                            obsidianRobots,
+                            geodeRobots + 1);
+                        if (nextKey != ulong.MaxValue)
+                            if (!minTime.TryGetValue(nextKey, out var prevMinTime) || prevMinTime > nextTime)
+                            {
+                                minTime[nextKey] = nextTime;
+                                heap.Add(MakeQueueItem(nextTime, nextKey));
+                            }
+                    }
+                }
+
+                if (oreRobots > 0 && clayRobots > 0 && obsidianRobots < (1 << 6) - 1)
+                {
+                    var nextTimeDelta = Max(
+                        NextTime(blueprint.ObsidianRobotCostOre, ore, oreRobots),
+                        NextTime(blueprint.ObsidianRobotCostClay, clay, clayRobots));
+                    var nextTime = curTime + nextTimeDelta;
+                    if (nextTime < totalTime)
+                    {
+                        var nextKey = TryMakeKey(
+                            ore + nextTimeDelta * oreRobots - blueprint.ObsidianRobotCostOre,
+                            clay + nextTimeDelta * clayRobots - blueprint.ObsidianRobotCostClay,
+                            obsidian + nextTimeDelta * obsidianRobots,
+                            geode + nextTimeDelta * geodeRobots,
+                            oreRobots,
+                            clayRobots,
+                            obsidianRobots + 1,
+                            geodeRobots);
+                        if (nextKey != ulong.MaxValue)
+                            if (!minTime.TryGetValue(nextKey, out var prevMinTime) || prevMinTime > nextTime)
+                            {
+                                minTime[nextKey] = nextTime;
+                                heap.Add(MakeQueueItem(nextTime, nextKey));
+                            }
+                    }
+                }
+
+                if (clayRobots < (1 << 6) - 1)
+                {
+                    var nextTimeDelta = NextTime(blueprint.ClayRobotCostOre, ore, oreRobots);
+                    var nextTime = curTime + nextTimeDelta;
+                    if (nextTime < totalTime)
+                    {
+                        var nextKey = TryMakeKey(
+                            ore + nextTimeDelta * oreRobots - blueprint.ClayRobotCostOre,
+                            clay + nextTimeDelta * clayRobots,
+                            obsidian + nextTimeDelta * obsidianRobots,
+                            geode + nextTimeDelta * geodeRobots,
+                            oreRobots,
+                            clayRobots + 1,
+                            obsidianRobots,
+                            geodeRobots);
+                        if (nextKey != ulong.MaxValue)
+                            if (!minTime.TryGetValue(nextKey, out var prevMinTime) || prevMinTime > nextTime)
+                            {
+                                minTime[nextKey] = nextTime;
+                                heap.Add(MakeQueueItem(nextTime, nextKey));
+                            }
+                    }
+                }
+
+                if (oreRobots < (1 << 6) - 1)
+                {
+                    var nextTimeDelta = NextTime(blueprint.OreRobotCostOre, ore, oreRobots);
+                    var nextTime = curTime + nextTimeDelta;
+                    if (nextTime < totalTime)
+                    {
+                        var nextKey = TryMakeKey(
+                            ore + nextTimeDelta * oreRobots - blueprint.OreRobotCostOre,
+                            clay + nextTimeDelta * clayRobots,
+                            obsidian + nextTimeDelta * obsidianRobots,
+                            geode + nextTimeDelta * geodeRobots,
+                            oreRobots + 1,
+                            clayRobots,
+                            obsidianRobots,
+                            geodeRobots);
+                        if (nextKey != ulong.MaxValue)
+                            if (!minTime.TryGetValue(nextKey, out var prevMinTime) || prevMinTime > nextTime)
+                            {
+                                minTime[nextKey] = nextTime;
+                                heap.Add(MakeQueueItem(nextTime, nextKey));
+                            }
+                    }
+                }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                int NextTime(int cost, int resource, int robots)
+                {
+                    var time = (cost - resource + robots - 1) / robots;
+                    if (time < 0)
+                        time = 0;
+                    return time + 1;
+                }
+            }
+
+            return maxTotalGeode;
+        }
     }
 
     record BlueprintDay19(
-        int Id, 
+        int Id,
         int OreRobotCostOre,
         int ClayRobotCostOre,
         int ObsidianRobotCostOre,
@@ -44,9 +374,10 @@ public class Program
     {
         var sw = Stopwatch.StartNew();
         SolveTime(input, 24).Sum(x => x.id * x.score).Out($"Part 1 ({sw.ElapsedMilliseconds} ms): ");
-        
+
         sw = Stopwatch.StartNew();
-        SolveTime(input.Take(3).ToArray(), 32).Select(x => x.score).Product().Out($"Part 2 ({sw.ElapsedMilliseconds} ms): ");
+        SolveTime(input.Take(3).ToArray(), 32).Select(x => x.score).Product()
+            .Out($"Part 2 ({sw.ElapsedMilliseconds} ms): ");
 
         List<(int id, int score)> SolveTime(BlueprintDay19[] blueprints, int time)
         {
@@ -66,11 +397,11 @@ public class Program
                         var score = Solve(
                             blueprint: blueprint,
                             turn: time,
-                            0, 0, 0, 0, 
+                            0, 0, 0, 0,
                             1, 0, 0, 0,
                             bestKnownResult: 0,
                             false, false, false, false);
-                        lock(result)
+                        lock (result)
                             result.Add((blueprint.Id, score));
                         // Console.Out.WriteLine($"{blueprint.Id}: {score}");
                     }
@@ -82,8 +413,8 @@ public class Program
         }
 
         int Solve(
-            BlueprintDay19 blueprint, 
-            int turn, 
+            BlueprintDay19 blueprint,
+            int turn,
             int ore,
             int clay,
             int obsidian,
@@ -108,7 +439,7 @@ public class Program
                 possibleGeodes += possibleGeodeRobots;
                 possibleGeodeRobots++;
             }
-            
+
             if (possibleGeodes <= bestKnownResult)
                 return bestKnownResult;
 
@@ -120,7 +451,7 @@ public class Program
 
             if (canGeode && !forbiddenGeodeRobot)
             {
-                var newResult = Solve(blueprint, turn - 1, 
+                var newResult = Solve(blueprint, turn - 1,
                     ore - blueprint.GeodeRobotCostOre + oreRobots,
                     clay + clayRobots,
                     obsidian - blueprint.GeodeRobotCostObsidian + obsidianRobots,
@@ -129,16 +460,16 @@ public class Program
                     clayRobots,
                     obsidianRobots,
                     geodeRobots + 1,
-                    bestResult, 
+                    bestResult,
                     false, false, false, false);
                 if (newResult > bestResult)
                     bestResult = newResult;
             }
 
-            if (!canGeode && canObsidian && !forbiddenObsidianRobot)
-            // if (canObsidian && !forbiddenObsidianRobot)
+            // if (!canGeode && canObsidian && !forbiddenObsidianRobot)
+            if (canObsidian && !forbiddenObsidianRobot)
             {
-                var newResult = Solve(blueprint, turn - 1, 
+                var newResult = Solve(blueprint, turn - 1,
                     ore - blueprint.ObsidianRobotCostOre + oreRobots,
                     clay - blueprint.ObsidianRobotCostClay + clayRobots,
                     obsidian + obsidianRobots,
@@ -147,16 +478,16 @@ public class Program
                     clayRobots,
                     obsidianRobots + 1,
                     geodeRobots,
-                    bestResult, 
+                    bestResult,
                     false, false, false, false);
                 if (newResult > bestResult)
                     bestResult = newResult;
             }
 
-            if (!canGeode && !canObsidian && canClay && !forbiddenClayRobot)
-            // if (canClay && !forbiddenClayRobot)
+            // if (!canGeode && !canObsidian && canClay && !forbiddenClayRobot)
+            if (canClay && !forbiddenClayRobot)
             {
-                var newResult = Solve(blueprint, turn - 1, 
+                var newResult = Solve(blueprint, turn - 1,
                     ore - blueprint.ClayRobotCostOre + oreRobots,
                     clay + clayRobots,
                     obsidian + obsidianRobots,
@@ -165,16 +496,16 @@ public class Program
                     clayRobots + 1,
                     obsidianRobots,
                     geodeRobots,
-                    bestResult, 
+                    bestResult,
                     false, false, false, false);
                 if (newResult > bestResult)
                     bestResult = newResult;
             }
 
-            if (!canGeode && !canObsidian && canOre && !forbiddenOreRobot)
-            // if (canOre && !forbiddenOreRobot)
+            // if (!canGeode && !canObsidian && canOre && !forbiddenOreRobot)
+            if (canOre && !forbiddenOreRobot)
             {
-                var newResult = Solve(blueprint, turn - 1, 
+                var newResult = Solve(blueprint, turn - 1,
                     ore - blueprint.OreRobotCostOre + oreRobots,
                     clay + clayRobots,
                     obsidian + obsidianRobots,
@@ -183,15 +514,15 @@ public class Program
                     clayRobots,
                     obsidianRobots,
                     geodeRobots,
-                    bestResult, 
+                    bestResult,
                     false, false, false, false);
                 if (newResult > bestResult)
                     bestResult = newResult;
             }
 
-            if (!canGeode && !canObsidian)
+            // if (!canGeode && !canObsidian)
             {
-                var newResult = Solve(blueprint, turn - 1, 
+                var newResult = Solve(blueprint, turn - 1,
                     ore + oreRobots,
                     clay + clayRobots,
                     obsidian + obsidianRobots,
@@ -200,7 +531,7 @@ public class Program
                     clayRobots,
                     obsidianRobots,
                     geodeRobots,
-                    bestResult, 
+                    bestResult,
                     canOre, canClay, canObsidian, canGeode);
                 if (newResult > bestResult)
                     bestResult = newResult;
