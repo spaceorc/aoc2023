@@ -23,9 +23,98 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day20.txt", Solve_20);
+        Runner.RunFile("day21.txt", Solve_21);
     }
-    
+
+    record MonkeyDay21(string Name, long Number, string Arg1, char Op, string Arg2)
+    {
+        // ReSharper disable once UnusedMember.Local
+        public static MonkeyDay21 Parse(string s)
+        {
+            var split = s.Split(new[] { ':', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (split.Length == 2)
+                return new MonkeyDay21(split[0], long.Parse(split[1]), "", default, "");
+            return new MonkeyDay21(split[0], 0, split[1], split[2][0], split[3]);
+        }
+    }
+
+    static void Solve_21(MonkeyDay21[] input)
+    {
+        var monkeys = input.ToDictionary(x => x.Name);
+
+        long Solve(string name, Dictionary<string, long> results)
+        {
+            var monkey = monkeys[name];
+
+            if (results.ContainsKey(name))
+                return results[name];
+
+            if (monkey.Number != 0)
+            {
+                results[monkey.Name] = monkey.Number;
+                return monkey.Number;
+            }
+
+            var result = monkey.Op switch
+            {
+                '+' => Solve(monkey.Arg1, results) + Solve(monkey.Arg2, results),
+                '-' => Solve(monkey.Arg1, results) - Solve(monkey.Arg2, results),
+                '*' => Solve(monkey.Arg1, results) * Solve(monkey.Arg2, results),
+                '/' => Solve(monkey.Arg1, results) / Solve(monkey.Arg2, results),
+                _ => throw new Exception()
+            };
+
+            results[monkey.Name] = result;
+            return result;
+        }
+
+        Solve("root", new()).Out("Part 1: ");
+
+        monkeys["root"] = monkeys["root"] with { Op = '-' };
+        var expected = 0L;
+        const string humn = "humn";
+        var cur = "root";
+        while (cur != humn)
+        {
+            var used1 = new Dictionary<string, long>();
+            var used2 = new Dictionary<string, long>();
+            var v1 = Solve(monkeys[cur].Arg1, used1);
+            var v2 = Solve(monkeys[cur].Arg2, used2);
+            if (used1.ContainsKey(humn) && used2.ContainsKey(humn))
+                throw new Exception();
+            if (used1.ContainsKey(humn))
+            {
+                expected = monkeys[cur].Op switch
+                {
+                    '-' => expected + v2,
+                    '+' => expected - v2,
+                    '/' => expected * v2,
+                    '*' => expected / v2,
+                    _ => throw new Exception()
+                };
+
+                cur = monkeys[cur].Arg1;
+            }
+            else if (used2.ContainsKey(humn))
+            {
+                expected = monkeys[cur].Op switch
+                {
+                    '-' => v1 - expected,
+                    '+' => expected - v1,
+                    '/' => v1 / expected,
+                    '*' => expected / v1,
+                    _ => throw new Exception()
+                };
+
+                cur = monkeys[cur].Arg2;
+            }
+            else
+                throw new Exception();
+        }
+
+        expected.Out("Part 2: ");
+    }
+
     static void Solve_20(long[] input)
     {
         long Solve(long[] numbers, long multiplier, int times)
@@ -62,7 +151,7 @@ public class Program
                    + numbers[positionToIndex[(zeroPos + 2000) % numbers.Length]]
                    + numbers[positionToIndex[(zeroPos + 3000) % numbers.Length]];
         }
-        
+
         Solve(input, multiplier: 1, times: 1).Out("Part 1: ");
         Solve(input, multiplier: 811589153, times: 10).Out("Part 2: ");
     }
@@ -1538,7 +1627,7 @@ public class Program
             .Out("Part 2: ");
     }
 
-    record Monkey(int Index, long[] Items, char Op, string Arg, long DivisibleBy, long IfTrue, long IfFalse);
+    record MonkeyDay11(int Index, long[] Items, char Op, string Arg, long DivisibleBy, long IfTrue, long IfFalse);
 
     static void Solve_11_2([Template(@"Monkey {Index}:
   Starting items: {Items}
@@ -1546,7 +1635,7 @@ public class Program
   Test: divisible by {DivisibleBy}
     If true: throw to monkey {IfTrue}
     If false: throw to monkey {IfFalse}")]
-        params Monkey[] monkeysSource)
+        params MonkeyDay11[] monkeysSource)
     {
         var monkeys = monkeysSource
             .Select(r =>
@@ -1599,7 +1688,7 @@ public class Program
   Test: divisible by {DivisibleBy}
     If true: throw to monkey {IfTrue}
     If false: throw to monkey {IfFalse}")]
-        params Monkey[] monkeysSource)
+        params MonkeyDay11[] monkeysSource)
     {
         var monkeys = monkeysSource
             .Select(r =>
