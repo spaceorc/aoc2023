@@ -13,6 +13,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Math;
@@ -23,7 +24,270 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day21.txt", Solve_21);
+        Runner.RunFile("day22.txt", Day22.Solve);
+    }
+
+    static void Solve_22(string[] map, string[] pathInput)
+    {
+        var path = pathInput[0];
+        var dirs = new V[] { new(1, 0), new(0, 1), new(-1, 0), new(0, -1) };
+
+        var pathItems = new List<(string rotate, int num)>();
+        var cur = 0;
+        for (int i = 0; i < path.Length; i++)
+        {
+            if (path[i] is 'L' or 'R')
+            {
+                pathItems.Add(("", cur));
+                pathItems.Add((path[i].ToString(), 0));
+                cur = 0;
+            }
+            else
+                cur = cur * 10 + (path[i] - '0');
+        }
+
+        if (cur != 0)
+            pathItems.Add(("", cur));
+
+        // var size = 4;
+        var size = 50;
+        var facesSource = new[]
+        {
+            new V(1, 0),
+            new V(2, 0),
+            new V(1, 1),
+            new V(0, 2),
+            new V(1, 2),
+            new V(0, 3),
+        };
+        // var facesSource = new[]
+        // {
+        //     new V(2, 0),
+        //     new V(0, 1),
+        //     new V(1, 1),
+        //     new V(2, 1),
+        //     new V(2, 2),
+        //     new V(3, 2),
+        // };
+        var faceTransitions = new Dictionary<(int face, int dir), (int face, int dir)>();
+        for (int f = 0; f < facesSource.Length; f++)
+        {
+            for (int d = 0; d < 4; d++)
+            {
+                var n = facesSource[f] + dirs[d];
+                var nf = Array.IndexOf(facesSource, n);
+                if (nf != -1)
+                    faceTransitions.Add((f, d), (nf, d));
+            }
+
+            {
+                var nd = facesSource[f] + new V(1, 1);
+                var ndf = Array.IndexOf(facesSource, nd);
+                if (ndf != -1)
+                {
+                    var nnf1 = Array.IndexOf(facesSource, facesSource[f] + new V(1, 0));
+                    var nnf2 = Array.IndexOf(facesSource, facesSource[f] + new V(0, 1));
+                    if (nnf1 == -1 && nnf2 == -1)
+                        throw new Exception();
+                    if (nnf1 == -1)
+                    {
+                        faceTransitions.Add((f, 0), (ndf, 1));
+                        faceTransitions.Add((ndf, 3), (f, 2));
+                    }
+                    else if (nnf2 == -1)
+                    {
+                        faceTransitions.Add((f, 1), (ndf, 0));
+                        faceTransitions.Add((ndf, 2), (f, 3));
+                    }
+                    else
+                        throw new Exception();
+                }
+            }
+            {
+                var nd = facesSource[f] + new V(-1, 1);
+                var ndf = Array.IndexOf(facesSource, nd);
+                if (ndf != -1)
+                {
+                    var nnf1 = Array.IndexOf(facesSource, facesSource[f] + new V(-1, 0));
+                    var nnf2 = Array.IndexOf(facesSource, facesSource[f] + new V(0, 1));
+                    if (nnf1 == -1 && nnf2 == -1)
+                        throw new Exception();
+                    if (nnf1 == -1)
+                    {
+                        faceTransitions.Add((f, 2), (ndf, 1));
+                        faceTransitions.Add((ndf, 3), (f, 0));
+                    }
+                    else if (nnf2 == -1)
+                    {
+                        faceTransitions.Add((f, 1), (ndf, 2));
+                        faceTransitions.Add((ndf, 0), (f, 3));
+                    }
+                    else
+                        throw new Exception();
+                }
+            }
+        }
+
+        // faceTransitions.Add((0, 3), (1, 1));
+        // faceTransitions.Add((1, 3), (0, 1));
+        // faceTransitions.Add((0, 0), (5, 2));
+        // faceTransitions.Add((5, 0), (0, 2));
+        // faceTransitions.Add((1, 2), (5, 3));
+        // faceTransitions.Add((5, 1), (1, 0));
+        // faceTransitions.Add((1, 1), (4, 3));
+        // faceTransitions.Add((4, 1), (1, 3));
+
+        faceTransitions.Add((0, 3), (5, 0));
+        faceTransitions.Add((5, 2), (0, 1));
+        
+        faceTransitions.Add((0, 2), (3, 0));
+        faceTransitions.Add((3, 2), (0, 0));
+        
+        faceTransitions.Add((1, 0), (4, 2));
+        faceTransitions.Add((4, 0), (1, 2));
+        
+        faceTransitions.Add((1, 3), (5, 3));
+        faceTransitions.Add((5, 1), (1, 1));
+
+        for (int f = 0; f < facesSource.Length; f++)
+        {
+            for (int d = 0; d < 4; d++)
+                if (!faceTransitions.ContainsKey((f, d)))
+                    throw new Exception();
+        }
+
+        var facesStarts = facesSource.Select(f => f * size).ToArray();
+
+        var faceRange = new Range(0, 0, size - 1, size - 1);
+        var face = 0;
+        var pos = new V(0, 0);
+        var dir = 0;
+
+        bool IsWall(int f, V v)
+        {
+            if (!v.InRange(faceRange))
+                throw new Exception();
+            var real = facesStarts[f] + v;
+            if (real.Y >= map.Length)
+                throw new Exception();
+            if (real.X >= map[real.Y].Length)
+                throw new Exception();
+            if (map[real.Y][(int)real.X] is not ('.' or '#'))
+                throw new Exception();
+            return map[real.Y][(int)real.X] == '#';
+        }
+
+        (int toFace, int toDir, V to) MakeTransition(int f, int d, V from)
+        {
+            var (toFace, toDir) = faceTransitions[(f, d)];
+            var to = (from + dirs[d]).Mod(size);
+            for (var dd = d; dd != toDir; dd = (dd + 1) % 4)
+                to = ((to * 2 - new V(size - 1, size - 1)).RotateCW() + new V(size - 1, size - 1)) / 2;
+            return (toFace, toDir, to);
+        }
+
+        foreach (var (rotate, num) in pathItems)
+        {
+            if (rotate == "L")
+                dir = (dir + 3) % 4;
+            else if (rotate == "R")
+                dir = (dir + 1) % 4;
+            else
+            {
+                for (int i = 0; i < num; i++)
+                {
+                    var nextFace = face;
+                    var nextDir = dir;
+                    var nextPos = pos;
+
+                    nextPos += dirs[dir];
+                    if (!nextPos.InRange(faceRange))
+                        (nextFace, nextDir, nextPos) = MakeTransition(face, dir, pos);
+
+                    if (IsWall(nextFace, nextPos))
+                        break;
+
+                    face = nextFace;
+                    dir = nextDir;
+                    pos = nextPos;
+                }
+            }
+        }
+
+        var realPos = facesStarts[face] + pos;
+        Console.WriteLine((realPos.Y + 1) * 1000 + (realPos.X + 1) * 4 + dir);
+    }
+
+    static void Solve_22_1(string[] map, string[] pathInput)
+    {
+        var path = pathInput[0];
+        var startCol = map[0].IndexOf('.');
+        var pos = new V(startCol, 0);
+        var dirs = new V[] { new(1, 0), new(0, 1), new(-1, 0), new(0, -1) };
+        var dir = 0;
+
+        var pathItems = new List<(string rotate, int num)>();
+        var cur = 0;
+        for (int i = 0; i < path.Length; i++)
+        {
+            if (path[i] is 'L' or 'R')
+            {
+                pathItems.Add(("", cur));
+                pathItems.Add((path[i].ToString(), 0));
+                cur = 0;
+            }
+            else
+                cur = cur * 10 + (path[i] - '0');
+        }
+
+        if (cur != 0)
+            pathItems.Add(("", cur));
+
+        foreach (var (rotate, num) in pathItems)
+        {
+            if (rotate == "L")
+                dir = (dir + 3) % 4;
+            else if (rotate == "R")
+                dir = (dir + 1) % 4;
+            else
+            {
+                for (int i = 0; i < num; i++)
+                {
+                    var next = pos;
+                    next += dirs[dir];
+                    if (dir == 1 && (next.Y >= map.Length || next.X >= map[next.Y].Length ||
+                                     map[next.Y][(int)next.X] == ' '))
+                    {
+                        for (int y = 0; y < map.Length; y++)
+                        {
+                            next = new V(next.X, y);
+                            if (next.X < map[next.Y].Length && map[next.Y][(int)next.X] is '.' or '#')
+                                break;
+                        }
+                    }
+
+                    if (dir == 3 && (next.Y < 0 || next.X >= map[next.Y].Length || map[next.Y][(int)next.X] == ' '))
+                    {
+                        for (int y = map.Length - 1; y >= 0; y--)
+                        {
+                            next = new V(next.X, y);
+                            if (next.X < map[next.Y].Length && map[next.Y][(int)next.X] is '.' or '#')
+                                break;
+                        }
+                    }
+
+                    if (dir == 0 && (next.X >= map[next.Y].Length || map[next.Y][(int)next.X] == ' '))
+                        next = new V(map[next.Y].IndexOfAny(new[] { '.', '#' }), next.Y);
+                    if (dir == 2 && (next.X < 0 || map[next.Y][(int)next.X] == ' '))
+                        next = new V(map[next.Y].LastIndexOfAny(new[] { '.', '#' }), next.Y);
+                    if (map[next.Y][(int)next.X] == '#')
+                        break;
+                    pos = next;
+                }
+            }
+        }
+
+        Console.WriteLine((pos.Y + 1) * 1000 + (pos.X + 1) * 4 + dir);
     }
 
     record MonkeyDay21(string Name, long Number, string Arg1, char Op, string Arg2)

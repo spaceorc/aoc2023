@@ -5,6 +5,7 @@ namespace aoc;
 public struct V : IEquatable<V>
 {
     public static readonly V Zero = new(0, 0); 
+    public static readonly V One = new(1, 1); 
     public readonly long X;
     public readonly long Y;
 
@@ -37,6 +38,7 @@ public struct V : IEquatable<V>
     public static V operator +(V a, V b) => new(a.X + b.X, a.Y + b.Y);
     public static V operator *(V a, long k) => new(a.X * k, a.Y * k);
     public static V operator /(V a, long k) => new(a.X / k, a.Y / k);
+    public static V operator %(V a, long k) => new(a.X % k, a.Y % k);
     public static V operator -(V a, V b) => new(a.X - b.X, a.Y - b.Y);
     public static V operator -(V a) => new(-a.X, -a.Y);
 
@@ -60,4 +62,8 @@ public struct V : IEquatable<V>
     };
 
     public bool InRange(Range r) => X >= r.MinX && X <= r.MaxX && Y >= r.MinY && Y <= r.MaxY;
+
+    public V RotateCW() => new(-Y, X); // Y facing down
+
+    public V Mod(long k) => new(X.Mod(k), Y.Mod(k));
 }

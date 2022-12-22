@@ -318,4 +318,7 @@ public static class Helpers
             }
         }
     }
+
+    public static long Mod(this long v, long divisor) => (v % divisor + divisor) % divisor;
+    public static int Mod(this int v, int divisor) => (v % divisor + divisor) % divisor;
 }
