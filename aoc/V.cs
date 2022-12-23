@@ -43,13 +43,18 @@ public record V(long X, long Y)
     
     public override string ToString() => $"{X} {Y}";
 
-    public static  V[] up3 = { new(-1, -1), new(0, -1), new(1, -1) };
-    public static  V[] down3 = { new(-1, 1), new(0, 1), new(1, 1) };
-    public static  V[] left3 = { new(-1, -1), new(-1, 0), new(-1, 1) };
-    public static  V[] right3 = { new(1, -1), new(1, 0), new(1, 1) };
+    public static readonly V[] up3 = { new(-1, -1), new(0, -1), new(1, -1) };
+    public static readonly V[] down3 = { new(-1, 1), new(0, 1), new(1, 1) };
+    public static readonly V[] left3 = { new(-1, -1), new(-1, 0), new(-1, 1) };
+    public static readonly V[] right3 = { new(1, -1), new(1, 0), new(1, 1) };
+    public static readonly V up = new(0, -1);
+    public static readonly V down = new(0, 1);
+    public static readonly V left = new(-1, 0);
+    public static readonly V right = new(1, 0);
     
-    public static  V[] nears = { new(1, 0), new(-1, 0), new(0, 1), new(0, -1) };
-    public static  V[] nears8 =
+    
+    public static readonly V[] nears = { new(1, 0), new(-1, 0), new(0, 1), new(0, -1) };
+    public static readonly V[] nears8 =
     {
         new(1, 0), new(-1, 0), new(0, 1), new(0, -1),
         new(1, 1), new(-1, -1), new(-1, 1), new(1, -1),

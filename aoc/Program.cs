@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Mime;
@@ -28,6 +29,7 @@ public class Program
         Runner.RunFile("day23.txt", Solve_23);
     }
 
+    [SuppressMessage("ReSharper.DPA", "DPA0000: DPA issues")]
     static void Solve_23(Map<char> input)
     {
         var inputElves = input.All().Where(v => input[v] == '#').ToArray();
@@ -40,50 +42,46 @@ public class Program
         {
             var elves = inputElves.ToArray();
             var suggestDirStart = 0;
-            var shifts = new V[] { new(0, -1), new(0, 1), new(-1, 0), new(1, 0) };
+            var shifts = new[] { V.up, V.down, V.left, V.right };
             var checks = new[] { V.up3, V.down3, V.left3, V.right3 };
 
-            var suggestDirs = new int[elves.Length];
             while (true)
             {
                 var used = elves.ToHashSet();
-                var suggestedPositions = new DefaultDict<V, int>();
-                var hasSuggests = false;
+                var suggestedCounts = new DefaultDict<V, int>();
+                var suggestedDirs = Enumerable.Repeat(-1, elves.Length).ToArray();
                 for (int e = 0; e < elves.Length; e++)
                 {
                     var ve = elves[e];
-                    suggestDirs[e] = -1;
                     if (ve.Nears8().Any(n => used.Contains(n)))
                     {
                         for (int s = 0; s < 4; s++)
                         {
                             if (checks[(suggestDirStart + s) % 4].All(v => !used.Contains(ve + v)))
                             {
-                                suggestDirs[e] = (suggestDirStart + s) % 4;
-                                suggestedPositions[ve + shifts[suggestDirs[e]]]++;
-                                hasSuggests = true;
+                                suggestedDirs[e] = (suggestDirStart + s) % 4;
+                                suggestedCounts[ve + shifts[suggestedDirs[e]]]++;
                                 break;
                             }
                         }
                     }
                 }
 
-                if (!hasSuggests)
+                if (suggestedDirs.All(s => s == -1))
                     break;
 
                 for (int e = 0; e < elves.Length; e++)
                 {
                     var ve = elves[e];
-                    if (suggestDirs[e] != -1)
+                    if (suggestedDirs[e] != -1)
                     {
-                        var sv = ve + shifts[suggestDirs[e]];
-                        if (suggestedPositions[sv] == 1)
+                        var sv = ve + shifts[suggestedDirs[e]];
+                        if (suggestedCounts[sv] == 1)
                             elves[e] = sv;
                     }
                 }
 
                 suggestDirStart = (suggestDirStart + 1) % 4;
-
                 yield return elves;
             }
         }
