@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -29,59 +30,63 @@ public class Program
 
     static void Solve_23(Map<char> input)
     {
-        var elves = input.All().Where(v => input[v] == '#').ToList();
-        var suggestDirStart = 0;
-        var shifts = new V[] { new(0, -1), new(0, 1), new(-1, 0), new(1, 0) };
-        var checks = new[] { V.up3, V.down3, V.left3, V.right3 };
+        var elvesAfter10Moves = Simulate().Skip(10).First();
+        (elvesAfter10Moves.BoundingBox().All().Count() - elvesAfter10Moves.Length).Out("Part 1: ");
 
-        var suggestDirs = new int[elves.Count];
-        var interestingTurn = 10;
-        for (int i = 0; i < 1000000; i++)
+        Simulate().Count().Out("Part 2: ");
+        
+        IEnumerable<V[]> Simulate()
         {
-            if (i == interestingTurn)
-                (elves.BoundingBox().All().Count() - elves.Count).Out("Part 1: ");
+            var elves = input.All().Where(v => input[v] == '#').ToArray();
+            var suggestDirStart = 0;
+            var shifts = new V[] { new(0, -1), new(0, 1), new(-1, 0), new(1, 0) };
+            var checks = new[] { V.up3, V.down3, V.left3, V.right3 };
 
-            var used = elves.ToHashSet();
-            var suggestedPositions = new DefaultDict<V, int>();
-            var hasSuggests = false;
-            for (int e = 0; e < elves.Count; e++)
+            var suggestDirs = new int[elves.Length];
+            while (true)
             {
-                var ve = elves[e];
-                suggestDirs[e] = -1;
-                if (ve.Nears8().Any(n => used.Contains(n)))
+                yield return elves;
+
+                var used = elves.ToHashSet();
+                var suggestedPositions = new DefaultDict<V, int>();
+                var hasSuggests = false;
+                for (int e = 0; e < elves.Length; e++)
                 {
-                    for (int s = 0; s < 4; s++)
+                    var ve = elves[e];
+                    suggestDirs[e] = -1;
+                    if (ve.Nears8().Any(n => used.Contains(n)))
                     {
-                        if (checks[(suggestDirStart + s)%4].All(v => !used.Contains(ve + v)))
+                        for (int s = 0; s < 4; s++)
                         {
-                            suggestDirs[e] = (suggestDirStart + s)%4;
-                            suggestedPositions[ve + shifts[suggestDirs[e]]]++;
-                            hasSuggests = true;
-                            break;
+                            if (checks[(suggestDirStart + s)%4].All(v => !used.Contains(ve + v)))
+                            {
+                                suggestDirs[e] = (suggestDirStart + s)%4;
+                                suggestedPositions[ve + shifts[suggestDirs[e]]]++;
+                                hasSuggests = true;
+                                break;
+                            }
                         }
                     }
                 }
-            }
 
-            if (!hasSuggests)
-            {
-                (i + 1).Out("Part 2: ");
-                break;
-            }
+                if (!hasSuggests)
+                    break;
 
-            for (int e = 0; e < elves.Count; e++)
-            {
-                var ve = elves[e];
-                if (suggestDirs[e] != -1)
+                for (int e = 0; e < elves.Length; e++)
                 {
-                    var sv = ve + shifts[suggestDirs[e]];
-                    if (suggestedPositions[sv] == 1)
-                        elves[e] = sv;
+                    var ve = elves[e];
+                    if (suggestDirs[e] != -1)
+                    {
+                        var sv = ve + shifts[suggestDirs[e]];
+                        if (suggestedPositions[sv] == 1)
+                            elves[e] = sv;
+                    }
                 }
+                
+                suggestDirStart = (suggestDirStart + 1) % 4;
             }
-
-            suggestDirStart = (suggestDirStart + 1) % 4;
         }
+
     }
     
     record MonkeyDay21(string Name, long Number, string Arg1, char Op, string Arg2)
