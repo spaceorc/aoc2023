@@ -30,4 +30,9 @@ public class Range
         for (var x = MinX; x <= MaxX; x++)
             yield return new V(x, y);
     }
+
+    public override string ToString()
+    {
+        return $"MinX: {MinX}, MinY: {MinY}, MaxX: {MaxX}, MaxY: {MaxY}";
+    }
 }

@@ -24,7 +24,64 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day22.txt", Day22.Solve);
+        Runner.RunFile("day23.txt", Solve_23);
+    }
+
+    static void Solve_23(Map<char> input)
+    {
+        var elves = input.All().Where(v => input[v] == '#').ToList();
+        var suggestDirStart = 0;
+        var shifts = new V[] { new(0, -1), new(0, 1), new(-1, 0), new(1, 0) };
+        var checks = new[] { V.up3, V.down3, V.left3, V.right3 };
+
+        var suggestDirs = new int[elves.Count];
+        var interestingTurn = 10;
+        for (int i = 0; i < 1000000; i++)
+        {
+            if (i == interestingTurn)
+                (elves.BoundingBox().All().Count() - elves.Count).Out("Part 1: ");
+
+            var used = elves.ToHashSet();
+            var suggestedPositions = new DefaultDict<V, int>();
+            var hasSuggests = false;
+            for (int e = 0; e < elves.Count; e++)
+            {
+                var ve = elves[e];
+                suggestDirs[e] = -1;
+                if (ve.Nears8().Any(n => used.Contains(n)))
+                {
+                    for (int s = 0; s < 4; s++)
+                    {
+                        if (checks[(suggestDirStart + s)%4].All(v => !used.Contains(ve + v)))
+                        {
+                            suggestDirs[e] = (suggestDirStart + s)%4;
+                            suggestedPositions[ve + shifts[suggestDirs[e]]]++;
+                            hasSuggests = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!hasSuggests)
+            {
+                (i + 1).Out("Part 2: ");
+                break;
+            }
+
+            for (int e = 0; e < elves.Count; e++)
+            {
+                var ve = elves[e];
+                if (suggestDirs[e] != -1)
+                {
+                    var sv = ve + shifts[suggestDirs[e]];
+                    if (suggestedPositions[sv] == 1)
+                        elves[e] = sv;
+                }
+            }
+
+            suggestDirStart = (suggestDirStart + 1) % 4;
+        }
     }
     
     record MonkeyDay21(string Name, long Number, string Arg1, char Op, string Arg2)
@@ -913,30 +970,30 @@ public class Program
             curV = new V(2, maxY + 4);
         }
 
-        void Print()
-        {
-            Console.WriteLine();
-            var my = Max(maxY, curV.Y + figureHeight[fi] - 1);
-            for (var y = my; y >= 0; y--)
-            {
-                Console.Write("|");
-                for (var x = 0; x < 7; x++)
-                {
-                    var v = new V(x, y);
-                    if (used.Contains(v))
-                        Console.Write("#");
-                    else
-                    {
-                        if (figures[fi].Any(fv => curV + fv == v))
-                            Console.Write('@');
-                        else
-                            Console.Write(' ');
-                    }
-                }
-
-                Console.WriteLine("|");
-            }
-        }
+        // void Print()
+        // {
+        //     Console.WriteLine();
+        //     var my = Max(maxY, curV.Y + figureHeight[fi] - 1);
+        //     for (var y = my; y >= 0; y--)
+        //     {
+        //         Console.Write("|");
+        //         for (var x = 0; x < 7; x++)
+        //         {
+        //             var v = new V(x, y);
+        //             if (used.Contains(v))
+        //                 Console.Write("#");
+        //             else
+        //             {
+        //                 if (figures[fi].Any(fv => curV + fv == v))
+        //                     Console.Write('@');
+        //                 else
+        //                     Console.Write(' ');
+        //             }
+        //         }
+        //
+        //         Console.WriteLine("|");
+        //     }
+        // }
     }
 
     record ItemDay16(string from, int rate, string[] tos)
@@ -1772,7 +1829,7 @@ public class Program
 
         int Simulate(int knotsCount)
         {
-            var knots = Enumerable.Repeat(new V(), knotsCount).ToArray();
+            var knots = Enumerable.Repeat(V.Zero, knotsCount).ToArray();
             var used = new HashSet<V> { knots.Last() };
             foreach (var (dir, c) in lines)
             {

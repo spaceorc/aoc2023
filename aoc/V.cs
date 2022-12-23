@@ -1,19 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace aoc;
 
-public struct V : IEquatable<V>
+public record V(long X, long Y)
 {
     public static readonly V Zero = new(0, 0); 
     public static readonly V One = new(1, 1); 
-    public readonly long X;
-    public readonly long Y;
-
-    public V(long x, long y)
-    {
-        X = x;
-        Y = y;
-    }
 
     public static V Parse(string s)
     {
@@ -30,11 +24,6 @@ public struct V : IEquatable<V>
         return new V(long.Parse(s[0]), long.Parse(s[1]));
     }
 
-    public bool Equals(V other) => X == other.X && Y == other.Y;
-    public override bool Equals(object? obj) => obj is V other && Equals(other);
-    public override int GetHashCode() => HashCode.Combine(X, Y);
-    public static bool operator ==(V a, V b) => a.Equals(b);
-    public static bool operator !=(V a, V b) => !(a == b);
     public static V operator +(V a, V b) => new(a.X + b.X, a.Y + b.Y);
     public static V operator *(V a, long k) => new(a.X * k, a.Y * k);
     public static V operator /(V a, long k) => new(a.X / k, a.Y / k);
@@ -54,12 +43,20 @@ public struct V : IEquatable<V>
     
     public override string ToString() => $"{X} {Y}";
 
+    public static  V[] up3 = { new(-1, -1), new(0, -1), new(1, -1) };
+    public static  V[] down3 = { new(-1, 1), new(0, 1), new(1, 1) };
+    public static  V[] left3 = { new(-1, -1), new(-1, 0), new(-1, 1) };
+    public static  V[] right3 = { new(1, -1), new(1, 0), new(1, 1) };
+    
     public static  V[] nears = { new(1, 0), new(-1, 0), new(0, 1), new(0, -1) };
     public static  V[] nears8 =
     {
         new(1, 0), new(-1, 0), new(0, 1), new(0, -1),
         new(1, 1), new(-1, -1), new(-1, 1), new(1, -1),
     };
+
+    public IEnumerable<V> Nears() => nears.Select(x => this + x);
+    public IEnumerable<V> Nears8() => nears8.Select(x => this + x);
 
     public bool InRange(Range r) => X >= r.MinX && X <= r.MaxX && Y >= r.MinY && Y <= r.MaxY;
 
