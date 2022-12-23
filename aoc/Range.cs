@@ -24,6 +24,8 @@ public class Range
 
     public Range Grow(long delta) => new Range(TopLeft - new V(delta, delta), BottomRight + new V(delta, delta));
 
+    public long Area => (MaxX - MinX + 1) * (MaxY - MinY + 1);
+    
     public IEnumerable<V> All()
     {
         for (var y = MinY; y <= MaxY; y++)

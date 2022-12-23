@@ -30,14 +30,15 @@ public class Program
 
     static void Solve_23(Map<char> input)
     {
-        var elvesAfter10Moves = Simulate().Skip(10).First();
-        (elvesAfter10Moves.BoundingBox().All().Count() - elvesAfter10Moves.Length).Out("Part 1: ");
+        var inputElves = input.All().Where(v => input[v] == '#').ToArray();
 
-        Simulate().Count().Out("Part 2: ");
-        
+        (Simulate().Skip(9).First().BoundingBox().Area - inputElves.Length).Out("Part 1: ");
+
+        (Simulate().Count() + 1).Out("Part 2: ");
+
         IEnumerable<V[]> Simulate()
         {
-            var elves = input.All().Where(v => input[v] == '#').ToArray();
+            var elves = inputElves.ToArray();
             var suggestDirStart = 0;
             var shifts = new V[] { new(0, -1), new(0, 1), new(-1, 0), new(1, 0) };
             var checks = new[] { V.up3, V.down3, V.left3, V.right3 };
@@ -45,8 +46,6 @@ public class Program
             var suggestDirs = new int[elves.Length];
             while (true)
             {
-                yield return elves;
-
                 var used = elves.ToHashSet();
                 var suggestedPositions = new DefaultDict<V, int>();
                 var hasSuggests = false;
@@ -58,9 +57,9 @@ public class Program
                     {
                         for (int s = 0; s < 4; s++)
                         {
-                            if (checks[(suggestDirStart + s)%4].All(v => !used.Contains(ve + v)))
+                            if (checks[(suggestDirStart + s) % 4].All(v => !used.Contains(ve + v)))
                             {
-                                suggestDirs[e] = (suggestDirStart + s)%4;
+                                suggestDirs[e] = (suggestDirStart + s) % 4;
                                 suggestedPositions[ve + shifts[suggestDirs[e]]]++;
                                 hasSuggests = true;
                                 break;
@@ -82,13 +81,14 @@ public class Program
                             elves[e] = sv;
                     }
                 }
-                
+
                 suggestDirStart = (suggestDirStart + 1) % 4;
+
+                yield return elves;
             }
         }
-
     }
-    
+
     record MonkeyDay21(string Name, long Number, string Arg1, char Op, string Arg2)
     {
         // ReSharper disable once UnusedMember.Local
