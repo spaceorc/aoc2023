@@ -63,7 +63,5 @@ public struct V : IEquatable<V>
 
     public bool InRange(Range r) => X >= r.MinX && X <= r.MaxX && Y >= r.MinY && Y <= r.MaxY;
 
-    public V RotateCW() => new(-Y, X); // Y facing down
-
     public V Mod(long k) => new(X.Mod(k), Y.Mod(k));
 }
