@@ -31,10 +31,10 @@ public class Program
 
     static void Solve_24(Map<char> input)
     {
-        var rBlizzards = input.All().Where(v => input[v] == '>').ToHashSet();
-        var lBlizzards = input.All().Where(v => input[v] == '<').ToHashSet();
-        var uBlizzards = input.All().Where(v => input[v] == '^').ToHashSet();
-        var dBlizzards = input.All().Where(v => input[v] == 'v').ToHashSet();
+        var rights = input.All().Where(v => input[v] == '>').ToHashSet();
+        var lefts = input.All().Where(v => input[v] == '<').ToHashSet();
+        var ups = input.All().Where(v => input[v] == '^').ToHashSet();
+        var downs = input.All().Where(v => input[v] == 'v').ToHashSet();
 
         var stepsCount = Helpers.Lcm(input.sizeX - 2, input.sizeY - 2);
         var mapOnStep = new Map<char>[stepsCount];
@@ -44,78 +44,43 @@ public class Program
             input.CopyTo(map);
             foreach (var v in map.AllButBorder())
             {
-                var count =(rBlizzards.Contains(v) ? 1 : 0)
-                    + (lBlizzards.Contains(v) ? 1 : 0)
-                    + (uBlizzards.Contains(v) ? 1 : 0)
-                    + (dBlizzards.Contains(v) ? 1 : 0);
-                if (count == 0)
-                    map[v] = '.';
-                else if (count > 1)
-                    map[v] = count.ToString()[0];
-                else if (uBlizzards.Contains(v))
-                    map[v] = '^';
-                else if (dBlizzards.Contains(v))
-                    map[v] = 'v';
-                else if (rBlizzards.Contains(v))
-                    map[v] = '>';
-                else if (lBlizzards.Contains(v))
-                    map[v] = '<';
+                var count = (rights.Contains(v) ? 1 : 0)
+                            + (lefts.Contains(v) ? 1 : 0)
+                            + (ups.Contains(v) ? 1 : 0)
+                            + (downs.Contains(v) ? 1 : 0);
+                map[v] = count == 0 ? '.' : count.ToString()[0];
             }
 
             mapOnStep[step] = map;
 
-            rBlizzards = rBlizzards
-                .Select(v => v + new V(1, 0))
-                .Select(v => v.InRange(map.Range().Grow(-1)) ? v : v with {X = 1})
-                .ToHashSet();
-            lBlizzards = lBlizzards
-                .Select(v => v + new V(-1, 0))
-                .Select(v => v.InRange(map.Range().Grow(-1)) ? v : v with {X = map.sizeX - 2})
-                .ToHashSet();
-            dBlizzards = dBlizzards
-                .Select(v => v + new V(0, 1))
-                .Select(v => v.InRange(map.Range().Grow(-1)) ? v : v with {Y = 1})
-                .ToHashSet();
-            uBlizzards = uBlizzards
-                .Select(v => v + new V(0, -1))
-                .Select(v => v.InRange(map.Range().Grow(-1)) ? v : v with {Y = map.sizeY - 2})
-                .ToHashSet();
+            rights = rights.Select(v => v with { X = v.X.Mod(map.sizeX - 2) + 1 }).ToHashSet();
+            lefts = lefts.Select(v => v with { X = (v.X - 2).Mod(map.sizeX - 2) + 1 }).ToHashSet();
+            downs = downs.Select(v => v with { Y = v.Y.Mod(map.sizeY - 2) + 1 }).ToHashSet();
+            ups = ups.Select(v => v with { Y = (v.Y - 2).Mod(map.sizeY - 2) + 1 }).ToHashSet();
         }
-
-        var pathToGoal = Helpers.Bfs<(V Pos, int Step)>(
-                startFrom: new[] { (new V(1, 0), 0) },
-                getNextStates: state =>
-                {
-                    var nextStep = (state.Step + 1) % stepsCount;
-                    var map = mapOnStep[nextStep];
-                    return map.Area5(state.Pos).Where(v => map[v] == '.').Select(v => (v, nextStep));
-                })
-            .First(s => s.State.Pos.Y == input.sizeY - 1);
         
-        pathToGoal.Distance.Out("Part 1: ");
+        var start = input.Rows().First().First(v => input[v] == '.');
+        var end = input.Rows().Last().First(v => input[v] == '.');
         
-        var pathToStart = Helpers.Bfs(
-                startFrom: new[] { pathToGoal.State },
-                getNextStates: state =>
-                {
-                    var nextStep = (state.Step + 1) % stepsCount;
-                    var map = mapOnStep[nextStep];
-                    return map.Area5(state.Pos).Where(v => map[v] == '.').Select(v => (v, nextStep));
-                })
-            .First(s => s.State.Pos.Y == 0);
+        var pathToEnd = FindPath(start, 0, end);
+        var pathToStart = FindPath(end, pathToEnd.State.Step, start);
+        var pathToEndAgain = FindPath(start, pathToStart.State.Step, end);
         
-        var pathToGoalAgain = Helpers.Bfs(
-                startFrom: new[] { pathToStart.State },
-                getNextStates: state =>
-                {
-                    var nextStep = (state.Step + 1) % stepsCount;
-                    var map = mapOnStep[nextStep];
-                    return map.Area5(state.Pos).Where(v => map[v] == '.').Select(v => (v, nextStep));
-                })
-            .First(s => s.State.Pos.Y == input.sizeY - 1);
-
-        (pathToGoal.Distance + pathToStart.Distance + pathToGoalAgain.Distance).Out("Part 2: ");
-
+        pathToEnd.Distance.Out("Part 1: ");
+        (pathToEnd.Distance + pathToStart.Distance + pathToEndAgain.Distance).Out("Part 2: ");
+    
+        BfsPathItem<(V Pos, int Step)> FindPath(V from, int startStep, V to)
+        {
+            return Helpers.Bfs<(V Pos, int Step)>(
+                    startFrom: new[] { (from, startStep) },
+                    getNextStates: state =>
+                    {
+                        var nextStep = (state.Step + 1) % stepsCount;
+                        var map = mapOnStep[nextStep];
+                        return map.Area5(state.Pos).Where(v => map[v] == '.').Select(v => (v, nextStep));
+                    })
+                .First(s => s.State.Pos == to);
+        }
     }
 
     static void Solve_23(Map<char> input)
