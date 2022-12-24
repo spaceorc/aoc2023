@@ -26,7 +26,7 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day24.txt", Solve_24);
+        Runner.RunFile("day19.txt", Solve_19);
     }
 
     static void Solve_24(Map<char> input)
@@ -58,17 +58,17 @@ public class Program
             downs = downs.Select(v => v with { Y = v.Y.Mod(map.sizeY - 2) + 1 }).ToHashSet();
             ups = ups.Select(v => v with { Y = (v.Y - 2).Mod(map.sizeY - 2) + 1 }).ToHashSet();
         }
-        
+
         var start = input.Rows().First().First(v => input[v] == '.');
         var end = input.Rows().Last().First(v => input[v] == '.');
-        
+
         var pathToEnd = FindPath(start, 0, end);
         var pathToStart = FindPath(end, pathToEnd.State.Step, start);
         var pathToEndAgain = FindPath(start, pathToStart.State.Step, end);
-        
+
         pathToEnd.Distance.Out("Part 1: ");
         (pathToEnd.Distance + pathToStart.Distance + pathToEndAgain.Distance).Out("Part 2: ");
-    
+
         BfsPathItem<(V Pos, int Step)> FindPath(V from, int startStep, V to)
         {
             return Helpers.Bfs<(V Pos, int Step)>(
@@ -585,33 +585,17 @@ public class Program
         List<(int id, int score)> SolveTime(BlueprintDay19[] blueprints, int time)
         {
             var result = new List<(int id, int score)>();
-            var tasks = new List<Task>();
-            var b = 0;
-            for (var t = 0; t < Environment.ProcessorCount; t++)
+            foreach (var blueprint in blueprints)
             {
-                tasks.Add(Task.Run(() =>
-                {
-                    while (true)
-                    {
-                        var index = Interlocked.Increment(ref b) - 1;
-                        if (index >= blueprints.Length)
-                            return;
-                        var blueprint = blueprints[index];
-                        var score = Solve(
-                            blueprint: blueprint,
-                            turn: time,
-                            0, 0, 0, 0,
-                            1, 0, 0, 0,
-                            bestKnownResult: 0,
-                            false, false, false, false);
-                        lock (result)
-                            result.Add((blueprint.Id, score));
-                        // Console.Out.WriteLine($"{blueprint.Id}: {score}");
-                    }
-                }));
+                var score = Solve(
+                    blueprint: blueprint,
+                    turn: time,
+                    0, 0, 0, 0,
+                    1, 0, 0, 0,
+                    bestKnownResult: 0,
+                    false, false, false, false);
+                result.Add((blueprint.Id, score));
             }
-
-            Task.WaitAll(tasks.ToArray());
             return result;
         }
 
