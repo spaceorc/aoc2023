@@ -69,14 +69,21 @@ public class Map<T>
 
     public V BottomRight => new(sizeX - 1, sizeY - 1);
 
-    public IEnumerable<V> Nears(V v)
+    public Range Range() => new Range(V.Zero, BottomRight);
+
+    public IEnumerable<V> Area4(V v)
     {
-        return V.nears.Select(dv => v + dv).Where(Inside);
+        return V.area4.Select(dv => v + dv).Where(Inside);
     }
 
-    public IEnumerable<V> Nears8(V v)
+    public IEnumerable<V> Area5(V v)
     {
-        return V.nears8.Select(dv => v + dv).Where(Inside);
+        return V.area5.Select(dv => v + dv).Where(Inside);
+    }
+
+    public IEnumerable<V> Area8(V v)
+    {
+        return V.area8.Select(dv => v + dv).Where(Inside);
     }
 
     public IEnumerable<V> Column(long x)
@@ -140,27 +147,27 @@ public class Map<T>
         IEnumerable<V> startFrom,
         Func<T, T, bool> acceptNext)
     {
-        return Bfs(startFrom, Nears, acceptNext);
+        return Bfs(startFrom, Area4, acceptNext);
     }
 
     public IEnumerable<BfsPathItem<V>> Bfs4(
         V startFrom,
         Func<T, T, bool> acceptNext)
     {
-        return Bfs(new[] { startFrom }, Nears, acceptNext);
+        return Bfs(new[] { startFrom }, Area4, acceptNext);
     }
 
     public IEnumerable<BfsPathItem<V>> Bfs8(
         IEnumerable<V> startFrom,
         Func<T, T, bool> acceptNext)
     {
-        return Bfs(startFrom, Nears8, acceptNext);
+        return Bfs(startFrom, Area8, acceptNext);
     }
 
     public IEnumerable<BfsPathItem<V>> Bfs8(
         V startFrom,
         Func<T, T, bool> acceptNext)
     {
-        return Bfs(new[] { startFrom }, Nears8, acceptNext);
+        return Bfs(new[] { startFrom }, Area8, acceptNext);
     }
 }

@@ -53,15 +53,17 @@ public record V(long X, long Y)
     public static readonly V right = new(1, 0);
     
     
-    public static readonly V[] nears = { new(1, 0), new(-1, 0), new(0, 1), new(0, -1) };
-    public static readonly V[] nears8 =
+    public static readonly V[] area4 = { new(1, 0), new(-1, 0), new(0, 1), new(0, -1) };
+    public static readonly V[] area5 = { new(0, 0), new(1, 0), new(-1, 0), new(0, 1), new(0, -1) };
+    public static readonly V[] area8 =
     {
         new(1, 0), new(-1, 0), new(0, 1), new(0, -1),
         new(1, 1), new(-1, -1), new(-1, 1), new(1, -1),
     };
 
-    public IEnumerable<V> Nears() => nears.Select(x => this + x);
-    public IEnumerable<V> Nears8() => nears8.Select(x => this + x);
+    public IEnumerable<V> Area4() => area4.Select(x => this + x);
+    public IEnumerable<V> Area5() => area5.Select(x => this + x);
+    public IEnumerable<V> Area8() => area8.Select(x => this + x);
 
     public bool InRange(Range r) => X >= r.MinX && X <= r.MaxX && Y >= r.MinY && Y <= r.MaxY;
 

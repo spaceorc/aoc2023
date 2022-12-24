@@ -26,10 +26,98 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day23.txt", Solve_23);
+        Runner.RunFile("day24.txt", Solve_24);
     }
 
-    [SuppressMessage("ReSharper.DPA", "DPA0000: DPA issues")]
+    static void Solve_24(Map<char> input)
+    {
+        var rBlizzards = input.All().Where(v => input[v] == '>').ToHashSet();
+        var lBlizzards = input.All().Where(v => input[v] == '<').ToHashSet();
+        var uBlizzards = input.All().Where(v => input[v] == '^').ToHashSet();
+        var dBlizzards = input.All().Where(v => input[v] == 'v').ToHashSet();
+
+        var stepsCount = Helpers.Lcm(input.sizeX - 2, input.sizeY - 2);
+        var mapOnStep = new Map<char>[stepsCount];
+        for (int step = 0; step < stepsCount; step++)
+        {
+            var map = new Map<char>(input.sizeX, input.sizeY);
+            input.CopyTo(map);
+            foreach (var v in map.AllButBorder())
+            {
+                var count =(rBlizzards.Contains(v) ? 1 : 0)
+                    + (lBlizzards.Contains(v) ? 1 : 0)
+                    + (uBlizzards.Contains(v) ? 1 : 0)
+                    + (dBlizzards.Contains(v) ? 1 : 0);
+                if (count == 0)
+                    map[v] = '.';
+                else if (count > 1)
+                    map[v] = count.ToString()[0];
+                else if (uBlizzards.Contains(v))
+                    map[v] = '^';
+                else if (dBlizzards.Contains(v))
+                    map[v] = 'v';
+                else if (rBlizzards.Contains(v))
+                    map[v] = '>';
+                else if (lBlizzards.Contains(v))
+                    map[v] = '<';
+            }
+
+            mapOnStep[step] = map;
+
+            rBlizzards = rBlizzards
+                .Select(v => v + new V(1, 0))
+                .Select(v => v.InRange(map.Range().Grow(-1)) ? v : v with {X = 1})
+                .ToHashSet();
+            lBlizzards = lBlizzards
+                .Select(v => v + new V(-1, 0))
+                .Select(v => v.InRange(map.Range().Grow(-1)) ? v : v with {X = map.sizeX - 2})
+                .ToHashSet();
+            dBlizzards = dBlizzards
+                .Select(v => v + new V(0, 1))
+                .Select(v => v.InRange(map.Range().Grow(-1)) ? v : v with {Y = 1})
+                .ToHashSet();
+            uBlizzards = uBlizzards
+                .Select(v => v + new V(0, -1))
+                .Select(v => v.InRange(map.Range().Grow(-1)) ? v : v with {Y = map.sizeY - 2})
+                .ToHashSet();
+        }
+
+        var pathToGoal = Helpers.Bfs<(V Pos, int Step)>(
+                startFrom: new[] { (new V(1, 0), 0) },
+                getNextStates: state =>
+                {
+                    var nextStep = (state.Step + 1) % stepsCount;
+                    var map = mapOnStep[nextStep];
+                    return map.Area5(state.Pos).Where(v => map[v] == '.').Select(v => (v, nextStep));
+                })
+            .First(s => s.State.Pos.Y == input.sizeY - 1);
+        
+        pathToGoal.Distance.Out("Part 1: ");
+        
+        var pathToStart = Helpers.Bfs(
+                startFrom: new[] { pathToGoal.State },
+                getNextStates: state =>
+                {
+                    var nextStep = (state.Step + 1) % stepsCount;
+                    var map = mapOnStep[nextStep];
+                    return map.Area5(state.Pos).Where(v => map[v] == '.').Select(v => (v, nextStep));
+                })
+            .First(s => s.State.Pos.Y == 0);
+        
+        var pathToGoalAgain = Helpers.Bfs(
+                startFrom: new[] { pathToStart.State },
+                getNextStates: state =>
+                {
+                    var nextStep = (state.Step + 1) % stepsCount;
+                    var map = mapOnStep[nextStep];
+                    return map.Area5(state.Pos).Where(v => map[v] == '.').Select(v => (v, nextStep));
+                })
+            .First(s => s.State.Pos.Y == input.sizeY - 1);
+
+        (pathToGoal.Distance + pathToStart.Distance + pathToGoalAgain.Distance).Out("Part 2: ");
+
+    }
+
     static void Solve_23(Map<char> input)
     {
         var inputElves = input.All().Where(v => input[v] == '#').ToArray();
@@ -53,7 +141,7 @@ public class Program
                 for (int e = 0; e < elves.Length; e++)
                 {
                     var ve = elves[e];
-                    if (ve.Nears8().Any(n => used.Contains(n)))
+                    if (ve.Area8().Any(n => used.Contains(n)))
                     {
                         for (int s = 0; s < 4; s++)
                         {
@@ -693,13 +781,13 @@ public class Program
 
     static void Solve_18(V3[] cubes)
     {
-        long SurfaceSquare(IEnumerable<V3> cs)
+        long SurfaceArea(IEnumerable<V3> cs)
         {
             var set = cs.ToHashSet();
             return set.Sum(v => 6 - v.Neighbors().Count(set.Contains));
         }
 
-        SurfaceSquare(cubes).Out("Part 1: ");
+        SurfaceArea(cubes).Out("Part 1: ");
 
         var cubesSet = cubes.ToHashSet();
         var range = cubes.BoundingBox().Grow(1);
@@ -715,7 +803,7 @@ public class Program
             .Except(water)
             .Except(cubes);
 
-        (SurfaceSquare(cubes) - SurfaceSquare(holes)).Out("Part 2: ");
+        (SurfaceArea(cubes) - SurfaceArea(holes)).Out("Part 2: ");
     }
 
     static void Solve_17_2(string[] lines)
@@ -1179,7 +1267,7 @@ public class Program
 
     static void Solve_16_2_slow(
         [Template(
-            "^Valve (?<from>.*) has flow rate=(?<rate>.*); (tunnels lead to valves|tunnel leads to valve) (?<tos>.*)$",
+            "^Valve (?<from>.*) has flow rate=(?<rate>.*); tunnels? leads? to valves? (?<tos>.*)$",
             IsRegex = true)]
         ItemDay16[] input)
     {
