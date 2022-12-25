@@ -1,21 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
-using System.Net.Mime;
-using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Runtime.Serialization;
-using System.Runtime.Versioning;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Math;
@@ -26,7 +14,78 @@ public class Program
 {
     static void Main()
     {
-        Runner.RunFile("day19.txt", Solve_19);
+        Runner.RunFile("day25.txt", Solve_25);
+    }
+
+    static void Solve_25(string[] input)
+    {
+        const string SYMBOLS = "=-012";
+
+        long ToDigit(char c) => SYMBOLS.IndexOf(c) - 2;
+        char ToSymbol(long d) => SYMBOLS[(int)(d + 2)];
+        long ToLong(string num) => num.Aggregate(0L, (current, t) => current * 5 + ToDigit(t));
+        string Mul10(string num) => Mul5(Mul2(num));
+        string Mul5(string num) => num + '0';
+        string Add5(string num) => AddLessThan5(num[..^1], 1) + num[^1];
+
+        string AddLessThan10(string num, long value) =>
+            value < 5 ? AddLessThan5(num, value) : AddLessThan5(Add5(num), value - 5);
+
+        void AddDigits(long a, long b, out long res, out long ovr)
+        {
+            res = (a + b + 2).Mod(5) - 2;
+            ovr = a + b < -2 ? -1 : a + b > 2 ? 1 : 0;
+        }
+
+        void Mul2Digit(long d, out long res, out long ovr)
+        {
+            res = (d * 2 + 2).Mod(5) - 2;
+            ovr = d * 2 < -2 ? -1 : d * 2 > 2 ? 1 : 0;
+        }
+
+        string AddLessThan5(string num, long value)
+        {
+            var res = "";
+            var ovr = value;
+            for (var i = num.Length - 1; i >= 0; i--)
+            {
+                AddDigits(ToDigit(num[i]), ovr, out var dr, out ovr);
+                res = ToSymbol(dr) + res;
+            }
+
+            return ovr > 0 ? ovr + res : res;
+        }
+
+        string Mul2(string num)
+        {
+            var res = "";
+            var ovr = 0L;
+            for (var i = num.Length - 1; i >= 0; i--)
+            {
+                Mul2Digit(ToDigit(num[i]), out var dr, out var ovr2);
+                AddDigits(dr, ovr, out dr, out ovr);
+                ovr += ovr2;
+                res = ToSymbol(dr) + res;
+            }
+
+            return ovr > 0 ? ovr + res : res;
+        }
+
+        string ToNum(long val)
+        {
+            var res = "";
+            foreach (var c in val.ToString())
+            {
+                res = AddLessThan10(Mul10(res), c - '0');
+                val /= 10;
+            }
+
+            return res;
+        }
+
+        var sum = input.Select(ToLong).Sum();
+        sum.Out("Sum: ");
+        ToNum(sum).Out("SNAFU: ");
     }
 
     static void Solve_24(Map<char> input)
@@ -38,7 +97,7 @@ public class Program
 
         var stepsCount = Helpers.Lcm(input.sizeX - 2, input.sizeY - 2);
         var mapOnStep = new Map<char>[stepsCount];
-        for (int step = 0; step < stepsCount; step++)
+        for (var step = 0; step < stepsCount; step++)
         {
             var map = new Map<char>(input.sizeX, input.sizeY);
             input.CopyTo(map);
@@ -103,12 +162,12 @@ public class Program
                 var used = elves.ToHashSet();
                 var suggestedCounts = new DefaultDict<V, int>();
                 var suggestedDirs = Enumerable.Repeat(-1, elves.Length).ToArray();
-                for (int e = 0; e < elves.Length; e++)
+                for (var e = 0; e < elves.Length; e++)
                 {
                     var ve = elves[e];
                     if (ve.Area8().Any(n => used.Contains(n)))
                     {
-                        for (int s = 0; s < 4; s++)
+                        for (var s = 0; s < 4; s++)
                         {
                             if (checks[(suggestDirStart + s) % 4].All(v => !used.Contains(ve + v)))
                             {
@@ -123,7 +182,7 @@ public class Program
                 if (suggestedDirs.All(s => s == -1))
                     break;
 
-                for (int e = 0; e < elves.Length; e++)
+                for (var e = 0; e < elves.Length; e++)
                 {
                     var ve = elves[e];
                     if (suggestedDirs[e] != -1)
@@ -596,6 +655,7 @@ public class Program
                     false, false, false, false);
                 result.Add((blueprint.Id, score));
             }
+
             return result;
         }
 
