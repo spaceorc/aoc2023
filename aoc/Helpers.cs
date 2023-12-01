@@ -112,9 +112,14 @@ public static class Helpers
         return items.Skip(startFrom).Batch(n).Select(x => x.First());
     }
 
-    public static IEnumerable<(T, int)> WithIndex<T>(this IEnumerable<T> items)
+    public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> items)
     {
         return items.Select((v, i) => (v, i));
+    }
+    
+    public static IEnumerable<T> Without<T>(this IEnumerable<T> items, params T[] values)
+    {
+        return items.Where(x => !values.Contains(x));
     }
 
     public static string[] Columns(this IEnumerable<string> lines)

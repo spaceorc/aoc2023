@@ -19,33 +19,27 @@ public class Program
 
     static void Solve_1(string[] input)
     {
-        input
-            .Select(l => string.Join("", l.Where(char.IsDigit)))
-            .Select(l => $"{l[0]}{l[^1]}")
-            .Select(long.Parse)
-            .ToArray()
-            .Sum()
-            .Out("Part 1: ");
+        long Solve(bool isPart2)
+        {
+            var replacements1 = Enumerable
+                .Range(1, 9)
+                .Select(digit => (str: digit.ToString(), digit));
+            
+            var replacements2 = new[] { "one", "two", "three", "four", "five", "six", "seven", "eight", "nine" }
+                .Select((str, i) => (str, digit: i + 1));
+            
+            var replacements = isPart2 ? replacements1.Concat(replacements2) : replacements1;
+            return input
+                .Select(line => (
+                        first: replacements.Select(x => (x.digit, p: line.IndexOf(x.str))).Where(x => x.p != -1).MinBy(r => r.p).digit,
+                        last: replacements.Select(x => (x.digit, p: line.LastIndexOf(x.str))).Where(x => x.p != -1).MaxBy(r => r.p).digit
+                    )
+                )
+                .Select(x => x.first * 10 + x.last)
+                .Sum();
+        }
 
-        var digits = new[] { "one", "two", "three", "four", "five", "six", "seven", "eight", "nine" };
-        var digits2 = new[] { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
-        input
-            .Select(l =>
-            {
-                var first = digits.Select((d, i) => (d, i))
-                    .Concat(digits2.Select((d, i) => (d, i)))
-                    .Select(x => (num: x.i + 1, s: x.d, ind: l.IndexOf(x.d)))
-                    .Select(x => x with { ind = x.ind == -1 ? int.MaxValue : x.ind })
-                    .MinBy(x => x.ind)
-                    .num;
-                var last = digits.Select((d, i) => (d, i))
-                    .Concat(digits2.Select((d, i) => (d, i)))
-                    .Select(x => (num: x.i + 1, s: x.d, ind: l.LastIndexOf(x.d)))
-                    .MaxBy(x => x.ind)
-                    .num;
-                return first * 10 + last;
-            })
-            .Sum()
-            .Out("Part 2: ");
+        Solve(isPart2: false).Out("Part 1: ");
+        Solve(isPart2: true).Out("Part 2: ");
     }
 }
