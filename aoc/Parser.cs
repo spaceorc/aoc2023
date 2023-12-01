@@ -119,7 +119,6 @@ public static class Parser
         }
         else
         {
-
             var regex = new Regex(@"([\\$^()[\]:+*?])|({[^}]+})", RegexOptions.Compiled | RegexOptions.Singleline);
             var templateRegexString = "^" + regex.Replace(template, m =>
             {
