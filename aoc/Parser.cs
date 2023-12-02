@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -59,6 +60,11 @@ public static class Parser
         if (template != null)
             return ParseWithTemplate(parameterType, lines, template, templateAttribute!.IsRegex);
 
+        var structuredTemplateAttribute = parameter.GetCustomAttribute<StructuredTemplateAttribute>();
+        var structuredTemplate = structuredTemplateAttribute?.Template;
+        if (structuredTemplate != null)
+            return ParseWithStructuredTemplate(parameterType, lines, structuredTemplate);
+
         if (parameterType.IsArray)
         {
             var separators = parameter.GetCustomAttribute<SplitAttribute>()?.Separators ?? "- ;,";
@@ -85,12 +91,19 @@ public static class Parser
     {
         return type.IsArray
             ? lines.ParseAllWithTemplate(type.GetElementType()!, template, isRegex)
-            : lines.ParseRegionWithTemplate(type, template,isRegex);
+            : lines.ParseRegionWithTemplate(type, template, isRegex);
+    }
+    
+    public static object ParseWithStructuredTemplate(Type type, string[] lines, string template)
+    {
+        return type.IsArray
+            ? lines.ParseAllWithStructuredTemplate(type.GetElementType()!, template)
+            : lines.ParseRegionWithStructuredTemplate(type, template);
     }
 
     public static T[] ParseAllWithTemplate<T>(this IEnumerable<string> lines, string template, bool isRegex)
     {
-        return lines.Select(line => new[] { line }.ParseRegionWithTemplate<T>(template,isRegex)).ToArray();
+        return lines.Select(line => new[] { line }.ParseRegionWithTemplate<T>(template, isRegex)).ToArray();
     }
 
     public static object ParseAllWithTemplate(this IEnumerable<string> lines, Type type, string template, bool isRegex)
@@ -104,11 +117,38 @@ public static class Parser
         return result;
     }
 
+    public static T[] ParseAllWithStructuredTemplate<T>(this IEnumerable<string> lines, string template)
+    {
+        return lines.Select(line => new[] { line }.ParseRegionWithStructuredTemplate<T>(template)).ToArray();
+    }
+
+    public static object ParseAllWithStructuredTemplate(this IEnumerable<string> lines, Type type, string template)
+    {
+        var linesArr = lines as IList<string> ?? lines.ToArray();
+        var result = Array.CreateInstance(type, linesArr.Count);
+
+        for (int i = 0; i < linesArr.Count; i++)
+            result.SetValue(new[] { linesArr[i] }.ParseRegionWithStructuredTemplate(type, template), i);
+
+        return result;
+    }
+
     public static T ParseRegionWithTemplate<T>(this IEnumerable<string> lines, string template, bool isRegex)
     {
         return (T)lines.ParseRegionWithTemplate(typeof(T), template, isRegex);
     }
+    
+    public static T ParseRegionWithStructuredTemplate<T>(this IEnumerable<string> lines, string template)
+    {
+        return (T)lines.ParseRegionWithStructuredTemplate(typeof(T), template);
+    }
 
+    public static object ParseRegionWithStructuredTemplate(this IEnumerable<string> lines, Type type, string template)
+    {
+        var region = string.Join("\n", lines);
+        return StructuredTemplate.Parse(template).CreateObject(type, region);
+    }
+    
     public static object ParseRegionWithTemplate(this IEnumerable<string> lines, Type type, string template, bool isRegex)
     {
         var region = string.Join("\n", lines);
@@ -147,12 +187,16 @@ public static class Parser
                 throw new InvalidOperationException($"Invalid char {value}");
             return value[0];
         }
-
+        
         var constructor = type.GetConstructors().Single(x => x.GetParameters().Any());
         var parameters = new List<object>();
-        foreach (var parameter in constructor.GetParameters())
+        for (var paramIndex = 0; paramIndex < constructor.GetParameters().Length; paramIndex++)
         {
-            var value = match.Groups[parameter.Name!].Value;
+            var parameter = constructor.GetParameters()[paramIndex];
+            var name = parameter.Name!;
+            var value = name == $"item{paramIndex + 1}"
+                ? match.Groups[paramIndex + 1].Value
+                : match.Groups[name].Value;
             var separators = parameter.GetCustomAttribute<SplitAttribute>()?.Separators ?? "- ;,";
             parameters.Add(value.Parse(parameter.ParameterType, separators));
         }
@@ -175,11 +219,15 @@ public static class Parser
         if (type == typeof(string))
             return line;
 
-        var typeParseMethod = type.GetMethod("Parse", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) });
+        var typeParseMethod =
+            type.GetMethod("Parse", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) });
         if (typeParseMethod != null)
             return typeParseMethod.Invoke(null, new object?[] { line })!;
-                
-        var source = new Queue<string>(line.Split(separators.ToCharArray(), StringSplitOptions.RemoveEmptyEntries));
+
+        var source = new Queue<string>(line
+            .Split(separators.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim())
+            .Where(x => !string.IsNullOrEmpty(x)));
         return ReadFrom(type, source);
     }
 
@@ -198,16 +246,20 @@ public static class Parser
                 throw new InvalidOperationException($"Invalid char {value}");
             return value[0];
         }
-        
-        var typeParseMethod = type.GetMethod("Parse", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) });
+
+        var typeParseMethod =
+            type.GetMethod("Parse", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) });
         if (typeParseMethod != null)
             return typeParseMethod.Invoke(null, new object?[] { source.Dequeue() })!;
 
         if (type.IsArray)
         {
-            var result = Array.CreateInstance(type.GetElementType()!, source.Count);
-            for (int i = 0; i < result.Length; i++)
-                result.SetValue(ReadFrom(type.GetElementType()!, source), i);
+            var list = new ArrayList();
+            while (source.Any())
+                list.Add(ReadFrom(type.GetElementType()!, source));
+            var result = Array.CreateInstance(type.GetElementType()!, list.Count);
+            for (int i = 0; i < list.Count; i++)
+                result.SetValue(list[i], i);
             return result;
         }
 

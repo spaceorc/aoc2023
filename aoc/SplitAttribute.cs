@@ -2,7 +2,7 @@ using System;
 
 namespace aoc;
 
-[AttributeUsage(AttributeTargets.Parameter)]
+[AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Class)]
 public class SplitAttribute : Attribute
 {
     public SplitAttribute(string separators)
