@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace aoc
 {
@@ -6,11 +7,89 @@ namespace aoc
     {
         private static void Main()
         {
-            Runner.RunFile("day2.txt", Solve_2);
+            Runner.RunFile("day3.txt", Solve_3);
+        }
+
+        private static void Solve_3(Map<char> map)
+        {
+            SolvePart1().Out("Part 1: ");
+            SolvePart2().Out("Part 2: ");
+            return;
+
+            long SolvePart1()
+            {
+                return GetNumbers()
+                    .Where(n => Nears(n.y, n.start, n.end).Any())
+                    .Sum(n => n.num);
+            }
+
+            long SolvePart2()
+            {
+                return GetNumbers()
+                    .SelectMany(n => Nears(n.y, n.start, n.end).Where(v => map[v] == '*').Select(gv => (gv, n.num)))
+                    .GroupBy(g => g.gv, g => g.num)
+                    .Where(g => g.Count() == 2)
+                    .Sum(g => g.ElementAt(0) * g.ElementAt(1));
+            }
+
+            IEnumerable<(long num, int y, int start, int end)> GetNumbers()
+            {
+                for (int y = 0; y < map.sizeY; y++)
+                {
+                    var cur = 0L;
+                    var start = -1;
+                    for (int x = 0; x < map.sizeX; x++)
+                    {
+                        var v = new V(x, y);
+                        if (char.IsDigit(map[v]))
+                        {
+                            cur = cur * 10 + (map[v] - '0');
+                            if (start == -1)
+                                start = x;
+                        }
+                        else
+                        {
+                            if (start != -1)
+                                yield return (cur, y, start, x - 1);
+
+                            start = -1;
+                            cur = 0L;
+                        }
+                    }
+
+                    if (start != -1)
+                        yield return (cur, y, start, map.sizeX - 1);
+                }
+            }
+
+            IEnumerable<V> Nears(int y, int start, int end)
+            {
+                for (int x = start - 1; x <= end + 1; x++)
+                {
+                    var v = new V(x, y - 1);
+                    if (map.Inside(v) && map[v] != '.')
+                        yield return v;
+                }
+
+                for (int x = start - 1; x <= end + 1; x++)
+                {
+                    var v = new V(x, y + 1);
+                    if (map.Inside(v) && map[v] != '.')
+                        yield return v;
+                }
+
+                var vv = new V(start - 1, y);
+                if (map.Inside(vv) && map[vv] != '.')
+                    yield return vv;
+
+                vv = new V(end + 1, y);
+                if (map.Inside(vv) && map[vv] != '.')
+                    yield return vv;
+            }
         }
 
         private static void Solve_2(
-            [StructuredTemplate("Game {Id}: {Sets:[;]}")]
+            [StructuredTemplate("Game {id}: {sets:[;]{item:[,]}}")]
             (long id, (long n, string color)[][] sets)[] input
         )
         {
@@ -26,8 +105,12 @@ namespace aoc
                             )
                         )))
                 .ToList();
-            
-            long Solve_Part1()
+
+            SolvePart1().Out("Part 1: ");
+            SolvePart2().Out("Part 2: ");
+            return;
+
+            long SolvePart1()
             {
                 return games
                     .Where(x => x.sets.All(s => s is { R: <= 12, G: <= 13, B: <= 14 }))
@@ -35,19 +118,20 @@ namespace aoc
                     .Sum();
             }
 
-            long Solve_Part2()
+            long SolvePart2()
             {
                 return games
                     .Select(x => x.sets.Max(s => s.R) * x.sets.Max(s => s.G) * x.sets.Max(s => s.B))
                     .Sum();
             }
-
-            Solve_Part1().Out("Part 1: ");
-            Solve_Part2().Out("Part 2: ");
         }
-        
+
         private static void Solve_1(string[] input)
         {
+            Solve(false).Out("Part 1: ");
+            Solve(true).Out("Part 2: ");
+            return;
+
             long Solve(bool isPart2)
             {
                 var replacements1 = Enumerable
@@ -69,9 +153,6 @@ namespace aoc
                     .Select(x => x.first * 10 + x.last)
                     .Sum();
             }
-
-            Solve(false).Out("Part 1: ");
-            Solve(true).Out("Part 2: ");
         }
     }
 }
