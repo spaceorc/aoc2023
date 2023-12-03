@@ -108,7 +108,7 @@ namespace aoc
             {
                 var separators = paramToken.Separators
                                  ?? customAttributeProvider?.GetCustomAttributes(false).OfType<SplitAttribute>().FirstOrDefault()?.Separators
-                                 ?? "- ;,";
+                                 ?? "- ;,:";
                 var items = text
                     .Split(separators.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
                     .Select(x => x.Trim())
@@ -133,7 +133,7 @@ namespace aoc
                                  .OfType<SplitAttribute>()
                                  .SingleOrDefault()?.Separators
                              ?? type.GetCustomAttribute<SplitAttribute>()?.Separators
-                             ?? "- ;,";
+                             ?? "- ;,:";
             
             if (type.IsArray)
             {

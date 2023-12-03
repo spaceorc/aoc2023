@@ -67,7 +67,7 @@ public static class Parser
 
         if (parameterType.IsArray)
         {
-            var separators = parameter.GetCustomAttribute<SplitAttribute>()?.Separators ?? "- ;,";
+            var separators = parameter.GetCustomAttribute<SplitAttribute>()?.Separators ?? "- ;,:";
             var parseAllGeneric =
                 typeof(Parser).GetMethod(nameof(ParseAll), BindingFlags.Public | BindingFlags.Static)!;
             var parseAll = parseAllGeneric.MakeGenericMethod(parameterType.GetElementType()!);
@@ -197,24 +197,24 @@ public static class Parser
             var value = name == $"item{paramIndex + 1}"
                 ? match.Groups[paramIndex + 1].Value
                 : match.Groups[name].Value;
-            var separators = parameter.GetCustomAttribute<SplitAttribute>()?.Separators ?? "- ;,";
+            var separators = parameter.GetCustomAttribute<SplitAttribute>()?.Separators ?? "- ;,:";
             parameters.Add(value.Parse(parameter.ParameterType, separators));
         }
 
         return constructor.Invoke(parameters.ToArray());
     }
 
-    public static T[] ParseAll<T>(this IEnumerable<string> lines, string separators = "- ;,")
+    public static T[] ParseAll<T>(this IEnumerable<string> lines, string separators = "- ;,:")
     {
         return lines.Select(x => Parse<T>(x, separators)).ToArray();
     }
 
-    public static T Parse<T>(this string line, string separators = "- ;,")
+    public static T Parse<T>(this string line, string separators = "- ;,:")
     {
         return (T)line.Parse(typeof(T), separators);
     }
 
-    public static object Parse(this string line, Type type, string separators = "- ;,")
+    public static object Parse(this string line, Type type, string separators = "- ;,:")
     {
         if (type == typeof(string))
             return line;

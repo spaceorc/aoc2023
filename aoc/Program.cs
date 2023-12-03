@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace aoc
 {
@@ -7,7 +10,24 @@ namespace aoc
     {
         private static void Main()
         {
-            Runner.RunFile("day3.txt", Solve_3);
+            Runner.RunFile("input.txt", Solve_4);
+        }
+
+        private static void Solve_4(string[] input)
+        {
+            SolvePart1().Out("Part 1: ");
+            SolvePart2().Out("Part 2: ");
+            return;
+
+            long SolvePart1()
+            {
+                return 0L;
+            }
+
+            long SolvePart2()
+            {
+                return 0L;
+            }
         }
 
         private static void Solve_3(Map<char> map)
