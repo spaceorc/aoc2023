@@ -34,7 +34,7 @@ namespace aoc
                 return regex.Replace(Text, m => "\\" + m.Value);
             }
 
-            [GeneratedRegex(@"[\\$^()[\]:+*?]", RegexOptions.Compiled | RegexOptions.Singleline)]
+            [GeneratedRegex(@"[\\$^()[\]|:+*?]", RegexOptions.Compiled | RegexOptions.Singleline)]
             private static partial Regex TextTokenRegex();
         }
 

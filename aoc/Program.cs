@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace aoc
 {
@@ -10,10 +7,12 @@ namespace aoc
     {
         private static void Main()
         {
-            Runner.RunFile("input.txt", Solve_4);
+            Runner.RunFile("day4.txt", Solve_4);
         }
 
-        private static void Solve_4(string[] input)
+        private static void Solve_4(
+            [StructuredTemplate("Card {id}: {wins} | {nums}")]
+            (long id, long[] wins, long[] nums)[] input)
         {
             SolvePart1().Out("Part 1: ");
             SolvePart2().Out("Part 2: ");
@@ -21,12 +20,24 @@ namespace aoc
 
             long SolvePart1()
             {
-                return 0L;
+                return input.Sum(line =>
+                {
+                    var winCount = line.nums.Where(line.wins.Contains).Count();
+                    return winCount == 0 ? 0 : 1L << (winCount - 1);
+                });
             }
 
             long SolvePart2()
             {
-                return 0L;
+                var counts = input.ToDictionary(x => x.id, _ => 1L);
+                foreach (var (id, wins, nums) in input)
+                {
+                    var winCount = nums.Where(wins.Contains).Count();
+                    for (var i = 0; i < winCount; i++)
+                        counts[id + i + 1] += counts[id];
+                }
+
+                return counts.Sum(x => x.Value);
             }
         }
 
@@ -54,11 +65,11 @@ namespace aoc
 
             IEnumerable<(long num, int y, int start, int end)> GetNumbers()
             {
-                for (int y = 0; y < map.sizeY; y++)
+                for (var y = 0; y < map.sizeY; y++)
                 {
                     var cur = 0L;
                     var start = -1;
-                    for (int x = 0; x < map.sizeX; x++)
+                    for (var x = 0; x < map.sizeX; x++)
                     {
                         var v = new V(x, y);
                         if (char.IsDigit(map[v]))
@@ -84,14 +95,14 @@ namespace aoc
 
             IEnumerable<V> Nears(int y, int start, int end)
             {
-                for (int x = start - 1; x <= end + 1; x++)
+                for (var x = start - 1; x <= end + 1; x++)
                 {
                     var v = new V(x, y - 1);
                     if (map.Inside(v) && map[v] != '.')
                         yield return v;
                 }
 
-                for (int x = start - 1; x <= end + 1; x++)
+                for (var x = start - 1; x <= end + 1; x++)
                 {
                     var v = new V(x, y + 1);
                     if (map.Inside(v) && map[v] != '.')
