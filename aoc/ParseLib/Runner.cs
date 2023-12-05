@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Reflection.Emit;
 
-namespace aoc;
+namespace aoc.ParseLib;
 
 public static class Runner
 {

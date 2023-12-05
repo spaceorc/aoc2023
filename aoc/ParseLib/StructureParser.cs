@@ -48,18 +48,37 @@ public static class StructureParser
             .Concat(parentAttributes.Where(pa => CombineTarget(pa.target, pa.attribute.Target) == target).Select(pa => pa.attribute))
             .ToList();
 
-        var regex = TryGetRegex(applicableAttributes, target, usedAttributes);
+        var (regex, regexAttribute) = TryGetRegex(applicableAttributes, target, usedAttributes);
         if (regex != null)
         {
             var groupNames = regex.GetGroupNames();
+            
+            if (regexAttribute is RegexArrayAttribute)
+            {
+                if (!type.IsArray)
+                    throw new InvalidOperationException($"Regex array attribute can be applied only to array. Target: {target}");
+                var groupName = groupNames.Single(n => n != "0");
+                return new RegexArrayStructure(type, regex, Parse(type.GetElementType()!, null, CombineTarget(target, groupName), childAttributes, allAttributes, usedAttributes));
+            }
 
             if (IsPrimitive(type))
-                return new RegexPrimitiveStructure(type, regex);
+                return new RegexSingleElementStructure(type, regex, new PrimitiveStructure(type));
 
             if (type.IsArray)
             {
                 var groupName = groupNames.Single(n => n != "0");
-                return new RegexArrayStructure(type, regex, Parse(type.GetElementType()!, null, CombineTarget(target, groupName), childAttributes, allAttributes, usedAttributes));
+                return new RegexSingleElementStructure(
+                    type,
+                    regex,
+                    Parse(
+                        type,
+                        null,
+                        CombineTarget(target, groupName),
+                        childAttributes,
+                        allAttributes,
+                        usedAttributes
+                    )
+                );
             }
 
             var constructor = type.GetConstructors().Single(x => x.GetParameters().Length != 0);
@@ -150,12 +169,17 @@ public static class StructureParser
                type.GetMethod("Parse", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) }) is not null;
     }
 
-    private static Regex? TryGetRegex(IReadOnlyList<StructureAttribute> applicableAttributes, string target, Dictionary<StructureAttribute, string> usedAttributes)
+    private static (Regex? regex, StructureAttribute? attribute) TryGetRegex(IReadOnlyList<StructureAttribute> applicableAttributes, string target, Dictionary<StructureAttribute, string> usedAttributes)
     {
         var templateAttribute = applicableAttributes.OfType<TemplateAttribute>().SingleOrDefault();
         var regexAttribute = applicableAttributes.OfType<RegexAttribute>().SingleOrDefault();
+        var regexArrayAttribute = applicableAttributes.OfType<RegexArrayAttribute>().SingleOrDefault();
         if (templateAttribute != null && regexAttribute != null)
             throw new InvalidOperationException("Both template and regex are set");
+        if (templateAttribute != null && regexArrayAttribute != null)
+            throw new InvalidOperationException("Both template and regex array are set");
+        if (regexAttribute != null && regexArrayAttribute != null)
+            throw new InvalidOperationException("Both regex and regex array are set");
 
         if (templateAttribute != null)
         {
@@ -172,20 +196,29 @@ public static class StructureParser
                                               if (m.Value.Length == 1)
                                                   return "\\" + m.Value;
 
+                                              if (m.Value == "{?}")
+                                                  return "(?:.*)";
+
                                               return $"(?<{m.Value.Substring(1, m.Value.Length - 2)}>.*)";
                                           }
                                       ) +
                                       "$";
-            return new Regex(templateRegexString);
+            return (new Regex(templateRegexString, RegexOptions.Compiled | RegexOptions.Singleline), templateAttribute);
         }
 
         if (regexAttribute != null)
         {
             usedAttributes.Add(regexAttribute, target);
-            return new Regex(regexAttribute.Regex);
+            return (new Regex(regexAttribute.Regex, RegexOptions.Compiled | RegexOptions.Singleline), regexAttribute);
+        }
+        
+        if (regexArrayAttribute != null)
+        {
+            usedAttributes.Add(regexArrayAttribute, target);
+            return (new Regex(regexArrayAttribute.Regex, RegexOptions.Compiled | RegexOptions.Singleline), regexArrayAttribute);
         }
 
-        return null;
+        return (null, null);
     }
 
     private static string CombineTarget(string parent, string? child)

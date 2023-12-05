@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using aoc.ParseLib;
 
-namespace aoc;
+namespace aoc.ParseLib;
 
 public static class Parser
 {
@@ -56,7 +56,7 @@ public static class Parser
 
     public static object ParseParameterValue(ParameterInfo parameter, Type parameterType, string[] lines)
     {
-        if (parameterType.IsArray)
+        if (parameterType.IsArray && parameter.GetCustomAttribute<NonArrayAttribute>() == null)
         {
             var itemStructure = StructureParser.Parse(parameterType.GetElementType()!, parameter);
             var parseAllGeneric = typeof(Parser).GetMethod(nameof(ParseAll), BindingFlags.Public | BindingFlags.Static);
