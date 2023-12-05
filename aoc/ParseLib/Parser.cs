@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using aoc.ParseLib;
 
 namespace aoc.ParseLib;
 
@@ -63,7 +62,7 @@ public static class Parser
             var parseAll = parseAllGeneric!.MakeGenericMethod(parameterType.GetElementType()!);
             return parseAll.Invoke(null, new object?[] { itemStructure, lines })!;
         }
-        
+
         var structure = StructureParser.Parse(parameterType, parameter);
         var parseGeneric = typeof(Parser).GetMethod(nameof(Parse), BindingFlags.Public | BindingFlags.Static);
         var parse = parseGeneric!.MakeGenericMethod(parameterType);

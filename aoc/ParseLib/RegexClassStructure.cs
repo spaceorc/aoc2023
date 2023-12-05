@@ -12,13 +12,13 @@ public record RegexClassStructure(Type Type, Regex Regex, params (string Group, 
         var match = Regex.Match(source);
         if (!match.Success)
             throw new InvalidOperationException($"Source doesn't match. Regex: {Regex}. Source: {source}");
-        
+
         var parameters = new object?[Parameters.Length];
         var constructor = Type.GetConstructors().Single(x => x.GetParameters().Any());
         Debug.Assert(constructor.GetParameters().Length == Parameters.Length);
         for (var i = 0; i < Parameters.Length; i++)
         {
-            var value = int.TryParse(Parameters[i].Group, out var index) 
+            var value = int.TryParse(Parameters[i].Group, out var index)
                 ? match.Groups[index].Value
                 : match.Groups[Parameters[i].Group].Value;
             parameters[i] = Parameters[i].Structure.CreateObject(value);

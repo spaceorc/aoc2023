@@ -6,12 +6,22 @@ using System.Reflection;
 
 namespace aoc.ParseLib;
 
-public record SplitTreeStructure(Type Type, string Separators) : Structure(Type)
+public record AtomStructure(Type Type, string Separators = StructureParser.DefaultSeparators) : Structure(Type)
 {
     public override object CreateObject(string source)
     {
+        if (Type == typeof(long))
+            return long.Parse(source);
+        if (Type == typeof(int))
+            return int.Parse(source);
         if (Type == typeof(string))
             return source;
+        if (Type == typeof(char))
+        {
+            if (source.Length != 1)
+                throw new InvalidOperationException($"Invalid char {source}");
+            return source[0];
+        }
 
         var typeParseMethod = Type.GetMethod("Parse", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) });
         if (typeParseMethod != null)
@@ -53,7 +63,7 @@ public record SplitTreeStructure(Type Type, string Separators) : Structure(Type)
         if (type.IsArray)
         {
             var list = new ArrayList();
-            while (source.Any())
+            while (source.Count != 0)
                 list.Add(ReadFrom(type.GetElementType()!, source));
             var result = Array.CreateInstance(type.GetElementType()!, list.Count);
             for (var i = 0; i < list.Count; i++)
@@ -61,10 +71,11 @@ public record SplitTreeStructure(Type Type, string Separators) : Structure(Type)
             return result;
         }
 
-        var constructor = type.GetConstructors().Single(x => x.GetParameters().Any());
-        var parameters = new List<object>();
-        foreach (var parameter in constructor.GetParameters())
-            parameters.Add(ReadFrom(parameter.ParameterType, source));
-        return constructor.Invoke(parameters.ToArray());
+        var constructor = type.GetConstructors().Single(x => x.GetParameters().Length != 0);
+        var parameters = constructor
+            .GetParameters()
+            .Select(parameter => ReadFrom(parameter.ParameterType, source))
+            .ToArray();
+        return constructor.Invoke(parameters);
     }
 }

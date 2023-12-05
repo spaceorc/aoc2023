@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using aoc.ParseLib;
 
@@ -11,6 +10,10 @@ public class Program
     {
         Runner.RunFile("day5.txt", Solve_5_1);
         Runner.RunFile("day5.txt", Solve_5_2);
+        Runner.RunFile("day4.txt", Solve_4);
+        Runner.RunFile("day3.txt", Solve_3);
+        Runner.RunFile("day2.txt", Solve_2);
+        Runner.RunFile("day1.txt", Solve_1);
     }
 
     private static void Solve_5_2(
@@ -33,12 +36,14 @@ public class Program
                         .Select(m => (r: c.IntersectWith(m.src), shift: m.dest - m.src.Start))
                         .Where(x => !x.r.IsEmpty)
                         .ToList();
-                    
+
                     next.AddRange(used.Select(x => x.r.Shift(x.shift)));
                     next.AddRange(c.ExceptWith(used.Select(x => x.r)));
                 }
+
                 cur = next.ToArray();
             }
+
             return cur.Min(c => c.Start);
         }
     }

@@ -43,10 +43,11 @@ public static class Runner
             else
                 il.Emit(OpCodes.Unbox_Any, parameter.ParameterType); // [(ParameterType)args[i]]
         }
+
         // [*args]
         il.Emit(OpCodes.Call, solve.Method); // []
         il.Emit(OpCodes.Ret); // []
-        
+
         dynamicMethod.CreateDelegate<Action<object?[]>>()(args);
     }
 }
