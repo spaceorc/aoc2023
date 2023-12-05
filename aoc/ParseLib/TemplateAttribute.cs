@@ -15,10 +15,9 @@ public class TemplateAttribute : StructureAttribute
     }
 
     public string Template { get; }
-    public bool StrictWhitespaces { get; set; }
     public bool IsRegex { get; set; }
 
-    public override string ToString() => $"Template[{Template}], StrictWhitespaces={StrictWhitespaces}, IsRegex={IsRegex}, {base.ToString()}";
+    public override string ToString() => $"Template[{Template}], IsRegex={IsRegex}, {base.ToString()}";
 
     public override Structure CreateStructure(Type type, StructureParserContext context)
     {
@@ -61,7 +60,7 @@ public class TemplateAttribute : StructureAttribute
                                       m =>
                                       {
                                           if (m.Value == " ")
-                                              return StrictWhitespaces ? " " : "\\s+";
+                                              return "\\s+";
 
                                           if (m.Value.Length == 1)
                                               return "\\" + m.Value;

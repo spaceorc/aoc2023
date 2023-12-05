@@ -4,7 +4,7 @@ using aoc.ParseLib;
 
 namespace aoc;
 
-public class Program
+public static class Program
 {
     private static void Main()
     {
@@ -15,7 +15,7 @@ public class Program
         Runner.RunFile("day2.txt", Solve_2);
         Runner.RunFile("day1.txt", Solve_1);
     }
-
+    
     private static void Solve_5_2(
         [NonArray] [Template("seeds: {seeds}")] R[] seeds,
         [NonArray] [Template("{?}: {mappings}")] params (long dest, R src)[][] mappings
