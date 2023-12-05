@@ -38,9 +38,10 @@ public static class Runner
             il.Emit(OpCodes.Ldarg_0); // [args]
             il.Emit(OpCodes.Ldc_I4, i); // [args, i]
             il.Emit(OpCodes.Ldelem, typeof(object)); // [args[i]]
-            if (parameter.ParameterType.IsValueType)
-                throw new Exception($"Unsupported parameter type {parameter.ParameterType}");
-            il.Emit(OpCodes.Castclass, parameter.ParameterType); // [(ParameterType)args[i]]
+            if (!parameter.ParameterType.IsValueType)
+                il.Emit(OpCodes.Castclass, parameter.ParameterType); // [(ParameterType)args[i]]
+            else
+                il.Emit(OpCodes.Unbox_Any, parameter.ParameterType); // [(ParameterType)args[i]]
         }
         // [*args]
         il.Emit(OpCodes.Call, solve.Method); // []

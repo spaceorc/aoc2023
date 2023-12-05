@@ -5,7 +5,7 @@ namespace aoc.ParseLib;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Parameter, AllowMultiple = true, Inherited = false)]
 public class RecursiveSplitAttribute : StructureAttribute
 {
-    public RecursiveSplitAttribute(string separators = "- ;,:|")
+    public RecursiveSplitAttribute(string separators = "- ;,:|\n")
     {
         Separators = separators;
     }

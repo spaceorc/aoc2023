@@ -56,16 +56,17 @@ public static class Parser
 
     public static object ParseParameterValue(ParameterInfo parameter, Type parameterType, string[] lines)
     {
-        var structure = StructureParser.Parse(parameter);
         if (parameterType.IsArray)
         {
+            var itemStructure = StructureParser.Parse(parameterType.GetElementType()!, parameter);
             var parseAllGeneric = typeof(Parser).GetMethod(nameof(ParseAll), BindingFlags.Public | BindingFlags.Static);
-            var parseAll = parseAllGeneric.MakeGenericMethod(parameterType.GetElementType()!);
-            return parseAll.Invoke(null, new object?[] { structure, lines })!;
+            var parseAll = parseAllGeneric!.MakeGenericMethod(parameterType.GetElementType()!);
+            return parseAll.Invoke(null, new object?[] { itemStructure, lines })!;
         }
         
+        var structure = StructureParser.Parse(parameterType, parameter);
         var parseGeneric = typeof(Parser).GetMethod(nameof(Parse), BindingFlags.Public | BindingFlags.Static);
-        var parse = parseGeneric.MakeGenericMethod(parameterType);
+        var parse = parseGeneric!.MakeGenericMethod(parameterType);
         return parse.Invoke(null, new object?[] { structure, string.Join('\n', lines) })!;
     }
 

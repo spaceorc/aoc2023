@@ -8,15 +8,13 @@ namespace aoc.ParseLib;
 
 public static class StructureParser
 {
-    public static Structure Parse(ParameterInfo parameter)
+    public static Structure Parse(Type type, ICustomAttributeProvider? customAttributeProvider)
     {
         var allAttributes = new Dictionary<StructureAttribute, string>();
         var usedAttributes = new Dictionary<StructureAttribute, string>();
         var result = Parse(
-            parameter.ParameterType.IsArray
-                ? parameter.ParameterType.GetElementType()!
-                : parameter.ParameterType,
-            parameter,
+            type,
+            customAttributeProvider,
             "",
             Array.Empty<(string target, StructureAttribute attribute)>(),
             allAttributes,

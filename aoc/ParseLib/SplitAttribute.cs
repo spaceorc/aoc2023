@@ -5,7 +5,7 @@ namespace aoc.ParseLib;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Parameter, AllowMultiple = true, Inherited = false)]
 public class SplitAttribute : StructureAttribute
 {
-    public SplitAttribute(string separators = "- ;,:|")
+    public SplitAttribute(string separators = "- ;,:|\n")
     {
         Separators = separators;
     }
