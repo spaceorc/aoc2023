@@ -169,4 +169,9 @@ public class Map<T>
     {
         return Bfs(new[] { startFrom }, Area8, acceptNext);
     }
+    
+    public static Map<T> Parse(string s)
+    {
+        return s.Split('\n').ToMap<T>();
+    }
 }

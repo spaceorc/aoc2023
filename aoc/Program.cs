@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using aoc.ParseLib;
 
 namespace aoc
 {
@@ -7,11 +8,11 @@ namespace aoc
     {
         private static void Main()
         {
-            Runner.RunFile("day4.txt", Solve_4);
+            Runner.RunFile("day2.txt", Solve_2);
         }
 
         private static void Solve_4(
-            [StructuredTemplate("Card {id}: {wins} | {nums}")]
+            [Template("Card {id}: {wins} | {nums}")]
             (long id, long[] wins, long[] nums)[] input)
         {
             SolvePart1().Out("Part 1: ");
@@ -120,7 +121,8 @@ namespace aoc
         }
 
         private static void Solve_2(
-            [StructuredTemplate("Game {id}: {sets:[;]{item:[,]}}")]
+            [Template("Game {id}: {sets}")]
+            [Split(";", Target = "sets")]
             (long id, (long n, string color)[][] sets)[] input
         )
         {
