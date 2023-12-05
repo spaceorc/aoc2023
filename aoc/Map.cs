@@ -68,7 +68,7 @@ public class Map<T>
 
     public V BottomRight => new(sizeX - 1, sizeY - 1);
 
-    public Range Range() => new Range(V.Zero, BottomRight);
+    public Range2 Range() => new Range2(V.Zero, BottomRight);
 
     public IEnumerable<V> Area4(V v)
     {

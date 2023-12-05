@@ -14,8 +14,8 @@ public class Program
     }
 
     private static void Solve_5_2(
-        [NonArray] [Template("seeds: {seeds}")] (long start, long len)[] seeds,
-        [NonArray] [Template("{?}: {mappings}")] params (long dest, long src, long len)[][] mappings
+        [NonArray] [Template("seeds: {seeds}")] R[] seeds,
+        [NonArray] [Template("{?}: {mappings}")] params (long dest, R src)[][] mappings
     )
     {
         Solve().Out("Part 2: ");
@@ -26,32 +26,20 @@ public class Program
             var cur = seeds;
             foreach (var mapping in mappings)
             {
-                var next = new List<(long start, long len)>();
+                var next = new List<R>();
                 foreach (var c in cur)
                 {
-                    var used = new List<(long start, long len)>();
-                    foreach (var m in mapping)
-                    {
-                        var (start, end) = (Math.Max(c.start, m.src), Math.Min(c.start + c.len, m.src + m.len));
-                        if (end <= start)
-                            continue;
-                        used.Add((start, end - start));
-                        next.Add((m.dest + start - m.src, end - start));
-                    }
-                    used.Sort((a, b) => a.start.CompareTo(b.start));
-                    var s = c.start;
-                    foreach (var u in used)
-                    {
-                        if (s < u.start)
-                            next.Add((s, u.start - s));
-                        s = u.start + u.len;
-                    }
-                    if (s < c.start + c.len)
-                        next.Add((s, c.start + c.len - s));
+                    var used = mapping
+                        .Select(m => (r: c.IntersectWith(m.src), shift: m.dest - m.src.Start))
+                        .Where(x => !x.r.IsEmpty)
+                        .ToList();
+                    
+                    next.AddRange(used.Select(x => x.r.Shift(x.shift)));
+                    next.AddRange(c.ExceptWith(used.Select(x => x.r)));
                 }
                 cur = next.ToArray();
             }
-            return cur.Min(c => c.start);
+            return cur.Min(c => c.Start);
         }
     }
 

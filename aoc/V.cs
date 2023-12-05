@@ -65,7 +65,7 @@ public record V(long X, long Y)
     public IEnumerable<V> Area5() => area5.Select(x => this + x);
     public IEnumerable<V> Area8() => area8.Select(x => this + x);
 
-    public bool InRange(Range r) => X >= r.MinX && X <= r.MaxX && Y >= r.MinY && Y <= r.MaxY;
+    public bool InRange(Range2 r) => X >= r.MinX && X <= r.MaxX && Y >= r.MinY && Y <= r.MaxY;
 
     public V Mod(long k) => new(X.Mod(k), Y.Mod(k));
 }

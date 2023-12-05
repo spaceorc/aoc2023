@@ -2,14 +2,14 @@ using System.Collections.Generic;
 
 namespace aoc;
 
-public class Range
+public class Range2
 {
-    public Range(long minX, long minY, long maxX, long maxY)
+    public Range2(long minX, long minY, long maxX, long maxY)
         : this(new V(minX, minY), new V(maxX, maxY))
     {
     }
 
-    public Range(V topLeft, V bottomRight)
+    public Range2(V topLeft, V bottomRight)
     {
         TopLeft = topLeft;
         BottomRight = bottomRight;
@@ -22,7 +22,7 @@ public class Range
     public long MaxX => BottomRight.X;
     public long MaxY => BottomRight.Y;
 
-    public Range Grow(long delta) => new Range(TopLeft - new V(delta, delta), BottomRight + new V(delta, delta));
+    public Range2 Grow(long delta) => new Range2(TopLeft - new V(delta, delta), BottomRight + new V(delta, delta));
 
     public long Area => (MaxX - MinX + 1) * (MaxY - MinY + 1);
     
