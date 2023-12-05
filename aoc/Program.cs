@@ -15,7 +15,7 @@ public class Program
 
     private static void Solve_5_2(
         [NonArray] [Template("seeds: {seeds}")] (long start, long len)[] seeds,
-        [NonArray] [Template("{?}: {mapping}")] params (long dest, long src, long len)[][] mapping
+        [NonArray] [Template("{?}: {mappings}")] params (long dest, long src, long len)[][] mappings
     )
     {
         Solve().Out("Part 2: ");
@@ -24,48 +24,40 @@ public class Program
         long Solve()
         {
             var cur = seeds;
-            foreach (var m in mapping)
+            foreach (var mapping in mappings)
             {
                 var next = new List<(long start, long len)>();
-
-                foreach (var (start, len) in cur)
+                foreach (var c in cur)
                 {
                     var used = new List<(long start, long len)>();
-                    foreach (var (mDest, mSrc, mLen) in m)
+                    foreach (var m in mapping)
                     {
-                        var maxStart = Math.Max(start, mSrc);
-                        var minEnd = Math.Min(start + len, mSrc + mLen);
-                        if (minEnd > maxStart)
-                        {
-                            used.Add((maxStart, minEnd - maxStart));
-                            next.Add((mDest + maxStart - mSrc, minEnd - maxStart));
-                        }
+                        var (start, end) = (Math.Max(c.start, m.src), Math.Min(c.start + c.len, m.src + m.len));
+                        if (end <= start)
+                            continue;
+                        used.Add((start, end - start));
+                        next.Add((m.dest + start - m.src, end - start));
                     }
-
                     used.Sort((a, b) => a.start.CompareTo(b.start));
-
-                    var s = start;
-                    foreach (var (usedStart, usedlen) in used)
+                    var s = c.start;
+                    foreach (var u in used)
                     {
-                        if (s < usedStart)
-                            next.Add((s, usedStart - s));
-                        s = usedStart + usedlen;
+                        if (s < u.start)
+                            next.Add((s, u.start - s));
+                        s = u.start + u.len;
                     }
-
-                    if (s < start + len)
-                        next.Add((s, start + len - s));
+                    if (s < c.start + c.len)
+                        next.Add((s, c.start + c.len - s));
                 }
-
                 cur = next.ToArray();
             }
-
             return cur.Min(c => c.start);
         }
     }
 
     private static void Solve_5_1(
         [NonArray] [Template("seeds: {seeds}")] long[] seeds,
-        [NonArray] [Template("{?}: {mapping}")] params (long dest, long src, long len)[][] mapping
+        [NonArray] [Template("{?}: {mappings}")] params (long dest, long src, long len)[][] mappings
     )
     {
         Solve().Out("Part 1: ");
@@ -75,11 +67,11 @@ public class Program
         {
             return seeds
                 .Select(
-                    seed => mapping.Aggregate(
+                    seed => mappings.Aggregate(
                         seed,
-                        (cur, m) =>
+                        (cur, mapping) =>
                         {
-                            var (dest, src, _) = m.SingleOrDefault(mm => cur >= mm.src && cur < mm.src + mm.len, (cur, cur, 1));
+                            var (dest, src, _) = mapping.SingleOrDefault(m => cur >= m.src && cur < m.src + m.len, (cur, cur, 1));
                             return cur + dest - src;
                         }
                     )
