@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using aoc.ParseLib;
 
@@ -8,14 +9,60 @@ public static class Program
 {
     private static void Main()
     {
-        Runner.RunFile("day5.txt", Solve_5_1);
-        Runner.RunFile("day5.txt", Solve_5_2);
-        Runner.RunFile("day4.txt", Solve_4);
-        Runner.RunFile("day3.txt", Solve_3);
-        Runner.RunFile("day2.txt", Solve_2);
-        Runner.RunFile("day1.txt", Solve_1);
+        Runner.RunFile("day6.txt", Solve_6);
+        // Runner.RunFile("day5.txt", Solve_5_1);
+        // Runner.RunFile("day5.txt", Solve_5_2);
+        // Runner.RunFile("day4.txt", Solve_4);
+        // Runner.RunFile("day3.txt", Solve_3);
+        // Runner.RunFile("day2.txt", Solve_2);
+        // Runner.RunFile("day1.txt", Solve_1);
     }
     
+    private static void Solve_6(
+        [Template("""
+                  Time: {times}
+                  Distance: {distances}
+                  """)]
+        (long[] times, long[] distances) input)
+    {
+        SolvePart1(SolveSqEq).Out("Part 1 (square equation): ");
+        SolvePart2(SolveSqEq).Out("Part 2 (square equation): ");
+
+        SolvePart1(SolveBruteforce).Out("Part 1 (bruteforce): ");
+        SolvePart2(SolveBruteforce).Out("Part 2 (bruteforce): ");
+        
+        return;
+
+        long SolveSqEq(long time, long distance)
+        {
+            // d = t * (T - t) = Tt - t^2 = D
+            // t^2 - Tt + D = 0
+            // x = (T +- sqrt(T^2 - 4D)) / 2;
+            var x1 = (long)Math.Floor((time - Math.Sqrt(time * time - 4 * distance)) / 2) + 1;
+            var x2 = (long)Math.Ceiling((time + Math.Sqrt(time * time - 4 * distance)) / 2) - 1;
+            return x2 - x1 + 1;
+        }
+
+        long SolveBruteforce(long time, long distance)
+        {
+            return Enumerable.Range(0, (int)time + 1).Count(t => t * (time - t) > distance);
+        }
+
+        long SolvePart1(Func<long, long, long> solve)
+        {
+            return input.times
+                .Select((time, i) => solve(time, input.distances[i]))
+                .Aggregate(1L, (a, b) => a * b);
+        }
+
+        long SolvePart2(Func<long, long, long> solve)
+        {
+            var time = long.Parse(string.Join("", input.times));
+            var distance = long.Parse(string.Join("", input.distances));
+            return solve(time, distance);
+        }
+    }
+
     private static void Solve_5_2(
         [NonArray] [Template("seeds: {seeds}")] R[] seeds,
         [NonArray] [Template("{?}: {mappings}")] params (long dest, R src)[][] mappings
