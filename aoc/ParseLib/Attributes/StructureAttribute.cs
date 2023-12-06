@@ -1,6 +1,7 @@
 using System;
+using aoc.ParseLib.Structures;
 
-namespace aoc.ParseLib;
+namespace aoc.ParseLib.Attributes;
 
 public abstract class StructureAttribute : Attribute
 {
@@ -8,5 +9,5 @@ public abstract class StructureAttribute : Attribute
 
     public override string ToString() => $"Target: {Target}";
 
-    public abstract TypeStructure CreateStructure(Type type, StructureParserContext context);
+    public abstract TypeStructure CreateStructure(Type type, TypeStructureParserContext context);
 }

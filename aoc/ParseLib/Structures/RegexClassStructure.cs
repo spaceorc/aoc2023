@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace aoc.ParseLib;
+namespace aoc.ParseLib.Structures;
 
 public record RegexClassStructure(Type Type, Regex Regex, params (string Group, TypeStructure Structure)[] Parameters) : TypeStructure(Type)
 {

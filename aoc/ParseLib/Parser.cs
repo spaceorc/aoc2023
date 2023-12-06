@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using aoc.ParseLib.Attributes;
+using aoc.ParseLib.Structures;
 
 namespace aoc.ParseLib;
 
@@ -66,25 +68,18 @@ public static class Parser
     {
         if (parameterType.IsArray && !customAttributeProvider.GetCustomAttributes(false).OfType<NonArrayAttribute>().Any())
         {
-            var itemStructure = StructureParser.Parse(parameterType.GetElementType()!, customAttributeProvider);
+            var itemStructure = TypeStructureParser.Parse(parameterType.GetElementType()!, customAttributeProvider);
             var parseAllGeneric = typeof(Parser).GetMethod(nameof(ParseAll), BindingFlags.NonPublic | BindingFlags.Static);
             var parseAll = parseAllGeneric!.MakeGenericMethod(parameterType.GetElementType()!);
             return parseAll.Invoke(null, new object?[] { itemStructure, lines })!;
         }
 
-        var structure = StructureParser.Parse(parameterType, customAttributeProvider);
+        var structure = TypeStructureParser.Parse(parameterType, customAttributeProvider);
         var parseGeneric = typeof(Parser).GetMethod(nameof(Parse), BindingFlags.NonPublic | BindingFlags.Static);
         var parse = parseGeneric!.MakeGenericMethod(parameterType);
         return parse.Invoke(null, new object?[] { structure, string.Join('\n', lines) })!;
     }
 
-    private static T[] ParseAll<T>(TypeStructure structure, IEnumerable<string> lines)
-    {
-        return lines.Select(x => Parse<T>(structure, x)).ToArray();
-    }
-
-    private static T Parse<T>(TypeStructure structure, string line)
-    {
-        return (T)structure.CreateObject(line);
-    }
+    private static T[] ParseAll<T>(TypeStructure structure, IEnumerable<string> lines) => lines.Select(x => Parse<T>(structure, x)).ToArray();
+    private static T Parse<T>(TypeStructure structure, string line) => (T)structure.CreateObject(line);
 }

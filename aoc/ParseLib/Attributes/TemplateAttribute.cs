@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using aoc.ParseLib.Structures;
 
-namespace aoc.ParseLib;
+namespace aoc.ParseLib.Attributes;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Parameter | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
 public class TemplateAttribute : StructureAttribute
@@ -19,7 +20,7 @@ public class TemplateAttribute : StructureAttribute
 
     public override string ToString() => $"Template[{Template}], IsRegex={IsRegex}, {base.ToString()}";
 
-    public override TypeStructure CreateStructure(Type type, StructureParserContext context)
+    public override TypeStructure CreateStructure(Type type, TypeStructureParserContext context)
     {
         var regex = CreateRegex();
         var groupNames = regex.GetGroupNames();
@@ -30,7 +31,7 @@ public class TemplateAttribute : StructureAttribute
         if (type.IsArray)
         {
             var groupName = groupNames.Single(n => n != "0");
-            return new RegexSingleElementStructure(type, regex, StructureParser.Parse(type, null, context.Nested(groupName)));
+            return new RegexSingleElementStructure(type, regex, TypeStructureParser.Parse(type, null, context.Nested(groupName)));
         }
 
         var constructor = type.GetConstructors().Single(x => x.GetParameters().Length != 0);
@@ -42,7 +43,7 @@ public class TemplateAttribute : StructureAttribute
             var groupName = name == $"item{paramIndex + 1}"
                 ? groupNames.Where(n => n != "0").ElementAt(paramIndex)
                 : name;
-            paramStructures.Add((groupName, StructureParser.Parse(parameter.ParameterType, parameter, context.Nested(groupName))));
+            paramStructures.Add((groupName, TypeStructureParser.Parse(parameter.ParameterType, parameter, context.Nested(groupName))));
         }
 
         return new RegexClassStructure(type, regex, paramStructures.ToArray());

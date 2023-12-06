@@ -1,7 +1,7 @@
 using System;
 using System.Text.RegularExpressions;
 
-namespace aoc.ParseLib;
+namespace aoc.ParseLib.Structures;
 
 public record RegexSingleElementStructure(Type Type, Regex Regex, TypeStructure Element) : TypeStructure(Type)
 {

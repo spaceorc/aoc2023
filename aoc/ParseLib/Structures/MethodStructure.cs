@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 
-namespace aoc.ParseLib;
+namespace aoc.ParseLib.Structures;
 
 public record MethodStructure(MethodInfo Method, TypeStructure Parameters)
 {
@@ -15,14 +15,14 @@ public record MethodStructure(MethodInfo Method, TypeStructure Parameters)
             .GetTypes()
             .Single(t => t.Name == $"Tuple`{parameterTypes.Length}");
         var tupleType = genericType.MakeGenericType(parameterTypes);
-        var context = StructureParserContext.CreateRoot();
+        var context = TypeStructureParserContext.CreateRoot();
         for (var i = 0; i < parameterInfos.Length; i++)
         {
-            foreach (var attribute in StructureParser.GetStructureAttributes(parameterInfos[i]))
+            foreach (var attribute in TypeStructureParser.GetStructureAttributes(parameterInfos[i]))
                 context.DeclareParentAttribute($"{i + 1}", attribute);
         }
 
-        var parametersStructure = StructureParser.Parse(tupleType, methodInfo, context);
+        var parametersStructure = TypeStructureParser.Parse(tupleType, methodInfo, context);
         context.Validate();
         return new MethodStructure(methodInfo, parametersStructure);
     }

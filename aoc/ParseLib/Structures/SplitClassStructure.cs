@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 
-namespace aoc.ParseLib;
+namespace aoc.ParseLib.Structures;
 
 public record SplitClassStructure(Type Type, string Separators, params TypeStructure[] Parameters) : TypeStructure(Type)
 {

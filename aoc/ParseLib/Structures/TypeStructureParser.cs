@@ -2,16 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using aoc.ParseLib.Attributes;
 
-namespace aoc.ParseLib;
+namespace aoc.ParseLib.Structures;
 
-public static class StructureParser
+public static class TypeStructureParser
 {
     public const string DefaultSeparators = " ;,:|\n";
 
     public static TypeStructure Parse(Type type, ICustomAttributeProvider? customAttributeProvider)
     {
-        var context = StructureParserContext.CreateRoot();
+        var context = TypeStructureParserContext.CreateRoot();
         var result = Parse(type, customAttributeProvider, context);
         context.Validate();
         return result;
@@ -20,7 +21,7 @@ public static class StructureParser
     public static TypeStructure Parse(
         Type type,
         ICustomAttributeProvider? parameterInfo,
-        StructureParserContext context
+        TypeStructureParserContext context
     )
     {
         var attributes = GetStructureAttributes(type, parameterInfo);

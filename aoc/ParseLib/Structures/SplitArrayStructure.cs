@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace aoc.ParseLib;
+namespace aoc.ParseLib.Structures;
 
 public record SplitArrayStructure(Type Type, string Separators, TypeStructure Item) : TypeStructure(Type)
 {

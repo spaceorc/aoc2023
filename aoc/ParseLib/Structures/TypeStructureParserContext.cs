@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using aoc.ParseLib.Attributes;
 
-namespace aoc.ParseLib;
+namespace aoc.ParseLib.Structures;
 
-public record StructureParserContext(
+public record TypeStructureParserContext(
     string Target,
     List<StructureAttribute> Attributes,
     List<(string Target, StructureAttribute Attribute)> ParentAttributes,
@@ -27,7 +28,7 @@ public record StructureParserContext(
 
     public void UseAttribute(StructureAttribute attribute) => UsedAttributes.Add(attribute, Target);
 
-    public static StructureParserContext CreateRoot() => new(
+    public static TypeStructureParserContext CreateRoot() => new(
         Target: "",
         Attributes: new List<StructureAttribute>(),
         ParentAttributes: new List<(string Target, StructureAttribute Attribute)>(), 
@@ -43,7 +44,7 @@ public record StructureParserContext(
             .SingleOrDefault();
     }
 
-    public StructureParserContext Nested(string name)
+    public TypeStructureParserContext Nested(string name)
     {
         return this with
         {

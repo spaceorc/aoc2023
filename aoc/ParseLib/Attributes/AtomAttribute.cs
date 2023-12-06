@@ -1,11 +1,12 @@
 using System;
+using aoc.ParseLib.Structures;
 
-namespace aoc.ParseLib;
+namespace aoc.ParseLib.Attributes;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Parameter | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
 public class AtomAttribute : StructureAttribute
 {
-    public AtomAttribute(string separators = StructureParser.DefaultSeparators)
+    public AtomAttribute(string separators = TypeStructureParser.DefaultSeparators)
     {
         Separators = separators;
     }
@@ -14,7 +15,7 @@ public class AtomAttribute : StructureAttribute
 
     public override string ToString() => $"Atom[{Separators}], {base.ToString()}";
 
-    public override TypeStructure CreateStructure(Type type, StructureParserContext context)
+    public override TypeStructure CreateStructure(Type type, TypeStructureParserContext context)
     {
         return new AtomStructure(type, Separators);
     }

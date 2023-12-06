@@ -1,6 +1,6 @@
 using System;
 
-namespace aoc.ParseLib;
+namespace aoc.ParseLib.Structures;
 
 public abstract record TypeStructure(Type Type)
 {

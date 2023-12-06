@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using aoc.ParseLib.Structures;
 
-namespace aoc.ParseLib;
+namespace aoc.ParseLib.Attributes;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Parameter | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
 public class SplitAttribute : StructureAttribute
 {
-    public SplitAttribute(string separators = StructureParser.DefaultSeparators)
+    public SplitAttribute(string separators = TypeStructureParser.DefaultSeparators)
     {
         Separators = separators;
     }
@@ -16,10 +17,10 @@ public class SplitAttribute : StructureAttribute
 
     public override string ToString() => $"Split[{Separators}], {base.ToString()}";
 
-    public override TypeStructure CreateStructure(Type type, StructureParserContext context)
+    public override TypeStructure CreateStructure(Type type, TypeStructureParserContext context)
     {
         if (type.IsArray)
-            return new SplitArrayStructure(type, Separators, StructureParser.Parse(type.GetElementType()!, null, context.Nested("item")));
+            return new SplitArrayStructure(type, Separators, TypeStructureParser.Parse(type.GetElementType()!, null, context.Nested("item")));
 
         var parameters = new List<TypeStructure>();
         var constructor = type.GetConstructors().Single(x => x.GetParameters().Length != 0);
@@ -30,7 +31,7 @@ public class SplitAttribute : StructureAttribute
             var childName = name == $"item{paramIndex + 1}"
                 ? (paramIndex + 1).ToString()
                 : name;
-            parameters.Add(StructureParser.Parse(parameter.ParameterType, parameter, context.Nested(childName)));
+            parameters.Add(TypeStructureParser.Parse(parameter.ParameterType, parameter, context.Nested(childName)));
         }
 
         return new SplitClassStructure(type, Separators, parameters.ToArray());

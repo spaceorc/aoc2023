@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace aoc.ParseLib;
+namespace aoc.ParseLib.Structures;
 
-public record AtomStructure(Type Type, string Separators = StructureParser.DefaultSeparators) : TypeStructure(Type)
+public record AtomStructure(Type Type, string Separators = TypeStructureParser.DefaultSeparators) : TypeStructure(Type)
 {
     public override object CreateObject(string source)
     {
