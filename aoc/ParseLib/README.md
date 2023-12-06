@@ -35,15 +35,15 @@ public static class Program
 {
     // input data:
     // ---
-    // Game  1: text - 1, 2, 3
-    // Game 22: another - 4, 55
+    // Game  1: text | 1, 2, 3
+    // Game 22: another | 4, 55
     // ---
     private static void Solve(string[] input)
     {
         // input = new []
         // {
-        //     "Game  1: text - 1, 2, 3",
-        //     "Game 22: another - 4, 55"
+        //     "Game  1: text | 1, 2, 3",
+        //     "Game 22: another | 4, 55"
         // }
     }
 }
@@ -56,8 +56,8 @@ public static class Program
 {
     // input data:
     // ---
-    // Game  1: text - 1, 2, 3
-    // Game 22: another - 4, 55
+    // Game  1: text | 1, 2, 3
+    // Game 22: another | 4, 55
     // ---
     private static void Solve((string prefix, (int id, string name), int[] values)[] input)
     {
@@ -79,8 +79,8 @@ public static class Program
     
     // input data:
     // ---
-    // Game  1: text - 1, 2, 3
-    // Game 22: another - 4, 55
+    // Game  1: text | 1, 2, 3
+    // Game 22: another | 4, 55
     // ---
     private static void Solve((string _, Desc desc, int[] values)[] input)
     {
@@ -105,8 +105,8 @@ public static class Program
  
     // input data:
     // ---
-    // Game  1: text - 1, 2, 3
-    // Game 22: another - 4, 55
+    // Game  1: text | 1, 2, 3
+    // Game 22: another | 4, 55
     // ---
     private static void Solve((string _, int id, Desc2 desc, int[] values)[] input)
     {
@@ -119,7 +119,7 @@ public static class Program
 }
 ```
 
-Customizing separators - default is `- ;,:|\n`:
+Customizing separators - default is ` ;,:|\n`:
 
 ```csharp
 public static class Program

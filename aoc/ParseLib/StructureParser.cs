@@ -7,7 +7,7 @@ namespace aoc.ParseLib;
 
 public static class StructureParser
 {
-    public const string DefaultSeparators = "- ;,:|\n";
+    public const string DefaultSeparators = " ;,:|\n";
 
     public static Structure Parse(Type type, ICustomAttributeProvider? customAttributeProvider)
     {
