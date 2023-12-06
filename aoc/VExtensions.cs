@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace aoc;
 
-public static class V2Extensions
+public static class VExtensions
 {
     public static Range2 BoundingBox(this IEnumerable<V> vectors)
     {

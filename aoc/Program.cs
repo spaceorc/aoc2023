@@ -52,7 +52,7 @@ public static class Program
         {
             return times
                 .Select((time, i) => solve(time, distances[i]))
-                .Aggregate(1L, (a, b) => a * b);
+                .Product();
         }
 
         long SolvePart2(Func<long, long, long> solve)

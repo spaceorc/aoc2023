@@ -293,12 +293,12 @@ public static class Helpers
 
     public static long Product(this IEnumerable<long> items)
     {
-        return items.Aggregate((a, b) => a * b);
+        return items.Aggregate(1L, (a, b) => a * b);
     }
 
     public static int Product(this IEnumerable<int> items)
     {
-        return items.Aggregate((a, b) => a * b);
+        return items.Aggregate(1, (a, b) => a * b);
     }
 
     public static IEnumerable<BfsPathItem<TState>> Bfs<TState>(

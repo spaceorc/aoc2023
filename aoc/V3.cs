@@ -27,21 +27,6 @@ public class V3 : IEquatable<V3>
         Z = z;
     }
     
-    public static V3 Parse(string s)
-    {
-        return Parse(s, ",");
-    }
-
-    public static V3 Parse(string s, params string[] sep)
-    {
-        return Parse(s.Split(sep, StringSplitOptions.RemoveEmptyEntries));
-    }
-
-    public static V3 Parse(string[] s)
-    {
-        return new V3(long.Parse(s[0]), long.Parse(s[1]), long.Parse(s[2]));
-    }
-    
     public bool Equals(V3? other) => !ReferenceEquals(other, null) && X == other.X && Y == other.Y && Z == other.Z;
     public override bool Equals(object? obj) => obj is V3 other && Equals(other);
     public override int GetHashCode() => HashCode.Combine(X, Y, Z);

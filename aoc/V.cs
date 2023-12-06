@@ -9,21 +9,6 @@ public record V(long X, long Y)
     public static readonly V Zero = new(0, 0); 
     public static readonly V One = new(1, 1); 
 
-    public static V Parse(string s)
-    {
-        return Parse(s, ",");
-    }
-
-    public static V Parse(string s, params string[] sep)
-    {
-        return Parse(s.Split(sep, StringSplitOptions.RemoveEmptyEntries));
-    }
-
-    public static V Parse(string[] s)
-    {
-        return new V(long.Parse(s[0]), long.Parse(s[1]));
-    }
-
     public static V operator +(V a, V b) => new(a.X + b.X, a.Y + b.Y);
     public static V operator *(V a, long k) => new(a.X * k, a.Y * k);
     public static V operator /(V a, long k) => new(a.X / k, a.Y / k);
@@ -37,7 +22,6 @@ public record V(long X, long Y)
     public long MLen() => Math.Abs(X) + Math.Abs(Y);
     public static long XProd(V a, V b) => a.X * b.Y - a.Y * b.X;
     public static long DProd(V a, V b) => a.X * b.X + a.Y * b.Y;
-
 
     public V Dir => new V(Math.Sign(X), Math.Sign(Y));
     
