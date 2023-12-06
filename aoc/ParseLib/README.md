@@ -164,6 +164,28 @@ public static class Program
 }
 ```
 
+Templates of method level (actually, any attribute can be applied on method level):
+
+```csharp
+public static class Program
+{
+    // input data:
+    // ---
+    // Time:        54     81     70     88
+    // Distance:   446   1292   1035   1007
+    // ---
+    [Template("""
+              Time: {times}
+              Distance: {distances}
+              """)]
+    private static void Solve(long[] times, long[] distances)
+    {
+        // times = new[] {54, 81, 70, 88}
+        // distances = new[] {446, 1292, 1035, 1007}
+    }
+}
+```
+
 Regex:
 
 ```csharp
