@@ -1,6 +1,36 @@
 # Advent of Code Input Parser/Runner library
 
-## Basic usage:
+## Possibilities
+
+1. Run method of class
+2. Parse parameters of method from file, string, or array of strings
+
+### Parsing capabilities
+
+   * Fallback for simple `string[]` - plain content from source
+   * Parse many ranges from source (separated by `\n\n`):
+     * Each range goes to corresponding parameter of method
+     * Support `params` keyword to parse dynamic number of ranges
+   * Parse parameters:
+     * Atoms:
+       * Primitive types: `int`, `long`, `string`, `char`, classes with static `Parse(string)` method
+       * Arrays of any supported type
+       * ValueTuple or Tuple
+       * Any class or record with single constructor with parameters
+       * Specify separators for atoms parsing (defaults to `" ;,:|\n"`)
+     * Parse by template or regex:
+       * ValueTuple or Tuple
+       * Any class or record with single constructor with parameters
+     * Parse by simple splitting:
+        * ValueTuple or Tuple
+        * Any class or record with single constructor with parameters
+        * Array of any supported type
+        * Specify separators for simple parsing (defaults to `" ;,:|\n"`)
+     * Populate array by all captures from regex
+   * Templates, regexes and atoms can be specified also on method level,
+     not only on parameters level   
+
+## Basic usage
 
 ```csharp
 public static class Program
@@ -26,7 +56,7 @@ public static class Program
 }
 ```
 
-## Parameters parsing
+## Parameters parsing examples
 
 Fallback for simple `string[]`:
 
@@ -253,6 +283,30 @@ public static class Program
         // {
         //     new [] {"1, 2, 3", "4, 5"},
         //     new [] {"7, 8", "11, 12, 13, 14"}
+        // }
+    }
+}
+```
+
+Regex for array with many captures:
+
+```csharp
+public static class Program
+{
+    // input data:
+    // ---
+    // Game: 1, 2, 3
+    // Game: 4, 55
+    // ---
+    private static void Solve(
+        [RegexArray(@"Game\: (?:(?<value>\d+), )*(?<value>\d+)")]
+        long[][] input
+    )
+    {
+        // input = new[]
+        // {
+        //     new[] {1, 2, 3},
+        //     new[] {4, 55}
         // }
     }
 }
