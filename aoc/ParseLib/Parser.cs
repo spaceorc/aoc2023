@@ -10,8 +10,18 @@ public static class Parser
     public static object?[] ParseMethodParameterValues(MethodInfo method, string[] lines)
     {
         var parameters = method.GetParameters();
-        if (parameters.Length == 1 && parameters[0].ParameterType == typeof(string[]))
+        if (parameters.Length == 1 
+            && parameters[0].ParameterType == typeof(string[]) 
+            && !parameters[0].GetCustomAttributes().OfType<StructureAttribute>().Any()
+            && !method.GetCustomAttributes().OfType<StructureAttribute>().Any())
             return new object?[] { lines };
+
+        if (method.GetCustomAttributes().OfType<StructureAttribute>().Any())
+        {
+            var tupleType = CreateTupleType(method.GetParameters().Select(p => p.ParameterType).ToArray());
+            var value = ParseParameterValue(method, tupleType, lines);
+            return method.GetParameters().Select((_, i) => tupleType.GetProperty($"Item{i + 1}")!.GetValue(value)).ToArray();
+        }
 
         var regions = lines.Regions();
         if (parameters.All(p => p.GetCustomAttribute<ParamArrayAttribute>() == null) &&
@@ -53,28 +63,37 @@ public static class Parser
         return args.ToArray();
     }
 
-    public static object ParseParameterValue(ParameterInfo parameter, Type parameterType, string[] lines)
+    private static Type CreateTupleType(Type[] types)
     {
-        if (parameterType.IsArray && parameter.GetCustomAttribute<NonArrayAttribute>() == null)
+        var genericType = typeof(Tuple<>)
+            .Assembly
+            .GetTypes()
+            .Single(t => t.Name == $"Tuple`{types.Length}");
+        return genericType.MakeGenericType(types);
+    }
+
+    private static object ParseParameterValue(ICustomAttributeProvider customAttributeProvider, Type parameterType, string[] lines)
+    {
+        if (parameterType.IsArray && !customAttributeProvider.GetCustomAttributes(false).OfType<NonArrayAttribute>().Any())
         {
-            var itemStructure = StructureParser.Parse(parameterType.GetElementType()!, parameter);
-            var parseAllGeneric = typeof(Parser).GetMethod(nameof(ParseAll), BindingFlags.Public | BindingFlags.Static);
+            var itemStructure = StructureParser.Parse(parameterType.GetElementType()!, customAttributeProvider);
+            var parseAllGeneric = typeof(Parser).GetMethod(nameof(ParseAll), BindingFlags.NonPublic | BindingFlags.Static);
             var parseAll = parseAllGeneric!.MakeGenericMethod(parameterType.GetElementType()!);
             return parseAll.Invoke(null, new object?[] { itemStructure, lines })!;
         }
 
-        var structure = StructureParser.Parse(parameterType, parameter);
-        var parseGeneric = typeof(Parser).GetMethod(nameof(Parse), BindingFlags.Public | BindingFlags.Static);
+        var structure = StructureParser.Parse(parameterType, customAttributeProvider);
+        var parseGeneric = typeof(Parser).GetMethod(nameof(Parse), BindingFlags.NonPublic | BindingFlags.Static);
         var parse = parseGeneric!.MakeGenericMethod(parameterType);
         return parse.Invoke(null, new object?[] { structure, string.Join('\n', lines) })!;
     }
 
-    public static T[] ParseAll<T>(Structure structure, IEnumerable<string> lines)
+    private static T[] ParseAll<T>(Structure structure, IEnumerable<string> lines)
     {
         return lines.Select(x => Parse<T>(structure, x)).ToArray();
     }
 
-    public static T Parse<T>(Structure structure, string line)
+    private static T Parse<T>(Structure structure, string line)
     {
         return (T)structure.CreateObject(line);
     }

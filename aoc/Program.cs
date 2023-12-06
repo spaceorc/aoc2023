@@ -17,13 +17,12 @@ public static class Program
         // Runner.RunFile("day2.txt", Solve_2);
         // Runner.RunFile("day1.txt", Solve_1);
     }
-    
-    private static void Solve_6(
-        [Template("""
-                  Time: {times}
-                  Distance: {distances}
-                  """)]
-        (long[] times, long[] distances) input)
+
+    [Template("""
+              Time: {times}
+              Distance: {distances}
+              """)]
+    private static void Solve_6(long[] times, long[] distances)
     {
         SolvePart1(SolveSqEq).Out("Part 1 (square equation): ");
         SolvePart2(SolveSqEq).Out("Part 2 (square equation): ");
@@ -50,15 +49,15 @@ public static class Program
 
         long SolvePart1(Func<long, long, long> solve)
         {
-            return input.times
-                .Select((time, i) => solve(time, input.distances[i]))
+            return times
+                .Select((time, i) => solve(time, distances[i]))
                 .Aggregate(1L, (a, b) => a * b);
         }
 
         long SolvePart2(Func<long, long, long> solve)
         {
-            var time = long.Parse(string.Join("", input.times));
-            var distance = long.Parse(string.Join("", input.distances));
+            var time = long.Parse(string.Join("", times));
+            var distance = long.Parse(string.Join("", distances));
             return solve(time, distance);
         }
     }

@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace aoc.ParseLib;
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Parameter, AllowMultiple = true, Inherited = false)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Parameter | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
 public class RegexArrayAttribute : StructureAttribute
 {
     public RegexArrayAttribute(string regex)

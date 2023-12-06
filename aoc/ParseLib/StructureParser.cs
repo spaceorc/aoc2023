@@ -9,17 +9,17 @@ public static class StructureParser
 {
     public const string DefaultSeparators = "- ;,:|\n";
 
-    public static Structure Parse(Type type, ParameterInfo? parameterInfo)
+    public static Structure Parse(Type type, ICustomAttributeProvider? customAttributeProvider)
     {
         var context = StructureParserContext.CreateRoot();
-        var result = Parse(type, parameterInfo, context);
+        var result = Parse(type, customAttributeProvider, context);
         context.Validate();
         return result;
     }
-
+    
     public static Structure Parse(
         Type type,
-        ParameterInfo? parameterInfo,
+        ICustomAttributeProvider? parameterInfo,
         StructureParserContext context
     )
     {
