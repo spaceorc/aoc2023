@@ -19,7 +19,7 @@ public class TemplateAttribute : StructureAttribute
 
     public override string ToString() => $"Template[{Template}], IsRegex={IsRegex}, {base.ToString()}";
 
-    public override Structure CreateStructure(Type type, StructureParserContext context)
+    public override TypeStructure CreateStructure(Type type, StructureParserContext context)
     {
         var regex = CreateRegex();
         var groupNames = regex.GetGroupNames();
@@ -34,7 +34,7 @@ public class TemplateAttribute : StructureAttribute
         }
 
         var constructor = type.GetConstructors().Single(x => x.GetParameters().Length != 0);
-        var paramStructures = new List<(string Group, Structure Structure)>();
+        var paramStructures = new List<(string Group, TypeStructure Structure)>();
         for (var paramIndex = 0; paramIndex < constructor.GetParameters().Length; paramIndex++)
         {
             var parameter = constructor.GetParameters()[paramIndex];

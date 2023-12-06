@@ -14,7 +14,7 @@ public class AtomAttribute : StructureAttribute
 
     public override string ToString() => $"Atom[{Separators}], {base.ToString()}";
 
-    public override Structure CreateStructure(Type type, StructureParserContext context)
+    public override TypeStructure CreateStructure(Type type, StructureParserContext context)
     {
         return new AtomStructure(type, Separators);
     }

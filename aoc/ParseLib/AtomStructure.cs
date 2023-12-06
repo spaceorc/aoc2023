@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace aoc.ParseLib;
 
-public record AtomStructure(Type Type, string Separators = StructureParser.DefaultSeparators) : Structure(Type)
+public record AtomStructure(Type Type, string Separators = StructureParser.DefaultSeparators) : TypeStructure(Type)
 {
     public override object CreateObject(string source)
     {

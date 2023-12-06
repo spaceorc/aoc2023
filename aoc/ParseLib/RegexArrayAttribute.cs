@@ -16,7 +16,7 @@ public class RegexArrayAttribute : StructureAttribute
 
     public override string ToString() => $"RegexArray[{Regex}], {base.ToString()}";
 
-    public override Structure CreateStructure(Type type, StructureParserContext context)
+    public override TypeStructure CreateStructure(Type type, StructureParserContext context)
     {
         var regex = CreateRegex();
         var groupNames = regex.GetGroupNames();

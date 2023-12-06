@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace aoc.ParseLib;
 
-public record SplitClassStructure(Type Type, string Separators, params Structure[] Parameters) : Structure(Type)
+public record SplitClassStructure(Type Type, string Separators, params TypeStructure[] Parameters) : TypeStructure(Type)
 {
     public override object CreateObject(string source)
     {

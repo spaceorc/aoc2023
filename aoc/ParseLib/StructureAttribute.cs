@@ -8,5 +8,5 @@ public abstract class StructureAttribute : Attribute
 
     public override string ToString() => $"Target: {Target}";
 
-    public abstract Structure CreateStructure(Type type, StructureParserContext context);
+    public abstract TypeStructure CreateStructure(Type type, StructureParserContext context);
 }

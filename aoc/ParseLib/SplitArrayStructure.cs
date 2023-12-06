@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace aoc.ParseLib;
 
-public record SplitArrayStructure(Type Type, string Separators, Structure Item) : Structure(Type)
+public record SplitArrayStructure(Type Type, string Separators, TypeStructure Item) : TypeStructure(Type)
 {
     public override object CreateObject(string source)
     {

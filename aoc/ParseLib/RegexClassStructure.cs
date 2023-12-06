@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace aoc.ParseLib;
 
-public record RegexClassStructure(Type Type, Regex Regex, params (string Group, Structure Structure)[] Parameters) : Structure(Type)
+public record RegexClassStructure(Type Type, Regex Regex, params (string Group, TypeStructure Structure)[] Parameters) : TypeStructure(Type)
 {
     public override object CreateObject(string source)
     {

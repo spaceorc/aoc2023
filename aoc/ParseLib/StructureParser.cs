@@ -9,15 +9,15 @@ public static class StructureParser
 {
     public const string DefaultSeparators = " ;,:|\n";
 
-    public static Structure Parse(Type type, ICustomAttributeProvider? customAttributeProvider)
+    public static TypeStructure Parse(Type type, ICustomAttributeProvider? customAttributeProvider)
     {
         var context = StructureParserContext.CreateRoot();
         var result = Parse(type, customAttributeProvider, context);
         context.Validate();
         return result;
     }
-    
-    public static Structure Parse(
+
+    public static TypeStructure Parse(
         Type type,
         ICustomAttributeProvider? parameterInfo,
         StructureParserContext context
@@ -35,7 +35,7 @@ public static class StructureParser
         return structureAttribute.CreateStructure(type, context);
     }
 
-    private static List<StructureAttribute> GetStructureAttributes(params ICustomAttributeProvider?[] customAttributeProviders)
+    public static List<StructureAttribute> GetStructureAttributes(params ICustomAttributeProvider?[] customAttributeProviders)
     {
         return customAttributeProviders
             .Where(customAttributeProvider => customAttributeProvider != null)

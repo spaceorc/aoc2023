@@ -16,12 +16,12 @@ public class SplitAttribute : StructureAttribute
 
     public override string ToString() => $"Split[{Separators}], {base.ToString()}";
 
-    public override Structure CreateStructure(Type type, StructureParserContext context)
+    public override TypeStructure CreateStructure(Type type, StructureParserContext context)
     {
         if (type.IsArray)
             return new SplitArrayStructure(type, Separators, StructureParser.Parse(type.GetElementType()!, null, context.Nested("item")));
 
-        var parameters = new List<Structure>();
+        var parameters = new List<TypeStructure>();
         var constructor = type.GetConstructors().Single(x => x.GetParameters().Length != 0);
         for (var paramIndex = 0; paramIndex < constructor.GetParameters().Length; paramIndex++)
         {

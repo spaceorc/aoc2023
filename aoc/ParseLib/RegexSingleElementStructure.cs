@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace aoc.ParseLib;
 
-public record RegexSingleElementStructure(Type Type, Regex Regex, Structure Element) : Structure(Type)
+public record RegexSingleElementStructure(Type Type, Regex Regex, TypeStructure Element) : TypeStructure(Type)
 {
     public override object CreateObject(string source)
     {

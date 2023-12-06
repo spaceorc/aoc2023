@@ -7,7 +7,7 @@ namespace aoc.ParseLib;
 public record StructureParserContext(
     string Target,
     List<StructureAttribute> Attributes,
-    (string Target, StructureAttribute Attribute)[] ParentAttributes,
+    List<(string Target, StructureAttribute Attribute)> ParentAttributes,
     Dictionary<StructureAttribute, string> AllAttributes,
     Dictionary<StructureAttribute, string> UsedAttributes
 )
@@ -18,12 +18,19 @@ public record StructureParserContext(
         Attributes.Add(attribute);
     }
 
+    public void DeclareParentAttribute(string child, StructureAttribute attribute)
+    {
+        var target = CombineTarget(Target, child);
+        AllAttributes.Add(attribute, target);
+        ParentAttributes.Add((target, attribute));
+    }
+
     public void UseAttribute(StructureAttribute attribute) => UsedAttributes.Add(attribute, Target);
 
     public static StructureParserContext CreateRoot() => new(
         Target: "",
         Attributes: new List<StructureAttribute>(),
-        ParentAttributes: Array.Empty<(string Target, StructureAttribute Attribute)>(),
+        ParentAttributes: new List<(string Target, StructureAttribute Attribute)>(), 
         AllAttributes: new Dictionary<StructureAttribute, string>(),
         UsedAttributes: new Dictionary<StructureAttribute, string>()
     );
@@ -42,7 +49,7 @@ public record StructureParserContext(
         {
             Target = CombineTarget(Target, name),
             Attributes = new List<StructureAttribute>(),
-            ParentAttributes = ParentAttributes.Concat(Attributes.Select(a => (Target, a))).ToArray(),
+            ParentAttributes = ParentAttributes.Concat(Attributes.Select(a => (Target, a))).ToList(),
         };
     }
 

@@ -18,9 +18,8 @@ public static class Parser
 
         if (method.GetCustomAttributes().OfType<StructureAttribute>().Any())
         {
-            var tupleType = CreateTupleType(method.GetParameters().Select(p => p.ParameterType).ToArray());
-            var value = ParseParameterValue(method, tupleType, lines);
-            return method.GetParameters().Select((_, i) => tupleType.GetProperty($"Item{i + 1}")!.GetValue(value)).ToArray();
+            var methodStructure = MethodStructure.CreateStructure(method);
+            return methodStructure.CreateParameters(string.Join('\n', lines));
         }
 
         var regions = lines.Regions();
@@ -63,15 +62,6 @@ public static class Parser
         return args.ToArray();
     }
 
-    private static Type CreateTupleType(Type[] types)
-    {
-        var genericType = typeof(Tuple<>)
-            .Assembly
-            .GetTypes()
-            .Single(t => t.Name == $"Tuple`{types.Length}");
-        return genericType.MakeGenericType(types);
-    }
-
     private static object ParseParameterValue(ICustomAttributeProvider customAttributeProvider, Type parameterType, string[] lines)
     {
         if (parameterType.IsArray && !customAttributeProvider.GetCustomAttributes(false).OfType<NonArrayAttribute>().Any())
@@ -88,12 +78,12 @@ public static class Parser
         return parse.Invoke(null, new object?[] { structure, string.Join('\n', lines) })!;
     }
 
-    private static T[] ParseAll<T>(Structure structure, IEnumerable<string> lines)
+    private static T[] ParseAll<T>(TypeStructure structure, IEnumerable<string> lines)
     {
         return lines.Select(x => Parse<T>(structure, x)).ToArray();
     }
 
-    private static T Parse<T>(Structure structure, string line)
+    private static T Parse<T>(TypeStructure structure, string line)
     {
         return (T)structure.CreateObject(line);
     }
