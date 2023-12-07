@@ -37,8 +37,8 @@ public static class Program
 
         int GetCardScore(char k) => "J23456789TQKA".IndexOf(k) + 1;
         
-        long GetSort(int[] kind) => kind.Aggregate(0L, (current, k) => current * 100 + k);
-        
+        long GetSort(int[] kind) => kind.Aggregate(0L, (cur, k) => cur * 100 + k);
+
         int[] GetKind(string hand) => "23456789TQKA".Select(c => GetKindJ(hand, c)).MaxBy(GetSort)!;
 
         int[] GetKindJ(string hand, char j)
@@ -78,7 +78,7 @@ public static class Program
 
         int GetCardScore(char k) => "23456789TJQKA".IndexOf(k) + 2;
 
-        long GetSort(int[] kind) => kind.Aggregate(0L, (current, k) => current * 100 + k);
+        long GetSort(int[] kind) => kind.Aggregate(0L, (cur, k) => cur * 100 + k);
 
         int[] GetKind(string hand)
         {
