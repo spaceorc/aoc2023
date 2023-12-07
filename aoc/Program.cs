@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using aoc.ParseLib;
 using aoc.ParseLib.Attributes;
 
@@ -10,8 +12,7 @@ public static class Program
 {
     private static void Main()
     {
-        Runner.RunFile("day7.txt", Solve_7_1);
-        Runner.RunFile("day7.txt", Solve_7_2);
+        Runner.RunFile("day7.txt", Solve_7);
         // Runner.RunFile("day6.txt", Solve_6);
         // Runner.RunFile("day5.txt", Solve_5_1);
         // Runner.RunFile("day5.txt", Solve_5_2);
@@ -21,84 +22,39 @@ public static class Program
         // Runner.RunFile("day1.txt", Solve_1);
     }
 
-    private static void Solve_7_2((string hand, long bid)[] input)
+    private static void Solve_7((string hand, long bid)[] input)
     {
-        Solve().Out("Part 2: ");
-        return;
+        input
+            .Select(
+                x => (
+                    x.bid,
+                    kind: x.hand.GroupBy(c => c).Select(g => g.Count()).OrderDescending()
+                        .Concat(x.hand.Select(c => "23456789TJQKA".IndexOf(c)))
+                        .ToArray()
+                )
+            )
+            .OrderBy(x => x.kind, ArrayComparer.Create<int>())
+            .Select((x, i) => (x.bid, rank: i + 1))
+            .Sum(x => x.bid * x.rank)
+            .Out("Part 1: ");
 
-        long Solve()
-        {
-            return input
-                .Select(x => (x.bid, kind: GetKind(x.hand)))
-                .OrderBy(x => GetSort(x.kind))
-                .Select((x, i) => (x.bid, rank: i + 1))
-                .Sum(x => x.bid * x.rank);
-        }
-
-        int GetCardScore(char k) => "J23456789TQKA".IndexOf(k) + 1;
-        
-        long GetSort(int[] kind) => kind.Aggregate(0L, (cur, k) => cur * 100 + k);
-
-        int[] GetKind(string hand) => "23456789TQKA".Select(c => GetKindJ(hand, c)).MaxBy(GetSort)!;
-
-        int[] GetKindJ(string hand, char j)
-        {
-            var g = hand.Replace('J', j)
-                .GroupBy(c => c)
-                .ToLookup(g => g.Count());
-
-            return new[]
-            {
-                g[5].Count(),
-                g[4].Count(),
-                g[3].Count(),
-                g[2].Count(),
-                GetCardScore(hand[0]),
-                GetCardScore(hand[1]),
-                GetCardScore(hand[2]),
-                GetCardScore(hand[3]),
-                GetCardScore(hand[4]),
-            };
-        }
-    }
-
-    private static void Solve_7_1((string hand, long bid)[] input)
-    {
-        Solve().Out("Part 1: ");
-        return;
-
-        long Solve()
-        {
-            return input
-                .Select(x => (x.bid, kind: GetKind(x.hand)))
-                .OrderBy(x => GetSort(x.kind))
-                .Select((x, i) => (x.bid, rank: i + 1))
-                .Sum(x => x.bid * x.rank);
-        }
-
-        int GetCardScore(char k) => "23456789TJQKA".IndexOf(k) + 2;
-
-        long GetSort(int[] kind) => kind.Aggregate(0L, (cur, k) => cur * 100 + k);
-
-        int[] GetKind(string hand)
-        {
-            var g = hand
-                .GroupBy(c => c)
-                .ToLookup(g => g.Count());
-
-            return new[]
-            {
-                g[5].Count(),
-                g[4].Count(),
-                g[3].Count(),
-                g[2].Count(),
-                GetCardScore(hand[0]),
-                GetCardScore(hand[1]),
-                GetCardScore(hand[2]),
-                GetCardScore(hand[3]),
-                GetCardScore(hand[4]),
-            };
-        }
+        input
+            .Select(
+                x => (
+                    x.bid,
+                    kind: "23456789TQKA"
+                        .Select(
+                            j => x.hand.Replace('J', j).GroupBy(c => c).Select(g => g.Count()).OrderDescending()
+                                .Concat(x.hand.Select(c => "J23456789TQKA".IndexOf(c)))
+                                .ToArray()
+                        )
+                        .Max(ArrayComparer.Create<int>())!
+                )
+            )
+            .OrderBy(x => x.kind, ArrayComparer.Create<int>())
+            .Select((x, i) => (x.bid, rank: i + 1))
+            .Sum(x => x.bid * x.rank)
+            .Out("Part 2: ");
     }
 
     [Template(
