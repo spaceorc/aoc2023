@@ -37,7 +37,7 @@ public static class Program
                 .Sum(x => x.bid * x.rank);
         }
 
-        int GetScore(char k) => "J23456789TQKA".IndexOf(k) + 1;
+        int GetCardScore(char k) => "J23456789TQKA".IndexOf(k) + 1;
         
         long GetSort(int[] kind) => kind.Aggregate(0L, (current, k) => current * 100 + k);
         
@@ -47,8 +47,7 @@ public static class Program
         {
             var g = hand.Replace('J', j)
                 .GroupBy(c => c)
-                .Select(g => (score: GetScore(g.Key), count: g.Count()))
-                .ToLookup(g => g.count, g => g.score);
+                .ToLookup(g => g.Count());
 
             return new[]
             {
@@ -56,11 +55,11 @@ public static class Program
                 g[4].Count(),
                 g[3].Count(),
                 g[2].Count(),
-                GetScore(hand[0]),
-                GetScore(hand[1]),
-                GetScore(hand[2]),
-                GetScore(hand[3]),
-                GetScore(hand[4]),
+                GetCardScore(hand[0]),
+                GetCardScore(hand[1]),
+                GetCardScore(hand[2]),
+                GetCardScore(hand[3]),
+                GetCardScore(hand[4]),
             };
         }
     }
@@ -87,8 +86,7 @@ public static class Program
         {
             var g = hand
                 .GroupBy(c => c)
-                .Select(g => (score: GetCardScore(g.Key), count: g.Count()))
-                .ToLookup(g => g.count, g => g.score);
+                .ToLookup(g => g.Count());
 
             return new[]
             {
