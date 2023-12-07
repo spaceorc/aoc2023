@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using aoc.ParseLib;
 using aoc.ParseLib.Attributes;
 
@@ -10,19 +12,105 @@ public static class Program
 {
     private static void Main()
     {
-        Runner.RunFile("day6.txt", Solve_6);
-        Runner.RunFile("day5.txt", Solve_5_1);
-        Runner.RunFile("day5.txt", Solve_5_2);
-        Runner.RunFile("day4.txt", Solve_4);
-        Runner.RunFile("day3.txt", Solve_3);
-        Runner.RunFile("day2.txt", Solve_2);
-        Runner.RunFile("day1.txt", Solve_1);
+        Runner.RunFile("day7.txt", Solve_7_1);
+        Runner.RunFile("day7.txt", Solve_7_2);
+        // Runner.RunFile("day6.txt", Solve_6);
+        // Runner.RunFile("day5.txt", Solve_5_1);
+        // Runner.RunFile("day5.txt", Solve_5_2);
+        // Runner.RunFile("day4.txt", Solve_4);
+        // Runner.RunFile("day3.txt", Solve_3);
+        // Runner.RunFile("day2.txt", Solve_2);
+        // Runner.RunFile("day1.txt", Solve_1);
     }
 
-    [Template("""
-              Time: {times}
-              Distance: {distances}
-              """)]
+    private static void Solve_7_2((string hand, long bid)[] input)
+    {
+        Solve().Out("Part 2: ");
+        return;
+
+        long Solve()
+        {
+            return input
+                .Select(x => (x.bid, kind: GetKind(x.hand)))
+                .OrderBy(x => GetSort(x.kind))
+                .Select((x, i) => (x.bid, rank: i + 1))
+                .Sum(x => x.bid * x.rank);
+        }
+
+        int GetScore(char k) => "J23456789TQKA".IndexOf(k) + 1;
+        
+        long GetSort(int[] kind) => kind.Aggregate(0L, (current, k) => current * 100 + k);
+        
+        int[] GetKind(string hand) => "23456789TQKA".Select(c => GetKindJ(hand, c)).MaxBy(GetSort)!;
+
+        int[] GetKindJ(string hand, char j)
+        {
+            var g = hand.Replace('J', j)
+                .GroupBy(c => c)
+                .Select(g => (score: GetScore(g.Key), count: g.Count()))
+                .ToLookup(g => g.count, g => g.score);
+
+            return new[]
+            {
+                g[5].Count(),
+                g[4].Count(),
+                g[3].Count(),
+                g[2].Count(),
+                GetScore(hand[0]),
+                GetScore(hand[1]),
+                GetScore(hand[2]),
+                GetScore(hand[3]),
+                GetScore(hand[4]),
+            };
+        }
+    }
+
+    private static void Solve_7_1((string hand, long bid)[] input)
+    {
+        Solve().Out("Part 1: ");
+        return;
+
+        long Solve()
+        {
+            return input
+                .Select(x => (x.bid, kind: GetKind(x.hand)))
+                .OrderBy(x => GetSort(x.kind))
+                .Select((x, i) => (x.bid, rank: i + 1))
+                .Sum(x => x.bid * x.rank);
+        }
+
+        int GetCardScore(char k) => "23456789TJQKA".IndexOf(k) + 2;
+
+        long GetSort(int[] kind) => kind.Aggregate(0L, (current, k) => current * 100 + k);
+
+        int[] GetKind(string hand)
+        {
+            var g = hand
+                .GroupBy(c => c)
+                .Select(g => (score: GetCardScore(g.Key), count: g.Count()))
+                .ToLookup(g => g.count, g => g.score);
+
+            return new[]
+            {
+                g[5].Count(),
+                g[4].Count(),
+                g[3].Count(),
+                g[2].Count(),
+                GetCardScore(hand[0]),
+                GetCardScore(hand[1]),
+                GetCardScore(hand[2]),
+                GetCardScore(hand[3]),
+                GetCardScore(hand[4]),
+            };
+        }
+    }
+
+    [Template(
+        """
+        Time: {times}
+        Distance: {distances}
+        """
+    )]
     private static void Solve_6(long[] times, long[] distances)
     {
         SolvePart1(SolveSqEq).Out("Part 1 (square equation): ");
@@ -30,7 +118,7 @@ public static class Program
 
         SolvePart1(SolveBruteforce).Out("Part 1 (bruteforce): ");
         SolvePart2(SolveBruteforce).Out("Part 2 (bruteforce): ");
-        
+
         return;
 
         long SolveSqEq(long time, long distance)
