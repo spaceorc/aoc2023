@@ -12,14 +12,59 @@ public static class Program
 {
     private static void Main()
     {
-        Runner.RunFile("day7.txt", Solve_7);
-        // Runner.RunFile("day6.txt", Solve_6);
-        // Runner.RunFile("day5.txt", Solve_5_1);
-        // Runner.RunFile("day5.txt", Solve_5_2);
-        // Runner.RunFile("day4.txt", Solve_4);
-        // Runner.RunFile("day3.txt", Solve_3);
-        // Runner.RunFile("day2.txt", Solve_2);
-        // Runner.RunFile("day1.txt", Solve_1);
+        Runner.RunFile("day8.txt", Solve_8);
+        Runner.RunFile("day6.txt", Solve_6);
+        Runner.RunFile("day5.txt", Solve_5_1);
+        Runner.RunFile("day5.txt", Solve_5_2);
+        Runner.RunFile("day4.txt", Solve_4);
+        Runner.RunFile("day3.txt", Solve_3);
+        Runner.RunFile("day2.txt", Solve_2);
+        Runner.RunFile("day1.txt", Solve_1);
+    }
+
+    private static void Solve_8(
+        string moves,
+        (string id, string left, string right)[] nodes)
+    {
+        SolvePart1().Out("Part 1: ");
+        SolvePart2().Out("Part 2: ");
+        return;
+
+        long SolvePart1()
+        {
+            var graph = nodes.ToDictionary(n => n.id);
+            var curNode = "AAA";
+            var cur = 0;
+            var count = 0;
+            while (curNode != "ZZZ")
+            {
+                curNode = moves[cur] == 'L' ? graph[curNode].left : graph[curNode].right;
+                cur = (cur + 1) % moves.Length;
+                count++;
+            }
+            return count;
+        }
+        
+        long SolvePart2()
+        {
+            var graph = nodes.ToDictionary(n => n.id);
+            var startNodes = nodes.Select(n => n.id).Where(x => x[^1] == 'A').ToArray();
+            var periods = startNodes.Select(_ => 0L).ToArray();
+            for (var i = 0; i < startNodes.Length; i++)
+            {
+                var curNode = startNodes[i];
+                var cur = 0;
+                periods[i] = 0;
+                while (curNode[^1] != 'Z')
+                {
+                    curNode = moves[cur] == 'L' ? graph[curNode].left : graph[curNode].right;
+                    cur = (cur + 1) % moves.Length;
+                    periods[i]++;
+                }
+            }
+
+            return Helpers.Lcm(periods);
+        }
     }
 
     private static void Solve_7((string hand, long bid)[] input)

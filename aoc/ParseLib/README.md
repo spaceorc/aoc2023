@@ -17,7 +17,7 @@
        * Arrays of any supported type
        * ValueTuple or Tuple
        * Any class or record with single constructor with parameters
-       * Specify separators for atoms parsing (defaults to `" ;,:|\n"`)
+       * Specify separators for atoms parsing (defaults to `" ;,:|=()\n"`)
      * Parse by template or regex:
        * ValueTuple or Tuple
        * Any class or record with single constructor with parameters
@@ -25,7 +25,7 @@
         * ValueTuple or Tuple
         * Any class or record with single constructor with parameters
         * Array of any supported type
-        * Specify separators for simple parsing (defaults to `" ;,:|\n"`)
+        * Specify separators for simple parsing (defaults to `" ;,:|=()\n"`)
      * Populate array by all captures from regex
    * Templates, regexes and atoms can be specified also on method level,
      not only on parameters level   
@@ -149,7 +149,7 @@ public static class Program
 }
 ```
 
-Customizing separators - default is ` ;,:|\n`:
+Customizing separators - default is ` ;,:|=()\n`:
 
 ```csharp
 public static class Program
