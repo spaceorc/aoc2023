@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using aoc.ParseLib;
 using aoc.ParseLib.Attributes;
 
@@ -12,19 +10,51 @@ public static class Program
 {
     private static void Main()
     {
-        Runner.RunFile("day8.txt", Solve_8);
-        Runner.RunFile("day6.txt", Solve_6);
-        Runner.RunFile("day5.txt", Solve_5_1);
-        Runner.RunFile("day5.txt", Solve_5_2);
-        Runner.RunFile("day4.txt", Solve_4);
-        Runner.RunFile("day3.txt", Solve_3);
-        Runner.RunFile("day2.txt", Solve_2);
-        Runner.RunFile("day1.txt", Solve_1);
+        Runner.RunFile("day9.txt", Solve_9);
+        // Runner.RunFile("day8.txt", Solve_8);
+        // Runner.RunFile("day6.txt", Solve_6);
+        // Runner.RunFile("day5.txt", Solve_5_1);
+        // Runner.RunFile("day5.txt", Solve_5_2);
+        // Runner.RunFile("day4.txt", Solve_4);
+        // Runner.RunFile("day3.txt", Solve_3);
+        // Runner.RunFile("day2.txt", Solve_2);
+        // Runner.RunFile("day1.txt", Solve_1);
     }
 
+    private static void Solve_9(long[][] input)
+    {
+        SolvePart1().Out("Part 1: ");
+        SolvePart2().Out("Part 2: ");
+        return;
+
+        long SolvePart1()
+        {
+            return input.Sum(
+                data => data
+                    .Generate(x => x.Window(2).Select(w => w[1] - w[0]).ToArray())
+                    .TakeWhile(x => x.Any(e => e != 0))
+                    .Select(x => x[^1])
+                    .Sum()
+            );
+        }
+
+        long SolvePart2()
+        {
+            return input.Sum(
+                data => data
+                    .Generate(x => x.Window(2).Select(w => w[1] - w[0]).ToArray())
+                    .TakeWhile(x => x.Any(e => e != 0))
+                    .Select(x => x[0])
+                    .Reverse()
+                    .Aggregate(0L, (acc, cur) => cur - acc)
+            );
+        }
+    }
+    
     private static void Solve_8(
         string moves,
-        (string id, string left, string right)[] nodes)
+        (string id, string left, string right)[] nodes
+    )
     {
         SolvePart1().Out("Part 1: ");
         SolvePart2().Out("Part 2: ");
@@ -42,9 +72,10 @@ public static class Program
                 cur = (cur + 1) % moves.Length;
                 count++;
             }
+
             return count;
         }
-        
+
         long SolvePart2()
         {
             var graph = nodes.ToDictionary(n => n.id);
@@ -73,7 +104,9 @@ public static class Program
             .Select(
                 x => (
                     x.bid,
-                    kind: x.hand.GroupBy(c => c).Select(g => g.Count()).OrderDescending()
+                    kind: x.hand.GroupBy(c => c)
+                        .Select(g => g.Count())
+                        .OrderDescending()
                         .Concat(x.hand.Select(c => "23456789TJQKA".IndexOf(c)))
                         .ToArray()
                 )
@@ -89,7 +122,10 @@ public static class Program
                     x.bid,
                     kind: "23456789TQKA"
                         .Select(
-                            j => x.hand.Replace('J', j).GroupBy(c => c).Select(g => g.Count()).OrderDescending()
+                            j => x.hand.Replace('J', j)
+                                .GroupBy(c => c)
+                                .Select(g => g.Count())
+                                .OrderDescending()
                                 .Concat(x.hand.Select(c => "J23456789TQKA".IndexOf(c)))
                                 .ToArray()
                         )

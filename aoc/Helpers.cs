@@ -7,6 +7,16 @@ namespace aoc;
 
 public static class Helpers
 {
+    public static IEnumerable<T> Generate<T>(this T start, Func<T, T> next)
+    {
+        while (true)
+        {
+            yield return start;
+            start = next(start);
+        }
+        // ReSharper disable once IteratorNeverReturns
+    }
+
     public static IEnumerable<int[]> Variants(int n, int v)
     {
         var arr = new int[n];
@@ -89,27 +99,25 @@ public static class Helpers
             yield return indices.Select(x => items[x]).ToArray();
         } while (NextPermutation(indices));
     }
-
-    public static IEnumerable<T[]> Batch<T>(this IEnumerable<T> items, int batchSize)
+    
+    public static IEnumerable<T[]> Window<T>(this IEnumerable<T> items, int windowSize)
     {
-        var batch = new List<T>();
+        var queue = new Queue<T>(windowSize);
         foreach (var item in items)
         {
-            batch.Add(item);
-            if (batch.Count == batchSize)
-            {
-                yield return batch.ToArray();
-                batch.Clear();
-            }
+            if (queue.Count == windowSize)
+                queue.Dequeue();
+            
+            queue.Enqueue(item);
+        
+            if (queue.Count == windowSize)
+                yield return queue.ToArray();
         }
-
-        if (batch.Count > 0)
-            yield return batch.ToArray();
     }
 
     public static IEnumerable<T> TakeEvery<T>(this IEnumerable<T> items, int n, int startFrom = 0)
     {
-        return items.Skip(startFrom).Batch(n).Select(x => x.First());
+        return items.Skip(startFrom).Chunk(n).Select(x => x.First());
     }
 
     public static IEnumerable<(T item, int index)> WithIndex<T>(this IEnumerable<T> items)
