@@ -10,7 +10,8 @@ public static class Program
 {
     private static void Main()
     {
-        Runner.RunFile("day9.txt", Solve_9);
+        Runner.RunFile("day10.txt", Solve_10);
+        // Runner.RunFile("day9.txt", Solve_9);
         // Runner.RunFile("day8.txt", Solve_8);
         // Runner.RunFile("day6.txt", Solve_6);
         // Runner.RunFile("day5.txt", Solve_5_1);
@@ -19,6 +20,183 @@ public static class Program
         // Runner.RunFile("day3.txt", Solve_3);
         // Runner.RunFile("day2.txt", Solve_2);
         // Runner.RunFile("day1.txt", Solve_1);
+    }
+
+    private static void Solve_10(Map<char> map)
+    {
+        var pipe = GetPipe();
+
+        (pipe.Count / 2).Out("Part 1: ");
+        CountInside().Out("Part 2: ");
+        return;
+
+        long CountInside()
+        {
+            const int OUTSIDE = 0;
+            const int TOP_BORDER = 1;
+            const int BOTTOM_BORDER = 2;
+            const int INSIDE = 3;
+
+            var border = pipe.ToHashSet();
+            var count = 0;
+            for (var y = 0; y < map.sizeY; y++)
+            {
+                var position = OUTSIDE;
+                for (var x = 0; x < map.sizeX; x++)
+                {
+                    var v = new V(x, y);
+
+                    if (border.Contains(v))
+                    {
+                        position = position switch
+                        {
+                            OUTSIDE => map[v] switch
+                            {
+                                '|' => INSIDE,
+                                'F' => TOP_BORDER,
+                                'L' => BOTTOM_BORDER,
+                            },
+                            TOP_BORDER => map[v] switch
+                            {
+                                'J' => INSIDE,
+                                '7' => OUTSIDE,
+                                '-' => position,
+                            },
+                            BOTTOM_BORDER => map[v] switch
+                            {
+                                'J' => OUTSIDE,
+                                '7' => INSIDE,
+                                '-' => position,
+                            },
+                            INSIDE => map[v] switch
+                            {
+                                '|' => OUTSIDE,
+                                'F' => BOTTOM_BORDER,
+                                'L' => TOP_BORDER,
+                            },
+                        };
+                    }
+                    else
+                    {
+                        if (position == INSIDE)
+                            count++;
+                    }
+                }
+            }
+
+            return count;
+        }
+
+        List<V> GetPipe()
+        {
+            var start = map.All().Single(v => map[v] == 'S');
+            foreach (var c in new[] { '-', '|', 'L', 'J', 'F', '7' })
+            {
+                var pipe = new List<V> { start };
+                map[start] = c;
+                var cur = start;
+                var dir = map[start] switch
+                {
+                    '|' => new V(0, 1),
+                    'J' => new V(0, 1),
+                    'L' => new V(0, 1),
+                    '-' => new V(1, 0),
+                    'F' => new V(-1, 0),
+                    '7' => new V(1, 0),
+                    _ => throw new Exception($"start {map[start]}"),
+                };
+                var valid = true;
+                while (true)
+                {
+                    if (dir == new V(0, 1))
+                    {
+                        switch (map[cur])
+                        {
+                            case '|':
+                                break;
+                            case 'L':
+                                dir = new V(1, 0);
+                                break;
+                            case 'J':
+                                dir = new V(-1, 0);
+                                break;
+                            default:
+                                valid = false;
+                                break;
+                        }
+                    }
+                    else if (dir == new V(0, -1))
+                    {
+                        switch (map[cur])
+                        {
+                            case '|':
+                                break;
+                            case 'F':
+                                dir = new V(1, 0);
+                                break;
+                            case '7':
+                                dir = new V(-1, 0);
+                                break;
+                            default:
+                                valid = false;
+                                break;
+                        }
+                    }
+                    else if (dir == new V(1, 0))
+                    {
+                        switch (map[cur])
+                        {
+                            case '-':
+                                break;
+                            case '7':
+                                dir = new V(0, 1);
+                                break;
+                            case 'J':
+                                dir = new V(0, -1);
+                                break;
+                            default:
+                                valid = false;
+                                break;
+                        }
+                    }
+                    else if (dir == new V(-1, 0))
+                    {
+                        switch (map[cur])
+                        {
+                            case '-':
+                                break;
+                            case 'F':
+                                dir = new V(0, 1);
+                                break;
+                            case 'L':
+                                dir = new V(0, -1);
+                                break;
+                            default:
+                                valid = false;
+                                break;
+                        }
+                    }
+
+                    if (!valid)
+                        break;
+                    if (pipe.Count > 1 && cur == start)
+                        break;
+                    cur += dir;
+                    if (!map.Inside(cur))
+                    {
+                        valid = false;
+                        break;
+                    }
+
+                    pipe.Add(cur);
+                }
+
+                if (valid)
+                    return pipe;
+            }
+
+            throw new Exception("No pipe");
+        }
     }
 
     private static void Solve_9(long[][] input)
@@ -50,7 +228,7 @@ public static class Program
             );
         }
     }
-    
+
     private static void Solve_8(
         string moves,
         (string id, string left, string right)[] nodes
