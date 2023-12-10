@@ -24,7 +24,7 @@ public static class Program
 
     private static void Solve_10(Map<char> map)
     {
-        var pipe = GetPipe();
+        var pipe = BuildPipe();
 
         (pipe.Count / 2).Out("Part 1: ");
         CountInside().Out("Part 2: ");
@@ -87,115 +87,69 @@ public static class Program
             return count;
         }
 
-        List<V> GetPipe()
+        List<V> BuildPipe()
         {
             var start = map.All().Single(v => map[v] == 'S');
-            foreach (var c in new[] { '-', '|', 'L', 'J', 'F', '7' })
+            return new[] { '-', '|', 'L', 'J', 'F', '7' }
+                .Select(startSegment => TryBuildPipe(start, startSegment))
+                .First(x => x != null)!;
+        }
+
+        List<V>? TryBuildPipe(V start, char startSegment)
+        {
+            const int UP = 0;
+            const int RIGHT = 1;
+            const int DOWN = 2;
+            const int LEFT = 3;
+
+            var shifts = new[]
             {
-                var pipe = new List<V> { start };
-                map[start] = c;
-                var cur = start;
-                var dir = map[start] switch
-                {
-                    '|' => new V(0, 1),
-                    'J' => new V(0, 1),
-                    'L' => new V(0, 1),
-                    '-' => new V(1, 0),
-                    'F' => new V(-1, 0),
-                    '7' => new V(1, 0),
-                    _ => throw new Exception($"start {map[start]}"),
-                };
-                var valid = true;
-                while (true)
-                {
-                    if (dir == new V(0, 1))
-                    {
-                        switch (map[cur])
-                        {
-                            case '|':
-                                break;
-                            case 'L':
-                                dir = new V(1, 0);
-                                break;
-                            case 'J':
-                                dir = new V(-1, 0);
-                                break;
-                            default:
-                                valid = false;
-                                break;
-                        }
-                    }
-                    else if (dir == new V(0, -1))
-                    {
-                        switch (map[cur])
-                        {
-                            case '|':
-                                break;
-                            case 'F':
-                                dir = new V(1, 0);
-                                break;
-                            case '7':
-                                dir = new V(-1, 0);
-                                break;
-                            default:
-                                valid = false;
-                                break;
-                        }
-                    }
-                    else if (dir == new V(1, 0))
-                    {
-                        switch (map[cur])
-                        {
-                            case '-':
-                                break;
-                            case '7':
-                                dir = new V(0, 1);
-                                break;
-                            case 'J':
-                                dir = new V(0, -1);
-                                break;
-                            default:
-                                valid = false;
-                                break;
-                        }
-                    }
-                    else if (dir == new V(-1, 0))
-                    {
-                        switch (map[cur])
-                        {
-                            case '-':
-                                break;
-                            case 'F':
-                                dir = new V(0, 1);
-                                break;
-                            case 'L':
-                                dir = new V(0, -1);
-                                break;
-                            default:
-                                valid = false;
-                                break;
-                        }
-                    }
+                new V(0, -1),
+                new V(1, 0),
+                new V(0, 1),
+                new V(-1, 0),
+            };
 
-                    if (!valid)
-                        break;
-                    if (pipe.Count > 1 && cur == start)
-                        break;
-                    cur += dir;
-                    if (!map.Inside(cur))
+            var dirs = new Dictionary<char, int[]>
+            {
+                { '-', new[] { RIGHT, LEFT } },
+                { '|', new[] { UP, DOWN } },
+                { 'L', new[] { UP, RIGHT } },
+                { 'J', new[] { UP, LEFT } },
+                { 'F', new[] { DOWN, RIGHT } },
+                { '7', new[] { DOWN, LEFT } },
+            };
+
+            var moves = dirs
+                .SelectMany(
+                    kvp => new[]
                     {
-                        valid = false;
-                        break;
+                        (kvp.Key, inDir: (kvp.Value[0] + 2) % 4, outDir: kvp.Value[1]),
+                        (kvp.Key, inDir: (kvp.Value[1] + 2) % 4, outDir: kvp.Value[0]),
                     }
+                )
+                .ToDictionary(x => (x.Key, x.inDir), x => x.outDir);
 
-                    pipe.Add(cur);
-                }
+            map[start] = startSegment;
+            
+            var pipe = new List<V> { start };
+            var cur = start;
+            var inDir = moves.First(m => m.Key.Key == map[start]).Key.inDir;
+            while (true)
+            {
+                if (!moves.TryGetValue((map[cur], inDir), out var outDir))
+                    return null;
 
-                if (valid)
+                if (pipe.Count > 1 && cur == start)
                     return pipe;
-            }
 
-            throw new Exception("No pipe");
+                cur += shifts[outDir];
+                inDir = outDir;
+                if (!map.Inside(cur))
+                    return null;
+
+                pipe.Add(cur);
+            }
         }
     }
 
