@@ -10,7 +10,8 @@ public static class Program
 {
     private static void Main()
     {
-        Runner.RunFile("day10.txt", Solve_10);
+        Runner.RunFile("day11.txt", Solve_11);
+        // Runner.RunFile("day10.txt", Solve_10);
         // Runner.RunFile("day9.txt", Solve_9);
         // Runner.RunFile("day8.txt", Solve_8);
         // Runner.RunFile("day6.txt", Solve_6);
@@ -20,6 +21,33 @@ public static class Program
         // Runner.RunFile("day3.txt", Solve_3);
         // Runner.RunFile("day2.txt", Solve_2);
         // Runner.RunFile("day1.txt", Solve_1);
+    }
+
+    private static void Solve_11(Map<char> map)
+    {
+        Solve(2).Out("Part 1: ");
+        Solve(1_000_000).Out("Part 2: ");
+        return;
+
+        long Solve(long times)
+        {
+            var galaxies = map.All().Where(v => map[v] == '#').ToArray();
+            var emptyRows = map.Rows().Where(row => row.All(v => map[v] == '.')).Select(r => r[0].Y).ToArray();
+            var emptyCols = map.Columns().Where(col => col.All(v => map[v] == '.')).Select(r => r[0].X).ToArray();
+            galaxies = galaxies
+                .Select(
+                    v => (
+                        v,
+                        emptyColsCount: emptyCols.Count(e => e < v.X),
+                        emptyRowsCount: emptyRows.Count(e => e < v.Y)
+                    )
+                )
+                .Select(p => p.v + (times - 1) * new V(p.emptyColsCount, p.emptyRowsCount))
+                .ToArray();
+            return galaxies
+                .Combinations(2)
+                .Sum(c => c[0].MDistTo(c[1]));
+        }
     }
 
     private static void Solve_10(Map<char> map)
@@ -131,7 +159,7 @@ public static class Program
                 .ToDictionary(x => (x.Key, x.inDir), x => x.outDir);
 
             map[start] = startSegment;
-            
+
             var pipe = new List<V> { start };
             var cur = start;
             var inDir = moves.First(m => m.Key.Key == map[start]).Key.inDir;

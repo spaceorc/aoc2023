@@ -11,6 +11,7 @@ public record V(long X, long Y)
 
     public static V operator +(V a, V b) => new(a.X + b.X, a.Y + b.Y);
     public static V operator *(V a, long k) => new(a.X * k, a.Y * k);
+    public static V operator *(long k, V a) => a * k;
     public static V operator /(V a, long k) => new(a.X / k, a.Y / k);
     public static V operator %(V a, long k) => new(a.X % k, a.Y % k);
     public static V operator -(V a, V b) => new(a.X - b.X, a.Y - b.Y);
