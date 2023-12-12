@@ -10,7 +10,8 @@ public static class Program
 {
     private static void Main()
     {
-        Runner.RunFile("day11.txt", Solve_11);
+        Runner.RunFile("day12.txt", Solve_12);
+        // Runner.RunFile("day11.txt", Solve_11);
         // Runner.RunFile("day10.txt", Solve_10);
         // Runner.RunFile("day9.txt", Solve_9);
         // Runner.RunFile("day8.txt", Solve_8);
@@ -21,6 +22,62 @@ public static class Program
         // Runner.RunFile("day3.txt", Solve_3);
         // Runner.RunFile("day2.txt", Solve_2);
         // Runner.RunFile("day1.txt", Solve_1);
+    }
+
+    private static void Solve_12((string source, int[] groups)[] input)
+    {
+        SolvePart1().Out("Part 1: ");
+        SolvePart2().Out("Part 2: ");
+        return;
+
+        long SolvePart1()
+        {
+            return input.Sum(x => SolveOne(x.source, x.groups));
+        }
+
+        long SolvePart2()
+        {
+            return input
+                .Select(
+                    x => (
+                        source: string.Join('?', Enumerable.Repeat(x.source, 5)),
+                        groups: Enumerable.Repeat(x.groups, 5).SelectMany(v => v).ToArray()
+                    )
+                )
+                .Sum(x => SolveOne(x.source, x.groups));
+        }
+
+        long SolveOne(string source, int[] groups)
+        {
+            return Count(source, source.Length, groups, groups.Length, 0, new Dictionary<(int, int, int), long>());
+        }
+
+        long Count(string source, int len, int[] groups, int glen, int used, Dictionary<(int, int, int), long> results)
+        {
+            if (results.TryGetValue((len, glen, used), out var res))
+                return res;
+
+            if (len == 0)
+                return glen == 0 || glen == 1 && used == groups[glen - 1] ? 1 : 0;
+
+            var resDot = source[len - 1] switch
+            {
+                '.' or '?' when glen == 0 || used == 0 => Count(source, len - 1, groups, glen, used, results),
+                '.' or '?' when used == groups[glen - 1] => Count(source, len - 1, groups, glen - 1, 0, results),
+                '.' or '?' => 0,
+                _ => 0L
+            };
+
+            var resSharp = source[len - 1] switch
+            {
+                '#' or '?' when glen == 0 || used == groups[glen - 1] => 0,
+                '#' or '?' => Count(source, len - 1, groups, glen, used + 1, results),
+                _ => 0L
+            };
+
+            results[(len, glen, used)] = resDot + resSharp;
+            return resDot + resSharp;
+        }
     }
 
     private static void Solve_11(Map<char> map)
