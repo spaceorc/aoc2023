@@ -31,26 +31,28 @@ public static class Program
         SolvePart2().Out("Part 2: ");
         return;
 
-        bool IsLeftToRightReflection(Map<char> map, int leftCols)
-        {
-            var size = Math.Min(leftCols, map.sizeX - leftCols);
-            return Enumerable.Range(0, size).All(i => map.ColumnString(leftCols - i - 1) == map.ColumnString(leftCols + i));
-        }
-
-        bool IsTopToBottomReflection(Map<char> map, int topRows)
-        {
-            var size = Math.Min(topRows, map.sizeY - topRows);
-            return Enumerable.Range(0, size).All(i => map.RowString(topRows - i - 1) == map.RowString(topRows + i));
-        }
-
         long FindLeftToRightReflection(Map<char> map, long but = 0)
         {
-            return Enumerable.Range(1, map.sizeX - 1).FirstOrDefault(leftCols => leftCols != but && IsLeftToRightReflection(map, leftCols));
+            return Enumerable
+                .Range(1, map.sizeX - 1)
+                .FirstOrDefault(
+                    leftCols => leftCols != but &&
+                                Enumerable
+                                    .Range(0, Math.Min(leftCols, map.sizeX - leftCols))
+                                    .All(i => map.ColumnString(leftCols - i - 1) == map.ColumnString(leftCols + i))
+                );
         }
 
         long FindTopToBottomReflection(Map<char> map, long but = 0)
         {
-            return Enumerable.Range(1, map.sizeY - 1).FirstOrDefault(topRows => topRows != but && IsTopToBottomReflection(map, topRows));
+            return Enumerable
+                .Range(1, map.sizeY - 1)
+                .FirstOrDefault(
+                    topRows => topRows != but &&
+                               Enumerable
+                                   .Range(0, Math.Min(topRows, map.sizeY - topRows))
+                                   .All(i => map.RowString(topRows - i - 1) == map.RowString(topRows + i))
+                );
         }
 
         long SolvePart1() => maps.Sum(map => FindLeftToRightReflection(map) + FindTopToBottomReflection(map) * 100);
