@@ -10,8 +10,10 @@ public static class Program
 {
     private static void Main()
     {
-        Runner.RunFile("day13.txt", Solve_13);
-        // Runner.RunFile("day12.txt", Solve_12);
+        Runner.RunFile("day12.txt", Day12Recursive.Run);
+        Runner.RunFile("day12.txt", Day12Incremental.Run);
+        // Runner.RunFile("day13.txt", Solve_13);
+        Runner.RunFile("day12.txt", Solve_12);
         // Runner.RunFile("day11.txt", Solve_11);
         // Runner.RunFile("day10.txt", Solve_10);
         // Runner.RunFile("day9.txt", Solve_9);
