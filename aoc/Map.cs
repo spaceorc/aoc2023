@@ -106,6 +106,12 @@ public class Map<T>
         for (int x = 0; x < sizeX; x++)
             yield return Column(x).ToArray();
     }
+    
+    public IEnumerable<string> ColumnsStrings()
+    {
+        for (int x = 0; x < sizeX; x++)
+            yield return ColumnString(x);
+    }
 
     public IEnumerable<V> Row(long y)
     {
@@ -127,6 +133,12 @@ public class Map<T>
     {
         for (int y = 0; y < sizeY; y++)
             yield return Row(y).ToArray();
+    }
+    
+    public IEnumerable<string> RowsStrings()
+    {
+        for (int y = 0; y < sizeY; y++)
+            yield return RowString(y);
     }
 
     public IEnumerable<T> ValuesAt(IEnumerable<V> vs)
