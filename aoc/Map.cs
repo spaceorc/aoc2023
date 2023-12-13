@@ -91,6 +91,16 @@ public class Map<T>
             yield return new V(x, y);
     }
 
+    public IEnumerable<T> ColumnValues(long x)
+    {
+        return Column(x).Select(v => this[v]);
+    }
+
+    public string ColumnString(long x, string separator = "")
+    {
+        return string.Join(separator, ColumnValues(x));
+    }
+
     public IEnumerable<V[]> Columns()
     {
         for (int x = 0; x < sizeX; x++)
@@ -102,6 +112,16 @@ public class Map<T>
         for (int x = 0; x < sizeX; x++)
             yield return new V(x, y);
     }
+    
+    public IEnumerable<T> RowValues(long y)
+    {
+        return Row(y).Select(v => this[v]);
+    }
+
+    public string RowString(long y, string separator = "")
+    {
+        return string.Join(separator, RowValues(y));
+    }
 
     public IEnumerable<V[]> Rows()
     {
@@ -112,6 +132,18 @@ public class Map<T>
     public IEnumerable<T> ValuesAt(IEnumerable<V> vs)
     {
         return vs.Select(v => this[v]);
+    }
+
+    public IDisposable ChangeAt(V v, T newValue)
+    {
+        var original = this[v];
+        this[v] = newValue;
+        return new DisposableAction(() => this[v] = original);
+    }
+
+    public IDisposable ChangeAt(V v, Func<T, T> getNewValue)
+    {
+        return ChangeAt(v, getNewValue(this[v]));
     }
 
     public Map<T> Clone()
