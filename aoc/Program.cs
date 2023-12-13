@@ -25,7 +25,7 @@ public static class Program
         // Runner.RunFile("day1.txt", Solve_1);
     }
 
-    private static void Solve_13(params Map<char>[] input)
+    private static void Solve_13(params Map<char>[] maps)
     {
         SolvePart1().Out("Part 1: ");
         SolvePart2().Out("Part 2: ");
@@ -34,58 +34,44 @@ public static class Program
         bool IsLeftToRightReflection(Map<char> map, int leftCols)
         {
             var size = Math.Min(leftCols, map.sizeX - leftCols);
-            return Enumerable
-                .Range(0, size)
-                .All(i => map.ColumnString(leftCols - i - 1) == map.ColumnString(leftCols + i));
+            return Enumerable.Range(0, size).All(i => map.ColumnString(leftCols - i - 1) == map.ColumnString(leftCols + i));
         }
 
         bool IsTopToBottomReflection(Map<char> map, int topRows)
         {
             var size = Math.Min(topRows, map.sizeY - topRows);
-            return Enumerable
-                .Range(0, size)
-                .All(i => map.RowString(topRows - i - 1) == map.RowString(topRows + i));
+            return Enumerable.Range(0, size).All(i => map.RowString(topRows - i - 1) == map.RowString(topRows + i));
         }
 
         long FindLeftToRightReflection(Map<char> map, long but = 0)
         {
-            return Enumerable
-                .Range(1, map.sizeX - 1)
-                .FirstOrDefault(leftCols => leftCols != but && IsLeftToRightReflection(map, leftCols));
+            return Enumerable.Range(1, map.sizeX - 1).FirstOrDefault(leftCols => leftCols != but && IsLeftToRightReflection(map, leftCols));
         }
 
         long FindTopToBottomReflection(Map<char> map, long but = 0)
         {
-            return Enumerable
-                .Range(1, map.sizeY - 1)
-                .FirstOrDefault(topRows => topRows != but && IsTopToBottomReflection(map, topRows));
+            return Enumerable.Range(1, map.sizeY - 1).FirstOrDefault(topRows => topRows != but && IsTopToBottomReflection(map, topRows));
         }
 
-        long SolvePart1()
-        {
-            return input.Sum(map => FindLeftToRightReflection(map) + FindTopToBottomReflection(map) * 100);
-        }
+        long SolvePart1() => maps.Sum(map => FindLeftToRightReflection(map) + FindTopToBottomReflection(map) * 100);
 
-        long SolvePart2()
-        {
-            return input
-                .Select(
-                    map =>
-                    {
-                        var original = (l2r: FindLeftToRightReflection(map), t2b: FindTopToBottomReflection(map));
-                        var sum = map.All()
-                            .Sum(
-                                v =>
-                                {
-                                    using (map.ChangeAt(v, c => c == '.' ? '#' : '.'))
-                                        return FindLeftToRightReflection(map, original.l2r) + FindTopToBottomReflection(map, original.t2b) * 100L;
-                                }
-                            );
-                        return sum / 2;
-                    }
-                )
-                .Sum();
-        }
+        long SolvePart2() => maps
+            .Select(
+                map =>
+                {
+                    var original = (l2r: FindLeftToRightReflection(map), t2b: FindTopToBottomReflection(map));
+                    var sum = map.All()
+                        .Sum(
+                            v =>
+                            {
+                                using (map.ChangeAt(v, c => c == '.' ? '#' : '.'))
+                                    return FindLeftToRightReflection(map, but: original.l2r) + FindTopToBottomReflection(map, but: original.t2b) * 100L;
+                            }
+                        );
+                    return sum / 2;
+                }
+            )
+            .Sum();
     }
 
     private static void Solve_12((string source, int[] groups)[] input)
