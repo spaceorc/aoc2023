@@ -106,7 +106,7 @@ public class Map<T>
         for (int x = 0; x < sizeX; x++)
             yield return Column(x).ToArray();
     }
-    
+
     public IEnumerable<string> ColumnsStrings()
     {
         for (int x = 0; x < sizeX; x++)
@@ -118,7 +118,7 @@ public class Map<T>
         for (int x = 0; x < sizeX; x++)
             yield return new V(x, y);
     }
-    
+
     public IEnumerable<T> RowValues(long y)
     {
         return Row(y).Select(v => this[v]);
@@ -134,7 +134,7 @@ public class Map<T>
         for (int y = 0; y < sizeY; y++)
             yield return Row(y).ToArray();
     }
-    
+
     public IEnumerable<string> RowsStrings()
     {
         for (int y = 0; y < sizeY; y++)
@@ -158,6 +158,12 @@ public class Map<T>
         return ChangeAt(v, getNewValue(this[v]));
     }
 
+    public void Swap(V a, V b)
+    {
+        if (a != b)
+            (this[a], this[b]) = (this[b], this[a]);
+    }
+
     public Map<T> Clone()
     {
         var clone = new Map<T>(sizeX, sizeY);
@@ -173,7 +179,8 @@ public class Map<T>
     public IEnumerable<BfsPathItem<V>> Bfs(
         IEnumerable<V> startFrom,
         Func<V, IEnumerable<V>> nexts,
-        Func<T, T, bool> acceptNext)
+        Func<T, T, bool> acceptNext
+    )
     {
         return Helpers.Bfs(startFrom, nexts);
     }
@@ -181,39 +188,44 @@ public class Map<T>
     public IEnumerable<BfsPathItem<V>> Bfs(
         V startFrom,
         Func<V, IEnumerable<V>> nexts,
-        Func<T, T, bool> acceptNext)
+        Func<T, T, bool> acceptNext
+    )
     {
         return Bfs(new[] { startFrom }, nexts, acceptNext);
     }
 
     public IEnumerable<BfsPathItem<V>> Bfs4(
         IEnumerable<V> startFrom,
-        Func<T, T, bool> acceptNext)
+        Func<T, T, bool> acceptNext
+    )
     {
         return Bfs(startFrom, Area4, acceptNext);
     }
 
     public IEnumerable<BfsPathItem<V>> Bfs4(
         V startFrom,
-        Func<T, T, bool> acceptNext)
+        Func<T, T, bool> acceptNext
+    )
     {
         return Bfs(new[] { startFrom }, Area4, acceptNext);
     }
 
     public IEnumerable<BfsPathItem<V>> Bfs8(
         IEnumerable<V> startFrom,
-        Func<T, T, bool> acceptNext)
+        Func<T, T, bool> acceptNext
+    )
     {
         return Bfs(startFrom, Area8, acceptNext);
     }
 
     public IEnumerable<BfsPathItem<V>> Bfs8(
         V startFrom,
-        Func<T, T, bool> acceptNext)
+        Func<T, T, bool> acceptNext
+    )
     {
         return Bfs(new[] { startFrom }, Area8, acceptNext);
     }
-    
+
     public static Map<T> Parse(string s)
     {
         return s.Split('\n').ToMap<T>();
