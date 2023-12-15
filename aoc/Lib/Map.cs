@@ -222,6 +222,11 @@ public class Map<T>
         return Bfs(new[] { startFrom }, Area8, acceptNext);
     }
 
+    public override int GetHashCode()
+    {
+        return data.Aggregate(0, (acc, item) => HashCode.Combine(acc, item?.GetHashCode()));
+    }
+
     public static Map<T> Parse(string s)
     {
         return ToMap(s.Split('\n'));

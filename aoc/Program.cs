@@ -11,21 +11,21 @@ public static class Program
 {
     private static void Main()
     {
-        Runner.RunFile("day15.txt", Solve_15);
+        // Runner.RunFile("day15.txt", Solve_15);
         Runner.RunFile("day14.txt", Solve_14);
-        Runner.RunFile("day13.txt", Solve_13);
-        Runner.RunFile("day12.txt", Solve_12);
-        Runner.RunFile("day11.txt", Solve_11);
-        Runner.RunFile("day10.txt", Solve_10);
-        Runner.RunFile("day9.txt", Solve_9);
-        Runner.RunFile("day8.txt", Solve_8);
-        Runner.RunFile("day6.txt", Solve_6);
-        Runner.RunFile("day5.txt", Solve_5_1);
-        Runner.RunFile("day5.txt", Solve_5_2);
-        Runner.RunFile("day4.txt", Solve_4);
-        Runner.RunFile("day3.txt", Solve_3);
-        Runner.RunFile("day2.txt", Solve_2);
-        Runner.RunFile("day1.txt", Solve_1);
+        // Runner.RunFile("day13.txt", Solve_13);
+        // Runner.RunFile("day12.txt", Solve_12);
+        // Runner.RunFile("day11.txt", Solve_11);
+        // Runner.RunFile("day10.txt", Solve_10);
+        // Runner.RunFile("day9.txt", Solve_9);
+        // Runner.RunFile("day8.txt", Solve_8);
+        // Runner.RunFile("day6.txt", Solve_6);
+        // Runner.RunFile("day5.txt", Solve_5_1);
+        // Runner.RunFile("day5.txt", Solve_5_2);
+        // Runner.RunFile("day4.txt", Solve_4);
+        // Runner.RunFile("day3.txt", Solve_3);
+        // Runner.RunFile("day2.txt", Solve_2);
+        // Runner.RunFile("day1.txt", Solve_1);
     }
 
     private static void Solve_15(string input)
@@ -110,20 +110,6 @@ public static class Program
         void MoveW() => MoveAlong(map.Rows());
         void MoveE() => MoveBackAlong(map.Rows());
 
-        long CalcCycleSize(List<long> loads)
-        {
-            return Enumerable.Range(1, Math.Min(100, loads.Count / 4))
-                .FirstOrDefault(
-                    cycle => Enumerable
-                        .Range(0, cycle)
-                        .All(
-                            i => Enumerable
-                                .Range(1, 3)
-                                .All(c => loads[loads.Count - 1 - i] == loads[loads.Count - 1 - i - cycle * c])
-                        )
-                );
-        }
-
         long SolvePart1()
         {
             MoveN();
@@ -132,32 +118,18 @@ public static class Program
 
         long SolvePart2()
         {
-            var total = 1000000000L;
-            var loads = new List<long>();
-            var cycleLen = 0L;
-            for (var i = 0; i < total; i++)
-            {
-                MoveN();
-                MoveW();
-                MoveS();
-                MoveE();
-                loads.Add(CalcLoad());
-                cycleLen = CalcCycleSize(loads);
-                if (cycleLen != 0)
-                    break;
-            }
-
-            var remaining = (total - loads.Count) % cycleLen;
-            for (var i = 0; i < remaining; i++)
-            {
-                MoveN();
-                MoveW();
-                MoveS();
-                MoveE();
-                loads.Add(CalcLoad());
-            }
-
-            return loads[^1];
+            return (hash: map.GetHashCode(), load: CalcLoad()).Generate(
+                    _ =>
+                    {
+                        MoveN();
+                        MoveW();
+                        MoveS();
+                        MoveE();
+                        return (map.GetHashCode(), CalcLoad());
+                    }
+                )
+                .ElementAtWithCycleTrack(1000000000L)
+                .load;
         }
     }
 

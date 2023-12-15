@@ -16,6 +16,35 @@ public static class EnumerableHelpers
         // ReSharper disable once IteratorNeverReturns
     }
 
+    /// <summary>
+    /// Works only if next item is strictly determined by previous item - so, it we meet the same item again - it's a cycle
+    /// </summary>
+    public static T ElementAtWithCycleTrack<T>(this IEnumerable<T> items, long index, IEqualityComparer<T>? comparer = null) where T : notnull
+    {
+        comparer ??= EqualityComparer<T>.Default;
+        var prevIndexes = new Dictionary<T, long>(comparer);
+        var prevValues = new Dictionary<long, T>();
+        foreach (var item in items.WithIndex())
+        {
+            if (item.index == index)
+                return item.item;
+
+            if (!prevIndexes.TryGetValue(item.item, out var prevIndex))
+            {
+                prevIndexes.Add(item.item, item.index);
+                prevValues.Add(item.index, item.item);
+            }
+            else
+            {
+                var cycle = item.index - prevIndex;
+                var skip = (index - item.index) % cycle;
+                return prevValues[prevIndex + skip];
+            }
+        }
+
+        throw new InvalidOperationException($"There is no item with index {index}");
+    }
+
     public static IEnumerable<T[]> SlidingWindow<T>(this IEnumerable<T> items, int windowSize)
     {
         var queue = new Queue<T>(windowSize);
