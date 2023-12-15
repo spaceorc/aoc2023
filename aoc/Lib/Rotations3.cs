@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace aoc;
+namespace aoc.Lib;
 
 public static class Rotations3
 {
-    private static List<long[,]> A = new()
+    private static readonly List<long[,]> A = new()
     {
         new long[,]
         {
@@ -27,7 +27,7 @@ public static class Rotations3
         },
     };
 
-    private static List<long[,]> B = new()
+    private static readonly List<long[,]> B = new()
     {
         new long[,]
         {
@@ -55,7 +55,7 @@ public static class Rotations3
         },
     };
 
-    private static List<long[,]> C = new()
+    private static readonly List<long[,]> C = new()
     {
         new long[,]
         {
@@ -68,10 +68,13 @@ public static class Rotations3
             { 0, 0, -1 },
             { 0, -1, 0 },
             { -1, 0, 0 },
-        }
+        },
     };
 
-    static long[,] Mul(long[,] a, long[,] b)
+    private static readonly List<long[,]> ROTATIONS = GenRotations();
+    private static readonly List<long[,]> ROTATION_INVERSIONS = GenRotationInversions();
+
+    private static long[,] Mul(long[,] a, long[,] b)
     {
         var res = new long[3, 3];
         for (var i = 0; i < 3; i++)
@@ -89,7 +92,7 @@ public static class Rotations3
         return res;
     }
 
-    static V3 Mul(long[,] a, V3 v)
+    private static V3 Mul(long[,] a, V3 v)
     {
         return new V3(
             a[0, 0] * v.X + a[0, 1] * v.Y + a[0, 2] * v.Z,
@@ -98,38 +101,36 @@ public static class Rotations3
         );
     }
 
-    static List<long[,]> GenRotations()
+    private static List<long[,]> GenRotations()
     {
         var res = new List<long[,]>();
-        for (int i = 0; i < A.Count; i++)
-        for (int j = 0; j < B.Count; j++)
-        for (int k = 0; k < C.Count; k++)
+        for (var i = 0; i < A.Count; i++)
+        for (var j = 0; j < B.Count; j++)
+        for (var k = 0; k < C.Count; k++)
             res.Add(Mul(Mul(A[i], B[j]), C[k]));
 
         return res;
     }
 
-    static long[,] Inverse(long[,] rot)
+    private static long[,] Inverse(long[,] rot)
     {
         var res = new long[3, 3];
-        for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-        {
+        for (var i = 0; i < 3; i++)
+        for (var j = 0; j < 3; j++)
             res[i, j] = rot[j, i];
-        }
 
         return res;
     }
 
-    static List<long[,]> GenRotationInversions()
+    private static List<long[,]> GenRotationInversions()
     {
         return ROTATIONS.Select(Inverse).ToList();
     }
 
-    static bool IsIdentity(long[,] m)
+    private static bool IsIdentity(long[,] m)
     {
-        for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
+        for (var i = 0; i < 3; i++)
+        for (var j = 0; j < 3; j++)
         {
             if (i == j && m[i, j] != 1)
                 return false;
@@ -140,14 +141,11 @@ public static class Rotations3
         return true;
     }
 
-    private static List<long[,]> ROTATIONS = GenRotations();
-    private static List<long[,]> ROTATION_INVERSIONS = GenRotationInversions();
-
     public static V3 Rotate(V3 v, int direction)
     {
         return Mul(ROTATIONS[direction], v);
     }
-    
+
     public static V3 RotateBack(V3 v, int direction)
     {
         return Mul(ROTATION_INVERSIONS[direction], v);

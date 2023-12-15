@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace aoc;
+namespace aoc.Lib;
 
 public class Map<T>
 {
+    public readonly T[] data;
     public readonly int sizeX;
     public readonly int sizeY;
     public readonly int totalCount;
-    public readonly T[] data;
 
     public Map(int size)
         : this(size, size)
@@ -36,6 +36,8 @@ public class Map<T>
         set => data[index] = value;
     }
 
+    public V BottomRight => new(sizeX - 1, sizeY - 1);
+
     public void Clear()
     {
         Array.Fill(data, default);
@@ -50,25 +52,19 @@ public class Map<T>
 
     public IEnumerable<V> All()
     {
-        for (int y = 0; y < sizeY; y++)
-        for (int x = 0; x < sizeX; x++)
-        {
+        for (var y = 0; y < sizeY; y++)
+        for (var x = 0; x < sizeX; x++)
             yield return new V(x, y);
-        }
     }
 
     public IEnumerable<V> AllButBorder()
     {
-        for (int y = 1; y < sizeY - 1; y++)
-        for (int x = 1; x < sizeX - 1; x++)
-        {
+        for (var y = 1; y < sizeY - 1; y++)
+        for (var x = 1; x < sizeX - 1; x++)
             yield return new V(x, y);
-        }
     }
 
-    public V BottomRight => new(sizeX - 1, sizeY - 1);
-
-    public Range2 Range() => new Range2(V.Zero, BottomRight);
+    public Square Square() => new(V.Zero, BottomRight);
 
     public IEnumerable<V> Area4(V v)
     {
@@ -87,7 +83,7 @@ public class Map<T>
 
     public IEnumerable<V> Column(long x)
     {
-        for (int y = 0; y < sizeY; y++)
+        for (var y = 0; y < sizeY; y++)
             yield return new V(x, y);
     }
 
@@ -103,19 +99,19 @@ public class Map<T>
 
     public IEnumerable<V[]> Columns()
     {
-        for (int x = 0; x < sizeX; x++)
+        for (var x = 0; x < sizeX; x++)
             yield return Column(x).ToArray();
     }
 
     public IEnumerable<string> ColumnsStrings()
     {
-        for (int x = 0; x < sizeX; x++)
+        for (var x = 0; x < sizeX; x++)
             yield return ColumnString(x);
     }
 
     public IEnumerable<V> Row(long y)
     {
-        for (int x = 0; x < sizeX; x++)
+        for (var x = 0; x < sizeX; x++)
             yield return new V(x, y);
     }
 
@@ -131,13 +127,13 @@ public class Map<T>
 
     public IEnumerable<V[]> Rows()
     {
-        for (int y = 0; y < sizeY; y++)
+        for (var y = 0; y < sizeY; y++)
             yield return Row(y).ToArray();
     }
 
     public IEnumerable<string> RowsStrings()
     {
-        for (int y = 0; y < sizeY; y++)
+        for (var y = 0; y < sizeY; y++)
             yield return RowString(y);
     }
 
@@ -182,7 +178,7 @@ public class Map<T>
         Func<T, T, bool> acceptNext
     )
     {
-        return Helpers.Bfs(startFrom, nexts);
+        return BfsHelpers.Bfs(startFrom, nexts);
     }
 
     public IEnumerable<BfsPathItem<V>> Bfs(
@@ -228,6 +224,34 @@ public class Map<T>
 
     public static Map<T> Parse(string s)
     {
-        return s.Split('\n').ToMap<T>();
+        return ToMap(s.Split('\n'));
+    }
+
+    private static Map<T> ToMap(IEnumerable<string> lines)
+    {
+        return ToMap(
+            lines,
+            c =>
+            {
+                if (typeof(T) == typeof(char))
+                    return (T)(object)c;
+                if (typeof(T) == typeof(int))
+                    return (T)(object)(c - '0');
+                if (typeof(T) == typeof(long))
+                    return (T)(object)(long)(c - '0');
+                throw new InvalidOperationException($"Unsupported type {typeof(T)}");
+            }
+        );
+    }
+
+    private static Map<T> ToMap(IEnumerable<string> lines, Func<char, T> selector)
+    {
+        var linesArr = lines as IList<string> ?? lines.ToArray();
+        var result = new Map<T>(linesArr[0].Length, linesArr.Count);
+        for (var y = 0; y < result.sizeY; y++)
+        for (var x = 0; x < result.sizeX; x++)
+            result[new V(x, y)] = selector(linesArr[y][x]);
+
+        return result;
     }
 }

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace aoc;
+namespace aoc.Lib;
 
 public record BfsPathItem<TState>(TState State, int Distance, BfsPathItem<TState>? Prev)
 {

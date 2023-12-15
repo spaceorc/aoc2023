@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using aoc.Lib;
 using aoc.ParseLib;
 using aoc.ParseLib.Attributes;
 
@@ -12,22 +12,22 @@ public static class Program
     private static void Main()
     {
         Runner.RunFile("day15.txt", Solve_15);
-        // Runner.RunFile("day14.txt", Solve_14);
-        // Runner.RunFile("day13.txt", Solve_13);
-        // Runner.RunFile("day12.txt", Day12Recursive.Run);
-        // Runner.RunFile("day12.txt", Day12Incremental.Run);
-        // Runner.RunFile("day12.txt", Solve_12);
-        // Runner.RunFile("day11.txt", Solve_11);
-        // Runner.RunFile("day10.txt", Solve_10);
-        // Runner.RunFile("day9.txt", Solve_9);
-        // Runner.RunFile("day8.txt", Solve_8);
-        // Runner.RunFile("day6.txt", Solve_6);
-        // Runner.RunFile("day5.txt", Solve_5_1);
-        // Runner.RunFile("day5.txt", Solve_5_2);
-        // Runner.RunFile("day4.txt", Solve_4);
-        // Runner.RunFile("day3.txt", Solve_3);
-        // Runner.RunFile("day2.txt", Solve_2);
-        // Runner.RunFile("day1.txt", Solve_1);
+        Runner.RunFile("day14.txt", Solve_14);
+        Runner.RunFile("day13.txt", Solve_13);
+        Runner.RunFile("day12.txt", Day12Recursive.Run);
+        Runner.RunFile("day12.txt", Day12Incremental.Run);
+        Runner.RunFile("day12.txt", Solve_12);
+        Runner.RunFile("day11.txt", Solve_11);
+        Runner.RunFile("day10.txt", Solve_10);
+        Runner.RunFile("day9.txt", Solve_9);
+        Runner.RunFile("day8.txt", Solve_8);
+        Runner.RunFile("day6.txt", Solve_6);
+        Runner.RunFile("day5.txt", Solve_5_1);
+        Runner.RunFile("day5.txt", Solve_5_2);
+        Runner.RunFile("day4.txt", Solve_4);
+        Runner.RunFile("day3.txt", Solve_3);
+        Runner.RunFile("day2.txt", Solve_2);
+        Runner.RunFile("day1.txt", Solve_1);
     }
 
     private static void Solve_15(string input)
@@ -77,12 +77,8 @@ public static class Program
 
     private static void Solve_14(Map<char> map)
     {
-        var t1 = Stopwatch.GetTimestamp();
         SolvePart1().Out("Part 1: ");
-        Stopwatch.GetElapsedTime(t1).Out("t1: ");
-        var t2 = Stopwatch.GetTimestamp();
         SolvePart2().Out("Part 2: ");
-        Stopwatch.GetElapsedTime(t2).Out("t2: ");
 
         return;
 
@@ -442,7 +438,7 @@ public static class Program
         {
             return input.Sum(
                 data => data
-                    .Generate(x => x.Window(2).Select(w => w[1] - w[0]).ToArray())
+                    .Generate(x => x.SlidingWindow(2).Select(w => w[1] - w[0]).ToArray())
                     .TakeWhile(x => x.Any(e => e != 0))
                     .Select(x => x[^1])
                     .Sum()
@@ -453,7 +449,7 @@ public static class Program
         {
             return input.Sum(
                 data => data
-                    .Generate(x => x.Window(2).Select(w => w[1] - w[0]).ToArray())
+                    .Generate(x => x.SlidingWindow(2).Select(w => w[1] - w[0]).ToArray())
                     .TakeWhile(x => x.Any(e => e != 0))
                     .Select(x => x[0])
                     .Reverse()
@@ -505,7 +501,7 @@ public static class Program
                 }
             }
 
-            return Helpers.Lcm(periods);
+            return MathHelpers.Lcm(periods);
         }
     }
 

@@ -1,44 +1,50 @@
 using System;
 using System.Collections.Generic;
 
-namespace aoc;
+namespace aoc.Lib;
 
-public class Heap
+public class Heap<T>
 {
-    private readonly List<ulong> values = new();
+    private readonly IComparer<T> comparer;
+    private readonly List<T> values = new();
+
+    public Heap(IComparer<T>? comparer = null)
+    {
+        this.comparer = comparer ?? Comparer<T>.Default;
+    }
 
     public bool IsEmpty => Count == 0;
 
     public int Count => values.Count;
 
-    public ulong Min
+    public T Min
     {
         get
         {
             if (IsEmpty)
-                throw new InvalidOperationException($"{nameof(Heap)} is empty");
+                throw new InvalidOperationException("Heap is empty");
             return values[0];
         }
     }
 
-    public void Add(ulong value)
+    public void Add(T value)
     {
         values.Add(value);
         var c = values.Count - 1;
         while (c > 0)
         {
             var p = (c - 1) / 2;
-            if (values[p] <= values[c])
+            if (comparer.Compare(values[p], values[c]) <= 0)
                 break;
             (values[p], values[c]) = (values[c], values[p]);
             c = p;
         }
     }
 
-    public ulong DeleteMin()
+    public T DeleteMin()
     {
         if (IsEmpty)
-            throw new InvalidOperationException($"{nameof(Heap)} is empty");
+            throw new InvalidOperationException("Heap is empty");
         var res = values[0];
         values[0] = values[^1];
         values.RemoveAt(values.Count - 1);
@@ -52,27 +58,25 @@ public class Heap
                 break;
             if (c2 >= values.Count)
             {
-                if (values[p] > values[c1])
-                {
+                if (comparer.Compare(values[p], values[c1]) > 0)
                     (values[p], values[c1]) = (values[c1], values[p]);
-                }
 
                 break;
             }
 
-            if (values[p] <= values[c1] && values[p] <= values[c2])
+            if (comparer.Compare(values[p], values[c1]) <= 0 && comparer.Compare(values[p], values[c2]) <= 0)
                 break;
-            if (values[p] <= values[c1])
+            if (comparer.Compare(values[p], values[c1]) <= 0)
             {
                 (values[p], values[c2]) = (values[c2], values[p]);
                 p = c2;
             }
-            else if (values[p] <= values[c2])
+            else if (comparer.Compare(values[p], values[c2]) <= 0)
             {
                 (values[p], values[c1]) = (values[c1], values[p]);
                 p = c1;
             }
-            else if (values[c1] <= values[c2])
+            else if (comparer.Compare(values[c1], values[c2]) <= 0)
             {
                 (values[p], values[c1]) = (values[c1], values[p]);
                 p = c1;

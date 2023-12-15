@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace aoc;
+namespace aoc.Lib;
 
 public static class DefaultDict
 {
@@ -13,7 +13,8 @@ public static class DefaultDict
 }
 
 public class DefaultDict<TKey, TValue> :
-    IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>
+    IDictionary<TKey, TValue>,
+    IReadOnlyDictionary<TKey, TValue>
     where TKey : notnull
 {
     private readonly Dictionary<TKey, TValue> impl;
@@ -92,11 +93,11 @@ public class DefaultDict<TKey, TValue> :
         set => impl[key] = value;
     }
 
-    IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => impl.Keys;
-
-    IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => impl.Values;
-
     public ICollection<TKey> Keys => impl.Keys;
 
     public ICollection<TValue> Values => impl.Values;
+
+    IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => impl.Keys;
+
+    IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => impl.Values;
 }

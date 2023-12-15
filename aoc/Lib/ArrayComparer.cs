@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace aoc;
+namespace aoc.Lib;
 
 public static class ArrayComparer
 {
@@ -16,6 +16,7 @@ public class ArrayComparer<T> : IComparer<T[]>
     {
         this.elementComparer = elementComparer ?? Comparer<T>.Default;
     }
+
     public int Compare(T[]? x, T[]? y)
     {
         if (x == null && y == null)

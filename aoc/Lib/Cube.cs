@@ -2,26 +2,30 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace aoc;
+namespace aoc.Lib;
 
 public class Cube : IEquatable<Cube>
 {
-    public long MinX { get; }
-    public long MaxX { get; }
-    public long MinY { get; }
-    public long MaxY { get; }
-    public long MinZ { get; }
-    public long MaxZ { get; }
-
     public Cube(long minX, long maxX, long minY, long maxY, long minZ, long maxZ)
+        : this(new V3(minX, minY, minZ), new V3(maxX, maxY, maxZ))
     {
-        MinX = minX;
-        MaxX = maxX;
-        MinY = minY;
-        MaxY = maxY;
-        MinZ = minZ;
-        MaxZ = maxZ;
     }
+
+    public Cube(V3 min, V3 max)
+    {
+        Min = min;
+        Max = max;
+    }
+
+    public V3 Min { get; }
+    public V3 Max { get; }
+
+    public long MinX => Min.X;
+    public long MaxX => Max.X;
+    public long MinY => Min.Y;
+    public long MaxY => Max.Y;
+    public long MinZ => Min.Z;
+    public long MaxZ => Max.Z;
 
     public bool Equals(Cube? other)
     {
@@ -29,8 +33,12 @@ public class Cube : IEquatable<Cube>
             return false;
         if (ReferenceEquals(this, other))
             return true;
-        return MinX == other.MinX && MaxX == other.MaxX && MinY == other.MinY && MaxY == other.MaxY &&
-               MinZ == other.MinZ && MaxZ == other.MaxZ;
+        return MinX == other.MinX &&
+               MaxX == other.MaxX &&
+               MinY == other.MinY &&
+               MaxY == other.MaxY &&
+               MinZ == other.MinZ &&
+               MaxZ == other.MaxZ;
     }
 
     public override bool Equals(object? obj)
@@ -39,7 +47,7 @@ public class Cube : IEquatable<Cube>
             return false;
         if (ReferenceEquals(this, obj))
             return true;
-        if (obj.GetType() != this.GetType())
+        if (obj.GetType() != GetType())
             return false;
         return Equals((Cube)obj);
     }
@@ -59,8 +67,10 @@ public class Cube : IEquatable<Cube>
         return !Equals(left, right);
     }
 
+    public Cube Grow(long delta) => new(Min - new V3(delta, delta, delta), Max + new V3(delta, delta, delta));
+
     public bool IsEmpty() => MinX > MaxX || MinY > MaxY || MinZ > MaxZ;
-    public long Size() => (MaxX - MinX + 1) * (MaxY - MinY + 1) * (MaxZ - MinZ + 1);
+    public long Volume() => (MaxX - MinX + 1) * (MaxY - MinY + 1) * (MaxZ - MinZ + 1);
 
     public override string ToString()
     {
@@ -106,7 +116,7 @@ public class Cube : IEquatable<Cube>
     {
         if (!a.IntersectsWith(b))
             return (null, new[] { a }, new[] { b });
-        
+
         var intersection = new List<Cube>();
         var inA = new List<Cube>();
         var inB = new List<Cube>();
@@ -163,4 +173,41 @@ public class Cube : IEquatable<Cube>
 
         return (intersection.Single(), inA.ToArray(), inB.ToArray());
     }
+
+    public HashSet<V3> Border()
+    {
+        var border = new HashSet<V3>();
+        for (var x = MinX; x <= MaxX; x++)
+        for (var y = MinY; y <= MaxY; y++)
+        {
+            border.Add(new V3(x, y, MinZ));
+            border.Add(new V3(x, y, MaxZ));
+        }
+
+        for (var x = MinX; x <= MaxX; x++)
+        for (var z = MinZ; z <= MaxZ; z++)
+        {
+            border.Add(new V3(x, MinY, z));
+            border.Add(new V3(x, MaxY, z));
+        }
+
+        for (var y = MinY; y <= MaxY; y++)
+        for (var z = MinZ; z <= MaxZ; z++)
+        {
+            border.Add(new V3(MinX, y, z));
+            border.Add(new V3(MaxX, y, z));
+        }
+
+        return border;
+    }
+
+    public IEnumerable<V3> All()
+    {
+        for (var x = MinX; x <= MaxX; x++)
+        for (var y = MinY; y <= MaxY; y++)
+        for (var z = MinZ; z <= MaxZ; z++)
+            yield return new V3(x, y, z);
+    }
+
+    public bool Contains(V3 other) => other.InCube(this);
 }
