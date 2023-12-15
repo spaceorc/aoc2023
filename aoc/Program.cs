@@ -10,7 +10,7 @@ public static class Program
 {
     private static void Main()
     {
-        Runner.RunFile("day14.txt", Solve_14);
+        Runner.RunFile("day15.txt", Solve_15);
         // Runner.RunFile("day12.txt", Day12Recursive.Run);
         // Runner.RunFile("day12.txt", Day12Incremental.Run);
         // Runner.RunFile("day13.txt", Solve_13);
@@ -26,6 +26,51 @@ public static class Program
         // Runner.RunFile("day3.txt", Solve_3);
         // Runner.RunFile("day2.txt", Solve_2);
         // Runner.RunFile("day1.txt", Solve_1);
+    }
+
+    private static void Solve_15(string input)
+    {
+        SolvePart1().Out("Part 1: ");
+        SolvePart2().Out("Part 2: ");
+        return;
+
+        long Hash(string line) => line.Aggregate(0L, (current, c) => (current + c) * 17 % 256);
+
+        long SolvePart1() => input.Split(',').Sum(Hash);
+
+        (string name, char op, long value) ParseItem(string item)
+        {
+            var items = item.Split('-', '=');
+            var op = item[items[0].Length];
+            return (items[0], op, op == '-' ? 0L : long.Parse(items[1]));
+        }
+
+        long SolvePart2()
+        {
+            var boxes = Enumerable.Range(0, 256).Select(_ => new List<(string name, long value)>()).ToArray();
+            var items = input.Split(',').Select(ParseItem);
+            foreach (var (name, op, value) in items)
+            {
+                var box = boxes[Hash(name)];
+                switch (op)
+                {
+                    case '-':
+                        box.RemoveAll(bb => bb.name == name);
+                        break;
+                    case '=':
+                        var index = box.FindIndex(item => item.name == name);
+                        if (index < 0)
+                            box.Add((name, value));
+                        else
+                            box[index] = (name, value);
+                        break;
+                }
+            }
+
+            return boxes
+                .SelectMany((box, bi) => box.Select((item, i) => (bi + 1L) * (i + 1L) * item.value))
+                .Sum();
+        }
     }
 
     private static void Solve_14(Map<char> map)
@@ -101,7 +146,7 @@ public static class Program
                     break;
             }
 
-            var remaining = (total - loads.Count) % cycleLen; 
+            var remaining = (total - loads.Count) % cycleLen;
             for (var i = 0; i < remaining; i++)
             {
                 MoveN();
