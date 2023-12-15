@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using aoc.ParseLib;
 using aoc.ParseLib.Attributes;
@@ -11,9 +12,10 @@ public static class Program
     private static void Main()
     {
         Runner.RunFile("day15.txt", Solve_15);
+        // Runner.RunFile("day14.txt", Solve_14);
+        // Runner.RunFile("day13.txt", Solve_13);
         // Runner.RunFile("day12.txt", Day12Recursive.Run);
         // Runner.RunFile("day12.txt", Day12Incremental.Run);
-        // Runner.RunFile("day13.txt", Solve_13);
         // Runner.RunFile("day12.txt", Solve_12);
         // Runner.RunFile("day11.txt", Solve_11);
         // Runner.RunFile("day10.txt", Solve_10);
@@ -75,8 +77,13 @@ public static class Program
 
     private static void Solve_14(Map<char> map)
     {
+        var t1 = Stopwatch.GetTimestamp();
         SolvePart1().Out("Part 1: ");
+        Stopwatch.GetElapsedTime(t1).Out("t1: ");
+        var t2 = Stopwatch.GetTimestamp();
         SolvePart2().Out("Part 2: ");
+        Stopwatch.GetElapsedTime(t2).Out("t2: ");
+
         return;
 
         long CalcLoad() => map.All().Where(v => map[v] == 'O').Sum(v => map.sizeY - v.Y);
