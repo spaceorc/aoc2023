@@ -37,7 +37,8 @@ public static class Program
 
         long SolvePart1()
         {
-            return CountEnergized(new Walker(V.Zero, Dir.Right));
+            return CountEnergized2((V.Zero, V.right));
+            // return CountEnergized(new Walker(V.Zero, Dir.Right));
         }
 
         long SolvePart2()
@@ -74,6 +75,29 @@ public static class Program
                         .Where(next => next.Inside(map))
                 )
                 .Select(s => s.State.Pos)
+                .Distinct()
+                .Count();
+        }
+
+        long CountEnergized2((V pos, V dir) startFrom)
+        {
+            return BfsHelpers.Bfs(
+                    startFrom: new[] { startFrom },
+                    cur => ((map[cur.pos], cur.dir) switch
+                        {
+                            ('.', {} dir) => new[] { dir },
+                            ('-', {Y: 0} dir) => new[] { dir },
+                            ('|', {X: 0} dir) => new[] { dir },
+                            ('/', {Y: 0} dir) => new[] { dir.RotateCCW() },
+                            ('/', {X: 0} dir) => new[] { dir.RotateCW() },
+                            ('\\', {Y: 0} dir) => new[] { dir.RotateCW() },
+                            ('\\', {X: 0} dir) => new[] { dir.RotateCCW() },
+                            (_, {} dir) => new[] { dir.RotateCW(), dir.RotateCCW() },
+                        })
+                        .Where(dir => map.Inside(cur.pos + dir))
+                        .Select(dir => (cur.pos + dir, dir))
+                )
+                .Select(s => s.State.pos)
                 .Distinct()
                 .Count();
         }
