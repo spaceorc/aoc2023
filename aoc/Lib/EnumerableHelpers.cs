@@ -6,6 +6,11 @@ namespace aoc.Lib;
 
 public static class EnumerableHelpers
 {
+    public static IEnumerable<T> Flatten<T>(this IEnumerable<IEnumerable<T>> items)
+    {
+        return items.SelectMany(x => x);
+    }
+
     public static IEnumerable<T> Generate<T>(this T start, Func<T, T> next)
     {
         while (true)

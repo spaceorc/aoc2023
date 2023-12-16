@@ -37,83 +37,45 @@ public static class Program
 
         long SolvePart1()
         {
-            return CountEnergized((V.Zero, V.right));
-        }
-
-        long CountEnergized((V pos, V dir) startFrom)
-        {
-            return BfsHelpers.Bfs(
-                    startFrom: new[] { startFrom },
-                    cur =>
-                    {
-                        if (!map.Inside(cur.pos))
-                            return Array.Empty<(V, V)>();
-
-                        switch (map[cur.pos])
-                        {
-                            case '.':
-                            case '-' when cur.dir == V.left || cur.dir == V.right:
-                            case '|' when cur.dir == V.up || cur.dir == V.down:
-                                return new[] { (cur.pos + cur.dir, cur.dir) };
-
-                            case '/' when cur.dir == V.right:
-                                return new[] { (cur.pos + V.up, V.up) };
-
-                            case '/' when cur.dir == V.up:
-                                return new[] { (cur.pos + V.right, V.right) };
-
-                            case '/' when cur.dir == V.down:
-                                return new[] { (cur.pos + V.left, V.left) };
-
-                            case '/' when cur.dir == V.left:
-                                return new[] { (cur.pos + V.down, V.down) };
-
-                            case '\\' when cur.dir == V.right:
-                                return new[] { (cur.pos + V.down, V.down) };
-
-                            case '\\' when cur.dir == V.up:
-                                return new[] { (cur.pos + V.left, V.left) };
-
-                            case '\\' when cur.dir == V.down:
-                                return new[] { (cur.pos + V.right, V.right) };
-
-                            case '\\' when cur.dir == V.left:
-                                return new[] { (cur.pos + V.up, V.up) };
-
-                            case '-' when cur.dir == V.up || cur.dir == V.down:
-                                return new[]
-                                {
-                                    (cur.pos + V.left, V.left),
-                                    (cur.pos + V.right, V.right),
-                                };
-
-                            case '|' when cur.dir == V.left || cur.dir == V.right:
-                                return new[]
-                                {
-                                    (cur.pos + V.up, V.up),
-                                    (cur.pos + V.down, V.down),
-                                };
-
-                            default:
-                                throw new Exception($"Invalid state: {cur}");
-                        }
-                    }
-                )
-                .Select(s => s.State.pos)
-                .Where(map.Inside)
-                .Distinct()
-                .Count();
+            return CountEnergized(new Walker(V.Zero, Dir.Right));
         }
 
         long SolvePart2()
         {
-            return map.TopBorder()
-                .Select(v => (v, V.down))
-                .Concat(map.BottomBorder().Select(v => (v, V.up)))
-                .Concat(map.LeftBorder().Select(v => (v, V.right)))
-                .Concat(map.RightBorder().Select(v => (v, V.left)))
+            return new[]
+                {
+                    map.TopBorder().Select(v => new Walker(v, Dir.Down)),
+                    map.BottomBorder().Select(v => new Walker(v, Dir.Up)),
+                    map.LeftBorder().Select(v => new Walker(v, Dir.Right)),
+                    map.RightBorder().Select(v => new Walker(v, Dir.Left)),
+                }
+                .Flatten()
                 .Select(CountEnergized)
                 .Max();
+        }
+
+        long CountEnergized(Walker startFrom)
+        {
+            return BfsHelpers.Bfs(
+                    startFrom: new[] { startFrom },
+                    cur => ((map[cur.Pos], cur.Dir) switch
+                        {
+                            ('.', _) => new[] { cur },
+                            ('/', Dir.Right or Dir.Left) => new[] { cur.TurnCCW() },
+                            ('/', Dir.Up or Dir.Down) => new[] { cur.TurnCW() },
+                            ('\\', Dir.Right or Dir.Left) => new[] { cur.TurnCW() },
+                            ('\\', Dir.Up or Dir.Down) => new[] { cur.TurnCCW() },
+                            ('-', Dir.Left or Dir.Right) => new[] { cur },
+                            ('|', Dir.Up or Dir.Down) => new[] { cur },
+                            ('-' or '|', _) => new[] { cur.TurnCCW(), cur.TurnCW() },
+                            _ => throw new Exception($"Invalid state: {cur}")
+                        })
+                        .Select(next => next.Forward())
+                        .Where(next => next.Inside(map))
+                )
+                .Select(s => s.State.Pos)
+                .Distinct()
+                .Count();
         }
     }
 

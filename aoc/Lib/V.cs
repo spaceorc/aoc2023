@@ -17,6 +17,9 @@ public record V(long X, long Y)
     public static readonly V down = new(0, 1);
     public static readonly V left = new(-1, 0);
     public static readonly V right = new(1, 0);
+    private static readonly V[] dirs = { up, right, down, left };
+
+    public static V Dir(Dir dir) => dirs[(int)dir];
 
     public static readonly V[] area4 = { new(1, 0), new(-1, 0), new(0, 1), new(0, -1) };
     public static readonly V[] area5 = { new(0, 0), new(1, 0), new(-1, 0), new(0, 1), new(0, -1) };
@@ -27,7 +30,7 @@ public record V(long X, long Y)
         new(1, 1), new(-1, -1), new(-1, 1), new(1, -1),
     };
 
-    public V Dir => new(Math.Sign(X), Math.Sign(Y));
+    public V Norm => new(Math.Sign(X), Math.Sign(Y));
 
     public static V operator +(V a, V b) => new(a.X + b.X, a.Y + b.Y);
     public static V operator *(V a, long k) => new(a.X * k, a.Y * k);
@@ -53,4 +56,7 @@ public record V(long X, long Y)
     public bool InSquare(Square r) => X >= r.MinX && X <= r.MaxX && Y >= r.MinY && Y <= r.MaxY;
 
     public V Mod(long k) => new(X.Mod(k), Y.Mod(k));
+
+    public V RotateCW() => new(-Y, X);
+    public V RotateCCW() => new(Y, -X);
 }
