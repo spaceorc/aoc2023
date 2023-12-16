@@ -51,6 +51,18 @@ class Map:
     def __contains__(self, v: V) -> bool:
         return 0 <= v.y < self.size_y and 0 <= v.x < self.size_x
 
+    def top_border(self) -> list[V]:
+        return [V(x, 0) for x in range(self.size_x)]
+
+    def left_border(self) -> list[V]:
+        return [V(0, y) for y in range(self.size_y)]
+
+    def bottom_border(self) -> list[V]:
+        return [V(x, self.size_y - 1) for x in range(self.size_x)]
+
+    def right_border(self) -> list[V]:
+        return [V(self.size_x - 1, y) for y in range(self.size_y)]
+
 
 T = TypeVar("T")
 
@@ -125,4 +137,13 @@ def count_energized(map: Map, start_pos: V, start_dir: V) -> int:
 with open("day16.txt") as f:
     map = Map([x.strip() for x in f.readlines()])
 
-print(f"Part 1: {count_energized(map, V(0, 0), RIGHT)}")
+res1 = count_energized(map, V(0, 0), RIGHT)
+print(f"Part 1: {res1}")
+
+res2 = max(
+    max(count_energized(map, v, DOWN) for v in map.top_border()),
+    max(count_energized(map, v, UP) for v in map.bottom_border()),
+    max(count_energized(map, v, RIGHT) for v in map.left_border()),
+    max(count_energized(map, v, LEFT) for v in map.right_border()),
+)
+print(f"Part 2: {res2}")
