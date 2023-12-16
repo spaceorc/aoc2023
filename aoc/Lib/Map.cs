@@ -64,6 +64,30 @@ public class Map<T>
             yield return new V(x, y);
     }
 
+    public IEnumerable<V> TopBorder()
+    {
+        for (var x = 0; x < sizeX; x++)
+            yield return new V(x, 0);
+    }
+
+    public IEnumerable<V> BottomBorder()
+    {
+        for (var x = 0; x < sizeX; x++)
+            yield return new V(x, sizeY - 1);
+    }
+
+    public IEnumerable<V> LeftBorder()
+    {
+        for (var y = 0; y < sizeY; y++)
+            yield return new V(0, y);
+    }
+
+    public IEnumerable<V> RightBorder()
+    {
+        for (var y = 0; y < sizeY; y++)
+            yield return new V(sizeX - 1, y);
+    }
+
     public Square Square() => new(V.Zero, BottomRight);
 
     public IEnumerable<V> Area4(V v)

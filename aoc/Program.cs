@@ -11,8 +11,9 @@ public static class Program
 {
     private static void Main()
     {
+        Runner.RunFile("day16.txt", Solve_16);
         // Runner.RunFile("day15.txt", Solve_15);
-        Runner.RunFile("day14.txt", Solve_14);
+        // Runner.RunFile("day14.txt", Solve_14);
         // Runner.RunFile("day13.txt", Solve_13);
         // Runner.RunFile("day12.txt", Solve_12);
         // Runner.RunFile("day11.txt", Solve_11);
@@ -26,6 +27,94 @@ public static class Program
         // Runner.RunFile("day3.txt", Solve_3);
         // Runner.RunFile("day2.txt", Solve_2);
         // Runner.RunFile("day1.txt", Solve_1);
+    }
+
+    private static void Solve_16(Map<char> map)
+    {
+        SolvePart1().Out("Part 1: ");
+        SolvePart2().Out("Part 2: ");
+        return;
+
+        long SolvePart1()
+        {
+            return CountEnergized((V.Zero, V.right));
+        }
+
+        long CountEnergized((V pos, V dir) startFrom)
+        {
+            return BfsHelpers.Bfs(
+                    startFrom: new[] { startFrom },
+                    cur =>
+                    {
+                        if (!map.Inside(cur.pos))
+                            return Array.Empty<(V, V)>();
+
+                        switch (map[cur.pos])
+                        {
+                            case '.':
+                            case '-' when cur.dir == V.left || cur.dir == V.right:
+                            case '|' when cur.dir == V.up || cur.dir == V.down:
+                                return new[] { (cur.pos + cur.dir, cur.dir) };
+
+                            case '/' when cur.dir == V.right:
+                                return new[] { (cur.pos + V.up, V.up) };
+
+                            case '/' when cur.dir == V.up:
+                                return new[] { (cur.pos + V.right, V.right) };
+
+                            case '/' when cur.dir == V.down:
+                                return new[] { (cur.pos + V.left, V.left) };
+
+                            case '/' when cur.dir == V.left:
+                                return new[] { (cur.pos + V.down, V.down) };
+
+                            case '\\' when cur.dir == V.right:
+                                return new[] { (cur.pos + V.down, V.down) };
+
+                            case '\\' when cur.dir == V.up:
+                                return new[] { (cur.pos + V.left, V.left) };
+
+                            case '\\' when cur.dir == V.down:
+                                return new[] { (cur.pos + V.right, V.right) };
+
+                            case '\\' when cur.dir == V.left:
+                                return new[] { (cur.pos + V.up, V.up) };
+
+                            case '-' when cur.dir == V.up || cur.dir == V.down:
+                                return new[]
+                                {
+                                    (cur.pos + V.left, V.left),
+                                    (cur.pos + V.right, V.right),
+                                };
+
+                            case '|' when cur.dir == V.left || cur.dir == V.right:
+                                return new[]
+                                {
+                                    (cur.pos + V.up, V.up),
+                                    (cur.pos + V.down, V.down),
+                                };
+
+                            default:
+                                throw new Exception($"Invalid state: {cur}");
+                        }
+                    }
+                )
+                .Select(s => s.State.pos)
+                .Where(map.Inside)
+                .Distinct()
+                .Count();
+        }
+
+        long SolvePart2()
+        {
+            return map.TopBorder()
+                .Select(v => (v, V.down))
+                .Concat(map.BottomBorder().Select(v => (v, V.up)))
+                .Concat(map.LeftBorder().Select(v => (v, V.right)))
+                .Concat(map.RightBorder().Select(v => (v, V.left)))
+                .Select(CountEnergized)
+                .Max();
+        }
     }
 
     private static void Solve_15(string input)
