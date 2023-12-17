@@ -196,56 +196,6 @@ public class Map<T>
         Array.Copy(data, other.data, totalCount);
     }
 
-    public IEnumerable<BfsPathItem<V>> Bfs(
-        IEnumerable<V> startFrom,
-        Func<V, IEnumerable<V>> nexts,
-        Func<T, T, bool> acceptNext
-    )
-    {
-        return BfsHelpers.Bfs(startFrom, nexts);
-    }
-
-    public IEnumerable<BfsPathItem<V>> Bfs(
-        V startFrom,
-        Func<V, IEnumerable<V>> nexts,
-        Func<T, T, bool> acceptNext
-    )
-    {
-        return Bfs(new[] { startFrom }, nexts, acceptNext);
-    }
-
-    public IEnumerable<BfsPathItem<V>> Bfs4(
-        IEnumerable<V> startFrom,
-        Func<T, T, bool> acceptNext
-    )
-    {
-        return Bfs(startFrom, Area4, acceptNext);
-    }
-
-    public IEnumerable<BfsPathItem<V>> Bfs4(
-        V startFrom,
-        Func<T, T, bool> acceptNext
-    )
-    {
-        return Bfs(new[] { startFrom }, Area4, acceptNext);
-    }
-
-    public IEnumerable<BfsPathItem<V>> Bfs8(
-        IEnumerable<V> startFrom,
-        Func<T, T, bool> acceptNext
-    )
-    {
-        return Bfs(startFrom, Area8, acceptNext);
-    }
-
-    public IEnumerable<BfsPathItem<V>> Bfs8(
-        V startFrom,
-        Func<T, T, bool> acceptNext
-    )
-    {
-        return Bfs(new[] { startFrom }, Area8, acceptNext);
-    }
-
     public override int GetHashCode()
     {
         return data.Aggregate(0, (acc, item) => HashCode.Combine(acc, item?.GetHashCode()));

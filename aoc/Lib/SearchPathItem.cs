@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace aoc.Lib;
 
-public record BfsPathItem<TState>(TState State, int Distance, BfsPathItem<TState>? Prev)
+public record SearchPathItem<TState>(TState State, long Distance, SearchPathItem<TState>? Prev)
 {
     public IEnumerable<TState> PathBack()
     {

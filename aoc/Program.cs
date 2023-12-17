@@ -32,58 +32,33 @@ public static class Program
 
     private static void Solve_17(Map<long> map)
     {
-        SolvePart1().Out("Part 1: ");
-        SolvePart2().Out("Part 2: ");
+        Solve(minLen: 1, maxLen: 3).Out("Part 1: ");
+        Solve(minLen: 4, maxLen: 10).Out("Part 2: ");
         return;
-
-        long SolvePart1()
-        {
-            return Solve(minLen: 1, maxLen: 3);
-        }
-
-        long SolvePart2()
-        {
-            return Solve(minLen: 4, maxLen: 10);
-        }
 
         long Solve(long minLen, long maxLen)
         {
-            var queue = new Queue<(Walker walker, int len)>();
-            var used = new Dictionary<(Walker walker, int len), long>();
-            var start = (walker: new Walker(V.Zero, Dir.Right), len: 0);
-            queue.Enqueue(start);
-            used.Add(start, 0);
-            var queuedStates = new HashSet<(Walker walker, int len)>();
-            queuedStates.Add(start);
-
-            while (queue.Count > 0)
-            {
-                var cur = queue.Dequeue();
-                queuedStates.Remove(cur);
-                var cur1 = used[cur];
-
-                var nextStates = new[]
-                {
-                    (walker: cur.walker.Forward(), len: cur.len + 1),
-                    (walker: cur.walker.TurnCW().Forward(), len: 1),
-                    (walker: cur.walker.TurnCCW().Forward(), len: 1),
-                };
-                foreach (var next in nextStates)
-                {
-                    if (next.len > maxLen || next.walker.Dir != cur.walker.Dir && cur.len < minLen)
-                        continue;
-                    if (!next.walker.Inside(map))
-                        continue;
-                    if (used.TryGetValue(next, out var prev) && prev <= cur1 + map[next.walker.Pos])
-                        continue;
-
-                    used[next] = cur1 + map[next.walker.Pos];
-                    if (queuedStates.Add(next))
-                        queue.Enqueue(next);
-                }
-            }
-
-            return used.Where(u => u.Key.walker.Pos == map.BottomRight && u.Key.len >= minLen).Min(u => u.Value);
+            return Search.Dijkstra(
+                    startFrom: new[]
+                    {
+                        (walker: new Walker(V.Zero, Dir.Right), len: 0),
+                        (walker: new Walker(V.Zero, Dir.Down), len: 0),
+                    },
+                    getNextStates: cur => new[]
+                        {
+                            (walker: cur.walker.Forward(), len: cur.len + 1),
+                            (walker: cur.walker.TurnCW().Forward(), len: 1),
+                            (walker: cur.walker.TurnCCW().Forward(), len: 1),
+                        }
+                        .Where(
+                            n => n.walker.Inside(map) &&
+                                 n.len <= maxLen &&
+                                 (n.walker.Dir == cur.walker.Dir || cur.len >= minLen)
+                        )
+                        .Select(n => (n, map[n.walker.Pos]))
+                )
+                .First(s => s.State.walker.Pos == map.BottomRight && s.State.len >= minLen)
+                .Distance;
         }
     }
 
@@ -95,8 +70,7 @@ public static class Program
 
         long SolvePart1()
         {
-            return CountEnergized2((V.Zero, V.right));
-            // return CountEnergized(new Walker(V.Zero, Dir.Right));
+            return CountEnergized(new Walker(V.Zero, Dir.Right));
         }
 
         long SolvePart2()
@@ -115,7 +89,7 @@ public static class Program
 
         long CountEnergized(Walker startFrom)
         {
-            return BfsHelpers.Bfs(
+            return Search.Bfs(
                     startFrom: new[] { startFrom },
                     cur => ((map[cur.Pos], cur.Dir) switch
                         {
@@ -133,29 +107,6 @@ public static class Program
                         .Where(next => next.Inside(map))
                 )
                 .Select(s => s.State.Pos)
-                .Distinct()
-                .Count();
-        }
-
-        long CountEnergized2((V pos, V dir) startFrom)
-        {
-            return BfsHelpers.Bfs(
-                    startFrom: new[] { startFrom },
-                    cur => ((map[cur.pos], cur.dir) switch
-                        {
-                            ('.', { } dir) => new[] { dir },
-                            ('-', { Y: 0 } dir) => new[] { dir },
-                            ('|', { X: 0 } dir) => new[] { dir },
-                            ('/', { Y: 0 } dir) => new[] { dir.RotateCCW() },
-                            ('/', { X: 0 } dir) => new[] { dir.RotateCW() },
-                            ('\\', { Y: 0 } dir) => new[] { dir.RotateCW() },
-                            ('\\', { X: 0 } dir) => new[] { dir.RotateCCW() },
-                            (_, { } dir) => new[] { dir.RotateCW(), dir.RotateCCW() },
-                        })
-                        .Where(dir => map.Inside(cur.pos + dir))
-                        .Select(dir => (cur.pos + dir, dir))
-                )
-                .Select(s => s.State.pos)
                 .Distinct()
                 .Count();
         }
