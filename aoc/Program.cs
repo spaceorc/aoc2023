@@ -11,7 +11,8 @@ public static class Program
 {
     private static void Main()
     {
-        Runner.RunFile("day16.txt", Solve_16);
+        Runner.RunFile("day17.txt", Solve_17);
+        // Runner.RunFile("day16.txt", Solve_16);
         // Runner.RunFile("day15.txt", Solve_15);
         // Runner.RunFile("day14.txt", Solve_14);
         // Runner.RunFile("day13.txt", Solve_13);
@@ -27,6 +28,63 @@ public static class Program
         // Runner.RunFile("day3.txt", Solve_3);
         // Runner.RunFile("day2.txt", Solve_2);
         // Runner.RunFile("day1.txt", Solve_1);
+    }
+
+    private static void Solve_17(Map<long> map)
+    {
+        SolvePart1().Out("Part 1: ");
+        SolvePart2().Out("Part 2: ");
+        return;
+
+        long SolvePart1()
+        {
+            return Solve(minLen: 1, maxLen: 3);
+        }
+
+        long SolvePart2()
+        {
+            return Solve(minLen: 4, maxLen: 10);
+        }
+
+        long Solve(long minLen, long maxLen)
+        {
+            var queue = new Queue<(Walker walker, int len)>();
+            var used = new Dictionary<(Walker walker, int len), long>();
+            var start = (walker: new Walker(V.Zero, Dir.Right), len: 0);
+            queue.Enqueue(start);
+            used.Add(start, 0);
+            var queuedStates = new HashSet<(Walker walker, int len)>();
+            queuedStates.Add(start);
+
+            while (queue.Count > 0)
+            {
+                var cur = queue.Dequeue();
+                queuedStates.Remove(cur);
+                var cur1 = used[cur];
+
+                var nextStates = new[]
+                {
+                    (walker: cur.walker.Forward(), len: cur.len + 1),
+                    (walker: cur.walker.TurnCW().Forward(), len: 1),
+                    (walker: cur.walker.TurnCCW().Forward(), len: 1),
+                };
+                foreach (var next in nextStates)
+                {
+                    if (next.len > maxLen || next.walker.Dir != cur.walker.Dir && cur.len < minLen)
+                        continue;
+                    if (!next.walker.Inside(map))
+                        continue;
+                    if (used.TryGetValue(next, out var prev) && prev <= cur1 + map[next.walker.Pos])
+                        continue;
+
+                    used[next] = cur1 + map[next.walker.Pos];
+                    if (queuedStates.Add(next))
+                        queue.Enqueue(next);
+                }
+            }
+
+            return used.Where(u => u.Key.walker.Pos == map.BottomRight && u.Key.len >= minLen).Min(u => u.Value);
+        }
     }
 
     private static void Solve_16(Map<char> map)
@@ -85,14 +143,14 @@ public static class Program
                     startFrom: new[] { startFrom },
                     cur => ((map[cur.pos], cur.dir) switch
                         {
-                            ('.', {} dir) => new[] { dir },
-                            ('-', {Y: 0} dir) => new[] { dir },
-                            ('|', {X: 0} dir) => new[] { dir },
-                            ('/', {Y: 0} dir) => new[] { dir.RotateCCW() },
-                            ('/', {X: 0} dir) => new[] { dir.RotateCW() },
-                            ('\\', {Y: 0} dir) => new[] { dir.RotateCW() },
-                            ('\\', {X: 0} dir) => new[] { dir.RotateCCW() },
-                            (_, {} dir) => new[] { dir.RotateCW(), dir.RotateCCW() },
+                            ('.', { } dir) => new[] { dir },
+                            ('-', { Y: 0 } dir) => new[] { dir },
+                            ('|', { X: 0 } dir) => new[] { dir },
+                            ('/', { Y: 0 } dir) => new[] { dir.RotateCCW() },
+                            ('/', { X: 0 } dir) => new[] { dir.RotateCW() },
+                            ('\\', { Y: 0 } dir) => new[] { dir.RotateCW() },
+                            ('\\', { X: 0 } dir) => new[] { dir.RotateCCW() },
+                            (_, { } dir) => new[] { dir.RotateCW(), dir.RotateCCW() },
                         })
                         .Where(dir => map.Inside(cur.pos + dir))
                         .Select(dir => (cur.pos + dir, dir))
