@@ -8,7 +8,7 @@ public static class Search
     public static IEnumerable<SearchPathItem<TState>> Bfs<TState>(
         IEnumerable<TState> startFrom,
         Func<TState, IEnumerable<TState>> getNextStates,
-        Predicate<SearchPathItem<TState>>? filter = null
+        long maxDistance = long.MaxValue
     )
         where TState : notnull
     {
@@ -24,28 +24,27 @@ public static class Search
         {
             var cur = queue.Dequeue();
             var curItem = used[cur];
-            
+
             yield return curItem;
-            
+
+            if (curItem.Distance >= maxDistance)
+                continue;
+
             foreach (var next in getNextStates(cur))
             {
                 if (used.ContainsKey(next))
                     continue;
-                
-                var nextItem = new SearchPathItem<TState>(next, curItem.Distance + 1, curItem);
-                if (filter?.Invoke(nextItem) == false)
-                    continue;
-                
-                used.Add(next, nextItem);
+
+                used.Add(next, new SearchPathItem<TState>(next, curItem.Distance + 1, curItem));
                 queue.Enqueue(next);
             }
         }
     }
-    
+
     public static IEnumerable<SearchPathItem<TState>> Dijkstra<TState>(
         IEnumerable<TState> startFrom,
         Func<TState, IEnumerable<(TState state, long distance)>> getNextStates,
-        Predicate<SearchPathItem<TState>>? filter = null
+        long maxDistance = long.MaxValue
     )
         where TState : notnull
     {
@@ -62,20 +61,18 @@ public static class Search
             var curItem = used[cur];
             if (curItem.Distance != curDistance)
                 continue;
-            
+
             yield return curItem;
-            
+            if (curItem.Distance >= maxDistance)
+                continue;
+
             foreach (var (nextState, distance) in getNextStates(cur))
             {
                 if (used.TryGetValue(nextState, out var prevItem) && prevItem.Distance <= curItem.Distance + distance)
                     continue;
-                
-                var nextItem = new SearchPathItem<TState>(nextState, curItem.Distance + distance, curItem);
-                if (filter?.Invoke(nextItem) == false)
-                    continue;
-                
-                used[nextState] = nextItem;
-                queue.Enqueue(nextState, nextItem.Distance);
+
+                used[nextState] = new SearchPathItem<TState>(nextState, curItem.Distance + distance, curItem);
+                queue.Enqueue(nextState, new SearchPathItem<TState>(nextState, curItem.Distance + distance, curItem).Distance);
             }
         }
     }
