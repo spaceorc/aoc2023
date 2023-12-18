@@ -40,70 +40,57 @@ public static class Program
 
         long SolvePart1()
         {
-            var c = V.Zero;
-            var border = new List<V>();
-            foreach (var (dir, dist, color) in input)
-            {
-                for (int i = 0; i < dist; i++)
-                {
-                    border.Add(c);
-                    c += dir switch
-                    {
-                        'R' => V.right,
-                        'U' => V.up,
-                        'L' => V.left,
-                        'D' => V.down,
-                    };
-                }
-            }
-
-            var box = border.BoundingBox();
-            border = border.Select(v => v - box.TopLeft + V.One).ToList();
-            box = border.BoundingBox().Grow(1);
-            var map = new Map<char>((int)box.BottomRight.X + 1, (int)box.BottomRight.Y + 1);
-            map.Fill('.');
-            foreach (var v in border)
-                map[v] = '#';
-            //
-            // foreach (var s in map.RowsStrings())
-            //     Console.WriteLine(s);
-
-            var ext = Search.Bfs(
-                    startFrom: new[] { V.Zero },
-                    getNextStates: v => map.Area4(v).Where(n => map[n] != '#')
-                )
-                .Count();
-
-            return map.Square().Area - ext;
+            return CalcArea(
+                input
+                    .Select(
+                        l => (
+                            l.dist,
+                            dir: l.dir switch
+                            {
+                                'R' => V.right,
+                                'D' => V.down,
+                                'L' => V.left,
+                                'U' => V.up,
+                                _ => throw new Exception()
+                            }
+                        )
+                    )
+                    .Select(l => l.dir * l.dist)
+            );
         }
 
         long SolvePart2()
         {
-            var cur = V.Zero;
-            var border = new List<V>();
-            foreach (var (_, _, color) in input)
-            {
-                border.Add(cur);
-                var dist = Convert.ToInt64(color[1..^1], 16);
-                var dir = color[^1] switch
-                {
-                    '0' => V.right,
-                    '1' => V.down,
-                    '2' => V.left,
-                    '3' => V.up,
-                };
-                cur += dir * dist;
-            }
+            return CalcArea(
+                input
+                    .Select(
+                        l => (
+                            dist: Convert.ToInt64(l.color[1..^1], 16),
+                            dir: l.color[^1] switch
+                            {
+                                '0' => V.right,
+                                '1' => V.down,
+                                '2' => V.left,
+                                '3' => V.up,
+                                _ => throw new Exception()
+                            }
+                        )
+                    )
+                    .Select(l => l.dir * l.dist)
+            );
+        }
 
+        long CalcArea(IEnumerable<V> deltas)
+        {
+            var cur = V.Zero;
             var res = 0L;
             var bres = 0L;
-            for (int i = 0; i < border.Count; i++)
+            foreach (var d in deltas)
             {
-                var c = border[i];
-                var n = border[(i + 1) % border.Count];
-                if (n.Y == c.Y)
-                    res += (c.X - n.X) * n.Y;
-                bres += n.CDistTo(c);
+                if (d.Y == 0)
+                    res += d.X * cur.Y;
+                cur += d;
+                bres += d.CLen();
             }
 
             return Math.Abs(res) + bres / 2 + 1;
