@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Compression;
 using System.Linq;
 using aoc.Lib;
 using aoc.ParseLib;
@@ -11,7 +12,8 @@ public static class Program
 {
     private static void Main()
     {
-        Runner.RunFile("day17.txt", Solve_17);
+        Runner.RunFile("day18.txt", Solve_18);
+        // Runner.RunFile("day17.txt", Solve_17);
         // Runner.RunFile("day16.txt", Solve_16);
         // Runner.RunFile("day15.txt", Solve_15);
         // Runner.RunFile("day14.txt", Solve_14);
@@ -28,6 +30,84 @@ public static class Program
         // Runner.RunFile("day3.txt", Solve_3);
         // Runner.RunFile("day2.txt", Solve_2);
         // Runner.RunFile("day1.txt", Solve_1);
+    }
+
+    private static void Solve_18((char dir, long dist, string color)[] input)
+    {
+        SolvePart1().Out("Part 1: ");
+        SolvePart2().Out("Part 2: ");
+        return;
+
+        long SolvePart1()
+        {
+            var c = V.Zero;
+            var border = new List<V>();
+            foreach (var (dir, dist, color) in input)
+            {
+                for (int i = 0; i < dist; i++)
+                {
+                    border.Add(c);
+                    c += dir switch
+                    {
+                        'R' => V.right,
+                        'U' => V.up,
+                        'L' => V.left,
+                        'D' => V.down,
+                    };
+                }
+            }
+
+            var box = border.BoundingBox();
+            border = border.Select(v => v - box.TopLeft + V.One).ToList();
+            box = border.BoundingBox().Grow(1);
+            var map = new Map<char>((int)box.BottomRight.X + 1, (int)box.BottomRight.Y + 1);
+            map.Fill('.');
+            foreach (var v in border)
+                map[v] = '#';
+            //
+            // foreach (var s in map.RowsStrings())
+            //     Console.WriteLine(s);
+
+            var ext = Search.Bfs(
+                    startFrom: new[] { V.Zero },
+                    getNextStates: v => map.Area4(v).Where(n => map[n] != '#')
+                )
+                .Count();
+
+            return map.Square().Area - ext;
+        }
+
+        long SolvePart2()
+        {
+            var cur = V.Zero;
+            var border = new List<V>();
+            foreach (var (_, _, color) in input)
+            {
+                border.Add(cur);
+                var dist = Convert.ToInt64(color[1..^1], 16);
+                var dir = color[^1] switch
+                {
+                    '0' => V.right,
+                    '1' => V.down,
+                    '2' => V.left,
+                    '3' => V.up,
+                };
+                cur += dir * dist;
+            }
+
+            var res = 0L;
+            var bres = 0L;
+            for (int i = 0; i < border.Count; i++)
+            {
+                var c = border[i];
+                var n = border[(i + 1) % border.Count];
+                if (n.Y == c.Y)
+                    res += (c.X - n.X) * n.Y;
+                bres += n.CDistTo(c);
+            }
+
+            return Math.Abs(res) + bres / 2 + 1;
+        }
     }
 
     private static void Solve_17(Map<long> map)
