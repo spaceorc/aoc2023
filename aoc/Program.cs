@@ -82,18 +82,15 @@ public static class Program
 
         long CalcArea(IEnumerable<V> deltas)
         {
-            var cur = V.Zero;
-            var res = 0L;
-            var bres = 0L;
-            foreach (var d in deltas)
-            {
-                if (d.Y == 0)
-                    res += d.X * cur.Y;
-                cur += d;
-                bres += d.CLen();
-            }
-
-            return Math.Abs(res) + bres / 2 + 1;
+            var res = deltas.Aggregate(
+                (pos: V.Zero, area: 0L, perimeter: 0L),
+                (acc, delta) => (
+                    pos: acc.pos + delta,
+                    area: acc.area + delta.X * acc.pos.Y,
+                    perimeter: acc.perimeter + delta.MLen()
+                )
+            );
+            return Math.Abs(res.area) + res.perimeter / 2 + 1;
         }
     }
 
