@@ -12,7 +12,8 @@ public static class Program
 {
     private static void Main()
     {
-        Runner.RunFile("day18.txt", Solve_18);
+        Runner.RunFile("day19.txt", Solve_19);
+        // Runner.RunFile("day18.txt", Solve_18);
         // Runner.RunFile("day17.txt", Solve_17);
         // Runner.RunFile("day16.txt", Solve_16);
         // Runner.RunFile("day15.txt", Solve_15);
@@ -30,6 +31,133 @@ public static class Program
         // Runner.RunFile("day3.txt", Solve_3);
         // Runner.RunFile("day2.txt", Solve_2);
         // Runner.RunFile("day1.txt", Solve_1);
+    }
+
+    private static void Solve_19(
+        [Template(@"^(?<name>\w+)\{(?<items>.*),(?<otherwise>\w+)\}$", IsRegex = true)]
+        [Split(",", Target = "items")]
+        [Template(@"^(?<arg>\w)(?<op>[><])(?<value>\d+)\:(?<res>\w+)$", IsRegex = true, Target = "items.item")]
+        (string name, (char arg, char op, long value, string res)[] items, string otherwise)[] rules,
+        
+        [Split("{}=xmas,")]
+        (long x, long m, long a, long s)[] args
+    )
+    {
+        SolvePart1().Out("Part 1: ");
+        SolvePart2().Out("Part 2: ");
+        return;
+
+        long SolvePart1()
+        {
+            return args.Sum(
+                v =>
+                {
+                    var rule = rules.Single(r => r.name == "in");
+                    while (true)
+                    {
+                        string? next = null;
+                        foreach (var (arg, op, value, res) in rule.items)
+                        {
+                            var argValue = arg switch
+                            {
+                                'x' => v.x,
+                                'm' => v.m,
+                                'a' => v.a,
+                                's' => v.s,
+                            };
+                            if (op == '<' && argValue < value)
+                            {
+                                next = res;
+                                break;
+                            }
+
+                            if (op == '>' && argValue > value)
+                            {
+                                next = res;
+                                break;
+                            }
+                        }
+
+                        if (next == null)
+                            next = rule.otherwise;
+
+                        if (next == "A")
+                            return v.x + v.m + v.a + v.s;
+
+                        if (next == "R")
+                            return 0L;
+
+                        rule = rules.Single(r => r.name == next);
+                    }
+                });
+
+        }
+
+        long SolvePart2()
+        {
+            var cur = (x: new R(1, 4000), m: new R(1, 4000), a: new R(1, 4000), s: new R(1, 4000));
+            return Count(cur, rules.Single(r => r.name == "in"));
+
+
+            long Count((R x, R m, R a, R s) input, (string name, (char arg, char op, long value, string res)[] items, string otherwise) rule)
+            {
+                var result = 0L;
+                foreach (var (arg, op, value, res) in rule.items)
+                {
+                    var r = arg switch
+                    {
+                        'x' => input.x,
+                        'm' => input.m,
+                        'a' => input.a,
+                        's' => input.s,
+                    };
+                    var pr = r.IntersectWith(op switch
+                    {
+                        '>' => R.FromStartEnd(value + 1, 1000000),
+                        '<' => R.FromStartEnd(-1000000, value),
+                    });
+                    if (!pr.IsEmpty)
+                    {
+                        var next = arg switch
+                        {
+                            'x' => input with { x = pr },
+                            'm' => input with { m = pr },
+                            'a' => input with { a = pr },
+                            's' => input with { s = pr },
+                        };
+                        result += res switch
+                        {
+                            "A" => next.x.Len * next.m.Len * next.a.Len * next.s.Len,
+                            "R" => 0L,
+                            _ => Count(next, rules.Single(n => n.name == res))
+                        };
+                    }
+                    var nr = r.IntersectWith(op switch
+                    {
+                        '>' => R.FromStartEnd(-1000000, value + 1),
+                        '<' => R.FromStartEnd(value, 1000000),
+                    });
+                    if (nr.IsEmpty)
+                        return result;
+                            
+                    input = arg switch
+                    {
+                        'x' => input with { x = nr },
+                        'm' => input with { m = nr },
+                        'a' => input with { a = nr },
+                        's' => input with { s = nr },
+                    };
+                }
+                
+                result += rule.otherwise switch
+                {
+                    "A" => input.x.Len * input.m.Len * input.a.Len * input.s.Len,
+                    "R" => 0L,
+                    _ => Count(input, rules.Single(n => n.name == rule.otherwise))
+                };
+                return result;
+            }
+        }
     }
 
     private static void Solve_18((char dir, long dist, string color)[] input)
