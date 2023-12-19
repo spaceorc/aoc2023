@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO.Compression;
 using System.Linq;
+using System.Reflection.Emit;
 using aoc.Lib;
 using aoc.ParseLib;
 using aoc.ParseLib.Attributes;
@@ -14,6 +14,7 @@ public static class Program
     private static void Main()
     {
         Runner.RunFile("day19.txt", Solve_19);
+        Runner.RunFile("day19.txt", Solve_19_IL_Part1);
         // Runner.RunFile("day18.txt", Solve_18);
         // Runner.RunFile("day17.txt", Solve_17);
         // Runner.RunFile("day16.txt", Solve_16);
@@ -32,6 +33,48 @@ public static class Program
         // Runner.RunFile("day3.txt", Solve_3);
         // Runner.RunFile("day2.txt", Solve_2);
         // Runner.RunFile("day1.txt", Solve_1);
+    }
+
+    private static void Solve_19_IL_Part1(
+        [
+            Template("{name}{{{branches},{otherwise}}}"),
+            Split(",", Target = "branches"),
+            Template("{arg:char}{op:char}{value}:{next}", Target = "branches.item")
+        ]
+        (string name, (char field, char op, long value, string next)[] branches, string otherwise)[] rules,
+        [Split("{}=xmas,")]
+        long[][] parts
+    )
+    {
+        var method = new DynamicMethod(Guid.NewGuid().ToString(), typeof(bool), new[] { typeof(long[]) }, typeof(Program), true);
+        var il = method.GetILGenerator();
+        var labels = rules.ToDictionary(r => r.name, _ => il.DefineLabel());
+        labels.Add("A", il.DefineLabel());
+        labels.Add("R", il.DefineLabel());
+        il.Emit(OpCodes.Br, labels["in"]);
+        foreach (var (name, branches, otherwise) in rules)
+        {
+            il.MarkLabel(labels[name]);
+            foreach (var (field, op, value, next) in branches)
+            {
+                il.Emit(OpCodes.Ldarg_0); // stack: [part]
+                il.Emit(OpCodes.Ldc_I4, "xmas".IndexOf(field)); // stack: [part, fieldIndex]
+                il.Emit(OpCodes.Ldelem_I8); // stack: [part[fieldIndex]]
+                il.Emit(OpCodes.Ldc_I8, value); // stack: [part[fieldIndex], value]
+                il.Emit(op == '<' ? OpCodes.Blt : OpCodes.Bgt, labels[next]); // if (part[fieldIndex] 'op' value) goto next; stack: []
+            }
+
+            il.Emit(OpCodes.Br, labels[otherwise]);
+        }
+        il.MarkLabel(labels["R"]);
+        il.Emit(OpCodes.Ldc_I4_0); // stack: [false]
+        il.Emit(OpCodes.Ret);
+        il.MarkLabel(labels["A"]);
+        il.Emit(OpCodes.Ldc_I4_1); // stack: [true]
+        il.Emit(OpCodes.Ret);
+        var check = method.CreateDelegate<Func<long[], bool>>();
+
+        parts.Where(check).Sum(p => p.Sum()).Out("Part 1 (IL): ");
     }
 
     private static void Solve_19(
@@ -53,7 +96,7 @@ public static class Program
                     .Append((0, '>', 0, r.otherwise))
                     .ToArray()
             );
-        
+
         SolvePart1().Out("Part 1: ");
         SolvePart2().Out("Part 2: ");
         return;
