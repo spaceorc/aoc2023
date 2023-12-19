@@ -34,126 +34,103 @@ public static class Program
     }
 
     private static void Solve_19(
-        [Template(@"^(?<name>\w+)\{(?<items>.*),(?<otherwise>\w+)\}$", IsRegex = true)]
-        [Split(",", Target = "items")]
-        [Template(@"^(?<arg>\w)(?<op>[><])(?<value>\d+)\:(?<res>\w+)$", IsRegex = true, Target = "items.item")]
+        [Template(@"^(?<name>\w+)\{(?<items>.*),(?<otherwise>\w+)\}$", IsRegex = true)] [Split(",", Target = "items")] [Template(@"^(?<arg>\w)(?<op>[><])(?<value>\d+)\:(?<res>\w+)$", IsRegex = true, Target = "items.item")]
         (string name, (char arg, char op, long value, string res)[] items, string otherwise)[] rules,
-        
-        [Split("{}=xmas,")]
-        (long x, long m, long a, long s)[] args
+        [Split("{}=xmas,")] (long x, long m, long a, long s)[] parts
     )
     {
         SolvePart1().Out("Part 1: ");
         SolvePart2().Out("Part 2: ");
         return;
 
+        T GetPartValue<T>((T x, T m, T a, T s) part, char arg)
+        {
+            return arg switch
+            {
+                'x' => part.x,
+                'm' => part.m,
+                'a' => part.a,
+                's' => part.s,
+                _ => throw new Exception($"Bad part ref: {arg}")
+            };
+        }
+
+        (T x, T m, T a, T s) SetPartValue<T>((T x, T m, T a, T s) part, char arg, T value)
+        {
+            return arg switch
+            {
+                'x' => part with { x = value },
+                'm' => part with { m = value },
+                'a' => part with { a = value },
+                's' => part with { s = value },
+                _ => throw new Exception($"Bad part ref: {arg}")
+            };
+        }
+
         long SolvePart1()
         {
-            return args.Sum(
-                v =>
+            return parts
+                .Where(part => IsAccepted(part, "in"))
+                .Sum(part => part.x + part.m + part.a + part.s);
+
+            bool IsAccepted((long x, long m, long a, long s) part, string ruleName)
+            {
+                var rule = rules.Single(r => r.name == ruleName);
+                var next = rule.items
+                               .FirstOrDefault(
+                                   r => r.op == '<' && GetPartValue(part, r.arg) < r.value ||
+                                        r.op == '>' && GetPartValue(part, r.arg) > r.value
+                               )
+                               .res ??
+                           rule.otherwise;
+                return next switch
                 {
-                    var rule = rules.Single(r => r.name == "in");
-                    while (true)
-                    {
-                        string? next = null;
-                        foreach (var (arg, op, value, res) in rule.items)
-                        {
-                            var argValue = arg switch
-                            {
-                                'x' => v.x,
-                                'm' => v.m,
-                                'a' => v.a,
-                                's' => v.s,
-                            };
-                            if (op == '<' && argValue < value)
-                            {
-                                next = res;
-                                break;
-                            }
-
-                            if (op == '>' && argValue > value)
-                            {
-                                next = res;
-                                break;
-                            }
-                        }
-
-                        if (next == null)
-                            next = rule.otherwise;
-
-                        if (next == "A")
-                            return v.x + v.m + v.a + v.s;
-
-                        if (next == "R")
-                            return 0L;
-
-                        rule = rules.Single(r => r.name == next);
-                    }
-                });
-
+                    "A" => true,
+                    "R" => false,
+                    _ => IsAccepted(part, next)
+                };
+            }
         }
 
         long SolvePart2()
         {
-            var cur = (x: new R(1, 4000), m: new R(1, 4000), a: new R(1, 4000), s: new R(1, 4000));
-            return Count(cur, rules.Single(r => r.name == "in"));
-
-
-            long Count((R x, R m, R a, R s) input, (string name, (char arg, char op, long value, string res)[] items, string otherwise) rule)
+            var range = new R(1, 4000);
+            return Count((x: range, m: range, a: range, s: range), "in");
+            
+            long Count((R x, R m, R a, R s) ranges, string ruleName)
             {
                 var result = 0L;
+                var rule = rules.Single(r => r.name == ruleName); 
                 foreach (var (arg, op, value, res) in rule.items)
                 {
-                    var r = arg switch
+                    var r = GetPartValue(ranges, arg);
+                    var (matched, unmatched) = op switch
                     {
-                        'x' => input.x,
-                        'm' => input.m,
-                        'a' => input.a,
-                        's' => input.s,
+                        '>' => (r.MakeGreaterThan(value), r.MakeLessThanOrEqualTo(value)),
+                        '<' => (r.MakeLessThan(value), r.MakeGreaterThanOrEqualTo(value)),
                     };
-                    var pr = r.IntersectWith(op switch
+                    if (!matched.IsEmpty)
                     {
-                        '>' => R.FromStartEnd(value + 1, 1000000),
-                        '<' => R.FromStartEnd(-1000000, value),
-                    });
-                    if (!pr.IsEmpty)
-                    {
-                        var next = arg switch
-                        {
-                            'x' => input with { x = pr },
-                            'm' => input with { m = pr },
-                            'a' => input with { a = pr },
-                            's' => input with { s = pr },
-                        };
+                        var next = SetPartValue(ranges, arg, matched);
                         result += res switch
                         {
                             "A" => next.x.Len * next.m.Len * next.a.Len * next.s.Len,
                             "R" => 0L,
-                            _ => Count(next, rules.Single(n => n.name == res))
+                            _ => Count(next, res)
                         };
                     }
-                    var nr = r.IntersectWith(op switch
-                    {
-                        '>' => R.FromStartEnd(-1000000, value + 1),
-                        '<' => R.FromStartEnd(value, 1000000),
-                    });
-                    if (nr.IsEmpty)
+
+                    if (unmatched.IsEmpty)
                         return result;
-                            
-                    input = arg switch
-                    {
-                        'x' => input with { x = nr },
-                        'm' => input with { m = nr },
-                        'a' => input with { a = nr },
-                        's' => input with { s = nr },
-                    };
+
+                    ranges = SetPartValue(ranges, arg, unmatched);
                 }
-                
+
                 result += rule.otherwise switch
                 {
-                    "A" => input.x.Len * input.m.Len * input.a.Len * input.s.Len,
+                    "A" => ranges.x.Len * ranges.m.Len * ranges.a.Len * ranges.s.Len,
                     "R" => 0L,
-                    _ => Count(input, rules.Single(n => n.name == rule.otherwise))
+                    _ => Count(ranges, rule.otherwise)
                 };
                 return result;
             }
