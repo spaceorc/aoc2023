@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO.Compression;
 using System.Linq;
 using aoc.Lib;
@@ -41,50 +42,29 @@ public static class Program
         ]
         (string name, (char field, char op, long value, string next)[] branches, string otherwise)[] rules,
         [Split("{}=xmas,")]
-        (long x, long m, long a, long s)[] parts
+        long[][] parts
     )
     {
         SolvePart1().Out("Part 1: ");
         SolvePart2().Out("Part 2: ");
         return;
 
-        T GetPartValue<T>((T x, T m, T a, T s) part, char arg)
-        {
-            return arg switch
-            {
-                'x' => part.x,
-                'm' => part.m,
-                'a' => part.a,
-                's' => part.s,
-                _ => throw new Exception($"Bad part ref: {arg}")
-            };
-        }
-
-        (T x, T m, T a, T s) SetPartValue<T>((T x, T m, T a, T s) part, char arg, T value)
-        {
-            return arg switch
-            {
-                'x' => part with { x = value },
-                'm' => part with { m = value },
-                'a' => part with { a = value },
-                's' => part with { s = value },
-                _ => throw new Exception($"Bad part ref: {arg}")
-            };
-        }
-
         long SolvePart1()
         {
             var branches = rules
                 .ToDictionary(
                     r => r.name,
-                    r => r.branches.Append(('x', '>', 0, r.otherwise)).ToArray()
+                    r => r.branches
+                        .Select(b => (field: "xmas".IndexOf(b.field), b.op, b.value, b.next))
+                        .Append((0, '>', 0, r.otherwise))
+                        .ToArray()
                 );
 
             return parts
                 .Where(part => IsAccepted(part, "in"))
-                .Sum(part => part.x + part.m + part.a + part.s);
+                .Sum(part => part.Sum());
 
-            bool IsAccepted((long x, long m, long a, long s) part, string rule) =>
+            bool IsAccepted(long[] part, string rule) =>
                 rule switch
                 {
                     "A" => true,
@@ -93,8 +73,8 @@ public static class Program
                         part,
                         branches[rule]
                             .First(
-                                b => b.op == '<' && GetPartValue(part, b.field) < b.value ||
-                                     b.op == '>' && GetPartValue(part, b.field) > b.value
+                                b => b.op == '<' && part[b.field] < b.value ||
+                                     b.op == '>' && part[b.field] > b.value
                             )
                             .next
                     )
@@ -106,33 +86,35 @@ public static class Program
             var branches = rules
                 .ToDictionary(
                     r => r.name,
-                    r => r.branches.Append(('x', '>', 0, r.otherwise)).ToArray()
+                    r => r.branches
+                        .Select(b => (field: "xmas".IndexOf(b.field), b.op, b.value, b.next))
+                        .Append((0, '>', 0, r.otherwise))
+                        .ToArray()
                 );
 
-            var range = new R(1, 4000);
-            return Count((x: range, m: range, a: range, s: range), "in");
+            return Count(Enumerable.Repeat(new R(1, 4000), 4).ToImmutableArray(), "in");
 
-            long Count((R x, R m, R a, R s) part, string rule)
+            long Count(ImmutableArray<R> part, string rule)
             {
                 return rule switch
                 {
-                    "A" => part.x.Len * part.m.Len * part.a.Len * part.s.Len,
+                    "A" => part.Product(p => p.Len),
                     "R" => 0,
                     _ => branches[rule]
                         .Scan(
                             (part, stop: false, result: 0L),
                             (acc, branch) =>
                             {
-                                var r = GetPartValue(acc.part, branch.field);
+                                var r = acc.part[branch.field];
                                 var (matched, unmatched) = branch.op switch
                                 {
                                     '>' => (r.MakeGreaterThan(branch.value), r.MakeLessThanOrEqualTo(branch.value)),
                                     '<' => (r.MakeLessThan(branch.value), r.MakeGreaterThanOrEqualTo(branch.value)),
                                 };
                                 return (
-                                    part: SetPartValue(acc.part, branch.field, unmatched),
+                                    part: acc.part.SetItem(branch.field, unmatched),
                                     stop: unmatched.IsEmpty,
-                                    result: acc.result + (matched.IsEmpty ? 0 : Count(SetPartValue(acc.part, branch.field, matched), branch.next))
+                                    result: acc.result + (matched.IsEmpty ? 0 : Count(acc.part.SetItem(branch.field, matched), branch.next))
                                 );
                             }
                         )
