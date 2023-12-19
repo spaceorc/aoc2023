@@ -34,9 +34,15 @@ public static class Program
     }
 
     private static void Solve_19(
-        [Template(@"^(?<name>\w+)\{(?<items>.*),(?<otherwise>\w+)\}$", IsRegex = true)] [Split(",", Target = "items")] [Template(@"^(?<arg>\w)(?<op>[><])(?<value>\d+)\:(?<res>\w+)$", IsRegex = true, Target = "items.item")]
+        [
+            Template("{name}{{{items},{otherwise}}}"),
+            Split(",", Target = "items"),
+            Template("{arg:char}{op:char}{value}:{next}", Target = "items.item")
+        ]
         (string name, (char arg, char op, long value, string res)[] items, string otherwise)[] rules,
-        [Split("{}=xmas,")] (long x, long m, long a, long s)[] parts
+        
+        [Split("{}=xmas,")]
+        (long x, long m, long a, long s)[] parts
     )
     {
         SolvePart1().Out("Part 1: ");
@@ -96,11 +102,11 @@ public static class Program
         {
             var range = new R(1, 4000);
             return Count((x: range, m: range, a: range, s: range), "in");
-            
+
             long Count((R x, R m, R a, R s) ranges, string ruleName)
             {
                 var result = 0L;
-                var rule = rules.Single(r => r.name == ruleName); 
+                var rule = rules.Single(r => r.name == ruleName);
                 foreach (var (arg, op, value, res) in rule.items)
                 {
                     var r = GetPartValue(ranges, arg);
@@ -816,7 +822,8 @@ public static class Program
 
     private static void Solve_5_2(
         [NonArray] [Template("seeds: {seeds}")] R[] seeds,
-        [NonArray] [Template("{?}: {mappings}")] params (long dest, R src)[][] mappings
+        [NonArray] [Template("{?}: {mappings}")]
+        params (long dest, R src)[][] mappings
     )
     {
         Solve().Out("Part 2: ");
@@ -848,7 +855,8 @@ public static class Program
 
     private static void Solve_5_1(
         [NonArray] [Template("seeds: {seeds}")] long[] seeds,
-        [NonArray] [Template("{?}: {mappings}")] params (long dest, long src, long len)[][] mappings
+        [NonArray] [Template("{?}: {mappings}")]
+        params (long dest, long src, long len)[][] mappings
     )
     {
         Solve().Out("Part 1: ");

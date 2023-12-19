@@ -80,6 +80,11 @@ public static class EnumerableHelpers
         return items.Where(x => !values.Contains(x));
     }
 
+    public static long Product<T>(this IEnumerable<T> items, Func<T, long> selector)
+    {
+        return items.Select(selector).Product();
+    }
+
     public static long Product(this IEnumerable<long> items)
     {
         return items.Aggregate(1L, (a, b) => a * b);

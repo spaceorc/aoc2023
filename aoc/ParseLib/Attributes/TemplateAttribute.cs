@@ -54,7 +54,7 @@ public class TemplateAttribute : StructureAttribute
         if (IsRegex)
             return new Regex(Template, RegexOptions.Compiled | RegexOptions.Singleline);
 
-        var templateTransformationRegex = new Regex(@"([\\$^()[\]:+*?|])| |({[^}]+})", RegexOptions.Compiled | RegexOptions.Singleline);
+        var templateTransformationRegex = new Regex(@"({{)|(}})|([\\$^()[\]:+*?|])| |({[^}]+})", RegexOptions.Compiled | RegexOptions.Singleline);
         var templateRegexString = "^" +
                                   templateTransformationRegex.Replace(
                                       Template,
@@ -63,13 +63,23 @@ public class TemplateAttribute : StructureAttribute
                                           if (m.Value == " ")
                                               return "\\s+";
 
+                                          if (m.Value == "{{")
+                                              return "{";
+
+                                          if (m.Value == "}}")
+                                              return "}";
+
                                           if (m.Value.Length == 1)
                                               return "\\" + m.Value;
 
                                           if (m.Value == "{?}")
                                               return "(?:.*)";
 
-                                          return $"(?<{m.Value.Substring(1, m.Value.Length - 2)}>.*)";
+                                          var spec = m.Value.Substring(1, m.Value.Length - 2);
+                                          if (spec.EndsWith(":char"))
+                                              return $"(?<{spec[..^5]}>.)";
+                                          
+                                          return $"(?<{spec}>.*)";
                                       }
                                   ) +
                                   "$";
