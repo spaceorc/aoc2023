@@ -45,21 +45,21 @@ public static class Program
         long[][] parts
     )
     {
+        var branches = rules
+            .ToDictionary(
+                r => r.name,
+                r => r.branches
+                    .Select(b => (field: "xmas".IndexOf(b.field), b.op, b.value, b.next))
+                    .Append((0, '>', 0, r.otherwise))
+                    .ToArray()
+            );
+        
         SolvePart1().Out("Part 1: ");
         SolvePart2().Out("Part 2: ");
         return;
 
         long SolvePart1()
         {
-            var branches = rules
-                .ToDictionary(
-                    r => r.name,
-                    r => r.branches
-                        .Select(b => (field: "xmas".IndexOf(b.field), b.op, b.value, b.next))
-                        .Append((0, '>', 0, r.otherwise))
-                        .ToArray()
-                );
-
             return parts
                 .Where(part => IsAccepted(part, "in"))
                 .Sum(part => part.Sum());
@@ -83,15 +83,6 @@ public static class Program
 
         long SolvePart2()
         {
-            var branches = rules
-                .ToDictionary(
-                    r => r.name,
-                    r => r.branches
-                        .Select(b => (field: "xmas".IndexOf(b.field), b.op, b.value, b.next))
-                        .Append((0, '>', 0, r.otherwise))
-                        .ToArray()
-                );
-
             return Count(Enumerable.Repeat(new R(1, 4000), 4).ToImmutableArray(), "in");
 
             long Count(ImmutableArray<R> part, string rule)
