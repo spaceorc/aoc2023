@@ -6,6 +6,44 @@ namespace aoc.Lib;
 
 public static class EnumerableHelpers
 {
+    public static IEnumerable<TSource> Scan<TSource>(this IEnumerable<TSource> source,
+        Func<TSource, TSource, TSource> transformation)
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (transformation == null) throw new ArgumentNullException(nameof(transformation));
+
+        return ScanImpl(source, transformation, e => e.MoveNext() ? (true, e.Current) : default);
+    }
+    
+    public static IEnumerable<TState> Scan<TSource, TState>(this IEnumerable<TSource> source,
+        TState seed, Func<TState, TSource, TState> transformation)
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (transformation == null) throw new ArgumentNullException(nameof(transformation));
+
+        return ScanImpl(source, transformation, _ => (true, seed));
+    }
+
+    private static IEnumerable<TState> ScanImpl<TSource, TState>(IEnumerable<TSource> source,
+        Func<TState, TSource, TState> transformation,
+        Func<IEnumerator<TSource>, (bool, TState)> seeder)
+    {
+        using var e = source.GetEnumerator();
+
+        var (seeded, aggregator) = seeder(e);
+
+        if (!seeded)
+            yield break;
+
+        yield return aggregator;
+
+        while (e.MoveNext())
+        {
+            aggregator = transformation(aggregator, e.Current);
+            yield return aggregator;
+        }
+    }
+
     public static IEnumerable<T> Flatten<T>(this IEnumerable<IEnumerable<T>> items)
     {
         return items.SelectMany(x => x);

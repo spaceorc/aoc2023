@@ -35,12 +35,11 @@ public static class Program
 
     private static void Solve_19(
         [
-            Template("{name}{{{items},{otherwise}}}"),
-            Split(",", Target = "items"),
-            Template("{arg:char}{op:char}{value}:{next}", Target = "items.item")
+            Template("{name}{{{branches},{otherwise}}}"),
+            Split(",", Target = "branches"),
+            Template("{arg:char}{op:char}{value}:{next}", Target = "branches.item")
         ]
-        (string name, (char arg, char op, long value, string res)[] items, string otherwise)[] rules,
-        
+        (string name, (char field, char op, long value, string next)[] branches, string otherwise)[] rules,
         [Split("{}=xmas,")]
         (long x, long m, long a, long s)[] parts
     )
@@ -75,70 +74,71 @@ public static class Program
 
         long SolvePart1()
         {
+            var branches = rules
+                .ToDictionary(
+                    r => r.name,
+                    r => r.branches.Append(('x', '>', 0, r.otherwise)).ToArray()
+                );
+
             return parts
                 .Where(part => IsAccepted(part, "in"))
                 .Sum(part => part.x + part.m + part.a + part.s);
 
-            bool IsAccepted((long x, long m, long a, long s) part, string ruleName)
-            {
-                var rule = rules.Single(r => r.name == ruleName);
-                var next = rule.items
-                               .FirstOrDefault(
-                                   r => r.op == '<' && GetPartValue(part, r.arg) < r.value ||
-                                        r.op == '>' && GetPartValue(part, r.arg) > r.value
-                               )
-                               .res ??
-                           rule.otherwise;
-                return next switch
+            bool IsAccepted((long x, long m, long a, long s) part, string rule) =>
+                rule switch
                 {
                     "A" => true,
                     "R" => false,
-                    _ => IsAccepted(part, next)
+                    _ => IsAccepted(
+                        part,
+                        branches[rule]
+                            .First(
+                                b => b.op == '<' && GetPartValue(part, b.field) < b.value ||
+                                     b.op == '>' && GetPartValue(part, b.field) > b.value
+                            )
+                            .next
+                    )
                 };
-            }
         }
 
         long SolvePart2()
         {
+            var branches = rules
+                .ToDictionary(
+                    r => r.name,
+                    r => r.branches.Append(('x', '>', 0, r.otherwise)).ToArray()
+                );
+
             var range = new R(1, 4000);
             return Count((x: range, m: range, a: range, s: range), "in");
 
-            long Count((R x, R m, R a, R s) ranges, string ruleName)
+            long Count((R x, R m, R a, R s) part, string rule)
             {
-                var result = 0L;
-                var rule = rules.Single(r => r.name == ruleName);
-                foreach (var (arg, op, value, res) in rule.items)
+                return rule switch
                 {
-                    var r = GetPartValue(ranges, arg);
-                    var (matched, unmatched) = op switch
-                    {
-                        '>' => (r.MakeGreaterThan(value), r.MakeLessThanOrEqualTo(value)),
-                        '<' => (r.MakeLessThan(value), r.MakeGreaterThanOrEqualTo(value)),
-                    };
-                    if (!matched.IsEmpty)
-                    {
-                        var next = SetPartValue(ranges, arg, matched);
-                        result += res switch
-                        {
-                            "A" => next.x.Len * next.m.Len * next.a.Len * next.s.Len,
-                            "R" => 0L,
-                            _ => Count(next, res)
-                        };
-                    }
-
-                    if (unmatched.IsEmpty)
-                        return result;
-
-                    ranges = SetPartValue(ranges, arg, unmatched);
-                }
-
-                result += rule.otherwise switch
-                {
-                    "A" => ranges.x.Len * ranges.m.Len * ranges.a.Len * ranges.s.Len,
-                    "R" => 0L,
-                    _ => Count(ranges, rule.otherwise)
+                    "A" => part.x.Len * part.m.Len * part.a.Len * part.s.Len,
+                    "R" => 0,
+                    _ => branches[rule]
+                        .Scan(
+                            (part, stop: false, result: 0L),
+                            (acc, branch) =>
+                            {
+                                var r = GetPartValue(acc.part, branch.field);
+                                var (matched, unmatched) = branch.op switch
+                                {
+                                    '>' => (r.MakeGreaterThan(branch.value), r.MakeLessThanOrEqualTo(branch.value)),
+                                    '<' => (r.MakeLessThan(branch.value), r.MakeGreaterThanOrEqualTo(branch.value)),
+                                };
+                                return (
+                                    part: SetPartValue(acc.part, branch.field, unmatched),
+                                    stop: unmatched.IsEmpty,
+                                    result: acc.result + (matched.IsEmpty ? 0 : Count(SetPartValue(acc.part, branch.field, matched), branch.next))
+                                );
+                            }
+                        )
+                        .First(t => t.stop)
+                        .result
                 };
-                return result;
             }
         }
     }
