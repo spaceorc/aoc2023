@@ -5,10 +5,10 @@ namespace aoc.Lib;
 
 public static class DefaultDict
 {
-    public static DefaultDict<TKey, TValue> ToDefault<TKey, TValue>(this Dictionary<TKey, TValue> impl)
+    public static DefaultDict<TKey, TValue> ToDefault<TKey, TValue>(this Dictionary<TKey, TValue> impl, TValue defaultValue = default!)
         where TKey : notnull
     {
-        return new DefaultDict<TKey, TValue>(impl);
+        return new DefaultDict<TKey, TValue>(impl, defaultValue);
     }
 }
 
@@ -18,10 +18,12 @@ public class DefaultDict<TKey, TValue> :
     where TKey : notnull
 {
     private readonly Dictionary<TKey, TValue> impl;
+    private readonly TValue defaultValue;
 
-    public DefaultDict(Dictionary<TKey, TValue> impl)
+    public DefaultDict(Dictionary<TKey, TValue> impl, TValue defaultValue = default!)
     {
         this.impl = impl;
+        this.defaultValue = defaultValue;
     }
 
     public DefaultDict() : this(new Dictionary<TKey, TValue>())
@@ -89,7 +91,7 @@ public class DefaultDict<TKey, TValue> :
 
     public TValue this[TKey key]
     {
-        get => impl.TryGetValue(key, out var v) ? v : default!;
+        get => impl.GetValueOrDefault(key, defaultValue);
         set => impl[key] = value;
     }
 

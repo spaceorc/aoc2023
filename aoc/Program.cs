@@ -55,186 +55,108 @@ public static class Program
 
     private static void Solve_20([Atom(" ->,")] (string name, string[] dest)[] input)
     {
+        var destinations = input
+            .ToDictionary(x => x.name.Trim('%', '&'), x => x.dest)
+            .ToDefault(Array.Empty<string>());
+
+        var sources = destinations
+            .SelectMany(x => x.Value.Select(v => (k: x.Key, v)))
+            .GroupBy(x => x.v, x => x.k)
+            .ToDictionary(x => x.Key, x => x.ToArray())
+            .ToDefault(Array.Empty<string>());
+
+        destinations["button"] = new[] { "broadcast" };
+        sources["broadcast"] = new[] { "button" };
+
+        var conjunctions = input
+            .Where(x => x.name.StartsWith('&'))
+            .Select(x => x with { name = x.name[1..] })
+            .ToDictionary(x => x.name, x => sources[x.name].ToDictionary(s => s, _ => false));
+
+        var flipFlops = input
+            .Where(x => x.name.StartsWith('%'))
+            .Select(x => x with { name = x.name[1..] })
+            .ToDictionary(x => x.name, _ => false);
+
+        var pulseCounts = new Dictionary<(string src, string dst, bool pulse), long>().ToDefault();
+
+
+        // Part 1: 944750144
+        // Part 2: 222718819437131
         SolvePart1().Out("Part 1: ");
         SolvePart2().Out("Part 2: ");
         return;
 
         long SolvePart1()
         {
-            var conjs = input
-                .Where(l => l.name.StartsWith('&'))
-                .Select(l => (name: l.name[1..], l.dest, src: input.Where(ii => ii.dest.Any(d => d == l.name[1..])).Select(ii => ii.name).ToArray()))
-                .ToDictionary(l => l.name, l => (src: l.src.ToDictionary(s => s[0] is '%' or '&' ? s[1..] : s, _ => 0), l.dest));
-
-            var flips = input
-                .Where(l => l.name.StartsWith('%'))
-                .Select(l => l with { name = l.name[1..] })
-                .ToDictionary(l => l.name, l => (state: 0, l.dest));
-
-            var counts = new long[2];
-            var broadcaster = input.Single(l => l.name == "broadcaster").dest;
-
-            for (int i = 0; i < 1000; i++)
+            Reset();
+            for (var i = 0; i < 1000; i++)
                 Push();
-
-            return counts.Product();
-
-            void Push()
-            {
-                var queue = new Queue<(string src, string dst, int pulse)>();
-                queue.Enqueue(("button", "broadcaster", 0));
-                counts[0]++;
-                while (queue.Count > 0)
-                {
-                    var (src, dst, pulse) = queue.Dequeue();
-                    // Console.WriteLine($"{src} -{(pulse == 0 ? "low" : "high")}-> {dst}");
-
-                    if (flips.TryGetValue(dst, out var flip))
-                    {
-                        if (pulse == 0)
-                        {
-                            flips[dst] = flip with { state = 1 - flip.state };
-                            foreach (var d in flip.dest)
-                            {
-                                queue.Enqueue((dst, d, flips[dst].state));
-                                counts[flips[dst].state]++;
-                            }
-                        }
-                    }
-                    else if (conjs.TryGetValue(dst, out var conj))
-                    {
-                        conj.src[src] = pulse;
-                        foreach (var d in conj.dest)
-                        {
-                            var sendPulse = 1 - conj.src.Values.Min();
-                            queue.Enqueue((dst, d, sendPulse));
-                            counts[sendPulse]++;
-                        }
-                    }
-                    else if (dst == "broadcaster")
-                    {
-                        foreach (var d in broadcaster)
-                        {
-                            queue.Enqueue(("broadcaster", d, pulse));
-                            counts[pulse]++;
-                        }
-                    }
-                    else if (dst != "rx")
-                        throw new Exception($"WTF? {dst}");
-                }
-            }
+            return pulseCounts.Where(kvp => kvp.Key.pulse).Sum(kvp => kvp.Value) * pulseCounts.Where(kvp => !kvp.Key.pulse).Sum(kvp => kvp.Value);
         }
 
         long SolvePart2()
         {
-            var conjs = input
-                .Where(l => l.name.StartsWith('&'))
-                .Select(l => (name: l.name[1..], l.dest, src: input.Where(ii => ii.dest.Any(d => d == l.name[1..])).Select(ii => ii.name).ToArray()))
-                .ToDictionary(l => l.name, l => (src: l.src.ToDictionary(s => s[0] is '%' or '&' ? s[1..] : s, _ => 0), l.dest));
-
-            var flips = input
-                .Where(l => l.name.StartsWith('%'))
-                .Select(l => l with { name = l.name[1..] })
-                .ToDictionary(l => l.name, l => (state: 0, l.dest));
-
-            var broadcaster = input.Single(l => l.name == "broadcaster").dest;
-
-            var counts = new[]
+            Reset();
+            var generators = sources[sources["rx"].Single()];
+            var generatorPeriods = new long[generators.Length];
+            for (var i = 0; i < int.MaxValue; i++)
             {
-                conjs.Keys.Concat(flips.Keys).Append("broadcaster").Append("rx").ToDictionary(k => k, _ => 0L),
-                conjs.Keys.Concat(flips.Keys).Append("broadcaster").Append("rx").ToDictionary(k => k, _ => 0L),
-            };
-
-            var ai = 0L;
-            var bi = 0L;
-            var ci = 0L;
-            var di = 0L;
-            for (int i = 0; i < 4096; i++)
-            {
-                // Console.WriteLine($"------ {i}");
-                // if (i % 100000 == 0)
-                // Console.WriteLine(i);
-                foreach (var (key, _) in counts[0])
+                Push();
+                for (int g = 0; g < generators.Length; g++)
                 {
-                    counts[0][key] = 0;
-                    counts[1][key] = 0;
+                    if (generatorPeriods[g] == 0 && pulseCounts.Any(x => x.Key.src == generators[g] && x.Key.pulse))
+                        generatorPeriods[g] = i + 1;
                 }
 
-                Push();
-                var a = string.Join("", new[] { "mr", "bm", "pd", "xg", "rz", "pr", "zq", "qg", "vk", "fx", "fl", "rj" }.Reverse().Select(d => flips[d].state));
-                var b = string.Join("", new[] { "rg", "fb", "tq", "mv", "vl", "vg", "zz", "np", "cl", "gj", "dv", "xl" }.Reverse().Select(d => flips[d].state));
-                var c = string.Join("", new[] { "sv", "mn", "jp", "pj", "sh", "hn", "pf", "gv", "jg", "tj", "zs", "nh" }.Reverse().Select(d => flips[d].state));
-                var d = string.Join("", new[] { "xr", "xn", "fm", "lr", "jj", "kk", "lh", "rd", "dz", "sx", "fn", "zr" }.Reverse().Select(d => flips[d].state));
-
-                if (a == "000000000000")
-                    ai = i + 1;
-                if (b == "000000000000")
-                    bi = i + 1;
-                if (c == "000000000000")
-                    ci = i + 1;
-                if (d == "000000000000")
-                    di = i + 1;
-                
-                if (ai != 0 && bi != 0 && ci != 0 && di != 0)
+                if (generatorPeriods.All(p => p > 0))
                     break;
-                // Console.WriteLine($"{counts[0]["xr"]},{counts[1]["xr"]}");
-                // string.Join("", conjs["xr"].src.Values).Out("xr:");
-                // (flips["xr"].state * 1000).Out("xr:");
-                // foreach (var (key, (src, _)) in conjs)
-                //     Console.WriteLine($"{key}: {string.Join("", src.Values)} ({string.Join(", ", src.Keys)})");
-                //
-                // Console.WriteLine(string.Join("", flips.Values.Select(v => v.state)));
-                // foreach (var (key, (state, _)) in flips)
-                //     Console.WriteLine($"{key}: {(state == 0 ? "_" : "ON")}");
-
-                if (counts[0]["rx"] > 0)
-                    return i + 1;
             }
 
-            return MathHelpers.Lcm(ai, bi, ci, di);
-            
-            void Push()
-            {
-                var queue = new Queue<(string src, string dst, int pulse)>();
-                queue.Enqueue(("button", "broadcaster", 0));
-                counts[0]["broadcaster"]++;
-                while (queue.Count > 0)
-                {
-                    var (src, dst, pulse) = queue.Dequeue();
-                    // Console.WriteLine($"{src} -{(pulse == 0 ? "low" : "high")}-> {dst}");
+            return generatorPeriods.Product();
+        }
 
-                    if (flips.TryGetValue(dst, out var flip))
+        void Reset()
+        {
+            foreach (var states in conjunctions.Values)
+            foreach (var key in states.Keys)
+                states[key] = false;
+
+            foreach (var key in flipFlops.Keys)
+                flipFlops[key] = false;
+
+            pulseCounts.Clear();
+        }
+
+        void Push()
+        {
+            var queue = new Queue<(string src, string dst, bool pulse)>();
+            queue.Enqueue(("button", "broadcaster", false));
+            while (queue.Count > 0)
+            {
+                var (src, dst, pulse) = queue.Dequeue();
+                pulseCounts[(src, dst, pulse)]++;
+                if (flipFlops.ContainsKey(dst))
+                {
+                    if (pulse == false)
                     {
-                        if (pulse == 0)
-                        {
-                            flips[dst] = flip with { state = 1 - flip.state };
-                            foreach (var d in flip.dest)
-                            {
-                                queue.Enqueue((dst, d, flips[dst].state));
-                                counts[flips[dst].state][d]++;
-                            }
-                        }
+                        flipFlops[dst] = !flipFlops[dst];
+                        var nextPulse = flipFlops[dst];
+                        foreach (var d in destinations[dst])
+                            queue.Enqueue((dst, d, nextPulse));
                     }
-                    else if (conjs.TryGetValue(dst, out var conj))
-                    {
-                        conj.src[src] = pulse;
-                        foreach (var d in conj.dest)
-                        {
-                            var sendPulse = 1 - conj.src.Values.Min();
-                            queue.Enqueue((dst, d, sendPulse));
-                            counts[sendPulse][d]++;
-                        }
-                    }
-                    else if (dst == "broadcaster")
-                    {
-                        foreach (var d in broadcaster)
-                        {
-                            queue.Enqueue(("broadcaster", d, pulse));
-                            counts[pulse][d]++;
-                        }
-                    }
-                    else if (dst != "rx")
-                        throw new Exception($"WTF? {dst}");
+                }
+                else if (conjunctions.ContainsKey(dst))
+                {
+                    conjunctions[dst][src] = pulse;
+                    var nextPulse = !conjunctions[dst].All(v => v.Value);
+                    foreach (var d in destinations[dst])
+                        queue.Enqueue((dst, d, nextPulse));
+                }
+                else if (dst == "broadcaster")
+                {
+                    foreach (var d in destinations[dst])
+                        queue.Enqueue((dst, d, pulse));
                 }
             }
         }
