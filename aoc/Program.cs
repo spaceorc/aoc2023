@@ -90,7 +90,8 @@ public static class Program
             Reset();
             for (var i = 0; i < 1000; i++)
                 Push();
-            return pulseCounts.Where(kvp => kvp.Key.pulse).Sum(kvp => kvp.Value) * pulseCounts.Where(kvp => !kvp.Key.pulse).Sum(kvp => kvp.Value);
+            return pulseCounts.Where(kvp => kvp.Key.pulse).Sum(kvp => kvp.Value) *
+                   pulseCounts.Where(kvp => !kvp.Key.pulse).Sum(kvp => kvp.Value);
         }
 
         long SolvePart2()
@@ -103,7 +104,7 @@ public static class Program
                 Push();
                 for (int g = 0; g < generators.Length; g++)
                 {
-                    if (generatorPeriods[g] == 0 && pulseCounts.Any(x => x.Key.src == generators[g] && x.Key.pulse && x.Value > 0))
+                    if (generatorPeriods[g] == 0 && pulseCounts.Any(x => x.Key.src == generators[g] && x.Key.pulse))
                         generatorPeriods[g] = i + 1;
                 }
 
