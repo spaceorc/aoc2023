@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Emit;
 using aoc.Lib;
@@ -78,7 +77,7 @@ public static class Program
             .Select(x => x with { name = x.name[1..] })
             .ToDictionary(x => x.name, _ => false);
 
-        var pulseCounts = new Dictionary<(string src, string dst, bool pulse), long>().ToDefault();
+        var pulseCounts = new Dictionary<(string src, bool pulse), long>().ToDefault();
 
 
         SolvePart1().Out("Part 1: ");
@@ -104,7 +103,7 @@ public static class Program
                 Push();
                 for (int g = 0; g < generators.Length; g++)
                 {
-                    if (generatorPeriods[g] == 0 && pulseCounts.Any(x => x.Key.src == generators[g] && x.Key.pulse))
+                    if (generatorPeriods[g] == 0 && pulseCounts[(generators[g], true)] > 0)
                         generatorPeriods[g] = i + 1;
                 }
 
@@ -134,7 +133,7 @@ public static class Program
             while (queue.Count > 0)
             {
                 var (from, to, pulse) = queue.Dequeue();
-                pulseCounts[(from, to, pulse)]++;
+                pulseCounts[(from, pulse)]++;
                 if (flipFlops.ContainsKey(to))
                 {
                     if (pulse == false)
