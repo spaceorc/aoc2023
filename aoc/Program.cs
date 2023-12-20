@@ -81,8 +81,6 @@ public static class Program
         var pulseCounts = new Dictionary<(string src, string dst, bool pulse), long>().ToDefault();
 
 
-        // Part 1: 944750144
-        // Part 2: 222718819437131
         SolvePart1().Out("Part 1: ");
         SolvePart2().Out("Part 2: ");
         return;
@@ -105,7 +103,7 @@ public static class Program
                 Push();
                 for (int g = 0; g < generators.Length; g++)
                 {
-                    if (generatorPeriods[g] == 0 && pulseCounts.Any(x => x.Key.src == generators[g] && x.Key.pulse))
+                    if (generatorPeriods[g] == 0 && pulseCounts.Any(x => x.Key.src == generators[g] && x.Key.pulse && x.Value > 0))
                         generatorPeriods[g] = i + 1;
                 }
 
@@ -130,33 +128,33 @@ public static class Program
 
         void Push()
         {
-            var queue = new Queue<(string src, string dst, bool pulse)>();
+            var queue = new Queue<(string from, string to, bool pulse)>();
             queue.Enqueue(("button", "broadcaster", false));
             while (queue.Count > 0)
             {
-                var (src, dst, pulse) = queue.Dequeue();
-                pulseCounts[(src, dst, pulse)]++;
-                if (flipFlops.ContainsKey(dst))
+                var (from, to, pulse) = queue.Dequeue();
+                pulseCounts[(from, to, pulse)]++;
+                if (flipFlops.ContainsKey(to))
                 {
                     if (pulse == false)
                     {
-                        flipFlops[dst] = !flipFlops[dst];
-                        var nextPulse = flipFlops[dst];
-                        foreach (var d in destinations[dst])
-                            queue.Enqueue((dst, d, nextPulse));
+                        flipFlops[to] = !flipFlops[to];
+                        var nextPulse = flipFlops[to];
+                        foreach (var dst in destinations[to])
+                            queue.Enqueue((to, dst, nextPulse));
                     }
                 }
-                else if (conjunctions.ContainsKey(dst))
+                else if (conjunctions.ContainsKey(to))
                 {
-                    conjunctions[dst][src] = pulse;
-                    var nextPulse = !conjunctions[dst].All(v => v.Value);
-                    foreach (var d in destinations[dst])
-                        queue.Enqueue((dst, d, nextPulse));
+                    conjunctions[to][from] = pulse;
+                    var nextPulse = !conjunctions[to].All(v => v.Value);
+                    foreach (var dst in destinations[to])
+                        queue.Enqueue((to, dst, nextPulse));
                 }
-                else if (dst == "broadcaster")
+                else if (to == "broadcaster")
                 {
-                    foreach (var d in destinations[dst])
-                        queue.Enqueue((dst, d, pulse));
+                    foreach (var dst in destinations[to])
+                        queue.Enqueue((to, dst, pulse));
                 }
             }
         }
