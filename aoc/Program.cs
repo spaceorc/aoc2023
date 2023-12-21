@@ -58,32 +58,19 @@ public static class Program
         var start = map.All().Single(v => map[v] == 'S');
         map[start] = '.';
 
-        // var srl = Search.Bfs(
-        //         startFrom: new[] { new V(map.sizeX, 0) },
-        //         getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
-        //     )
-        //     .ToList();
-        //
-        // // Console.WriteLine(map.All().Count(v => map[v] == '.'));
-        // Console.WriteLine(srl.Count(s => s.Distance >= 0));
-        // Console.WriteLine(srl.Count(s => s.Distance > 130 + 130));
-        // Console.WriteLine(srl.Count);
-        // map.All().Where(v => map[v] == '.').Except(srl.Select(x => x.State)).ToArray().Out("AAA: ");
-
-
+        // Part 1: 3660
+        // Part 2: 605492675373144
         SolvePart1().Out("Part 1: ");
         SolvePart2().Out("Part 2: ");
         return;
 
         long SolvePart1()
         {
-            var cur = new HashSet<V> { start };
-            for (int i = 0; i < 64; i++)
-            {
-                cur = cur.SelectMany(v => v.Area4()).Where(v => map[v] == '.').ToHashSet();
-            }
+            var cur = new [] { start };
+            for (var i = 0; i < 64; i++)
+                cur = cur.SelectMany(v => v.Area4()).Where(v => map[v] == '.').Distinct().ToArray();
 
-            return cur.Count;
+            return cur.Length;
         }
 
         long SolvePart2()
