@@ -56,6 +56,7 @@ public record V(long X, long Y)
     public bool InSquare(Square r) => X >= r.MinX && X <= r.MaxX && Y >= r.MinY && Y <= r.MaxY;
 
     public V Mod(long k) => new(X.Mod(k), Y.Mod(k));
+    public V Mod(long x, long y) => new(X.Mod(x), Y.Mod(y));
 
     public V RotateCW() => new(-Y, X);
     public V RotateCCW() => new(Y, -X);

@@ -29,7 +29,8 @@ public static class Program
         // Runner.RunFile("day14.txt", Day14OptimizedRefactored.SolvePart2);
         // Console.WriteLine($"Part 2 optimized refactored time = {Stopwatch.GetElapsedTime(t3)}");
 
-        Runner.RunFile("day20.txt", Solve_20);
+        Runner.RunFile("day21.txt", Solve_21);
+        // Runner.RunFile("day20.txt", Solve_20);
         // Runner.RunFile("day19.txt", Solve_19);
         // Runner.RunFile("day19.txt", Solve_19_IL_Part1);
         // Runner.RunFile("day18.txt", Solve_18);
@@ -50,6 +51,162 @@ public static class Program
         // Runner.RunFile("day3.txt", Solve_3);
         // Runner.RunFile("day2.txt", Solve_2);
         // Runner.RunFile("day1.txt", Solve_1);
+    }
+
+    private static void Solve_21(Map<char> map)
+    {
+        var start = map.All().Single(v => map[v] == 'S');
+        map[start] = '.';
+
+        // var srl = Search.Bfs(
+        //         startFrom: new[] { new V(map.sizeX, 0) },
+        //         getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+        //     )
+        //     .ToList();
+        //
+        // // Console.WriteLine(map.All().Count(v => map[v] == '.'));
+        // Console.WriteLine(srl.Count(s => s.Distance >= 0));
+        // Console.WriteLine(srl.Count(s => s.Distance > 130 + 130));
+        // Console.WriteLine(srl.Count);
+        // map.All().Where(v => map[v] == '.').Except(srl.Select(x => x.State)).ToArray().Out("AAA: ");
+
+
+        SolvePart1().Out("Part 1: ");
+        SolvePart2().Out("Part 2: ");
+        return;
+
+        long SolvePart1()
+        {
+            var cur = new HashSet<V> { start };
+            for (int i = 0; i < 64; i++)
+            {
+                cur = cur.SelectMany(v => v.Area4()).Where(v => map[v] == '.').ToHashSet();
+            }
+
+            return cur.Count;
+        }
+
+        long SolvePart2()
+        {
+            const int steps = 26501365;
+            long dif = steps / map.sizeY - 1;
+            var res0 = 0L;
+            var res1 = 0L;
+            if (dif % 2 == 1)
+            {
+                res0 += dif;
+                res1 += dif + 1;
+            }
+            else
+            {
+                res0 += dif + 1;
+                res1 += dif;
+            }
+
+            for (int i = 1; i <= dif; i++)
+            {
+                var l = (dif - i) * 2 + 1;
+                if (dif % 2 == 1)
+                {
+                    res0 += l - 1;
+                    res1 += l + 1;
+                }
+                else
+                {
+                    res0 += l + 1;
+                    res1 += l - 1;
+                }
+            }
+
+            var sr = Search.Bfs(
+                    startFrom: new[] { start },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
+
+            var sr0 = sr.Count(s => s.Distance % 2 == 0);
+            var sr1 = sr.Count(s => s.Distance % 2 == 1);
+
+            var result = 0L;
+            result += res0 * (steps % 2 == 0 ? sr0 : sr1);
+            result += res1 * (steps % 2 == 0 ? sr1 : sr0);
+
+            var left = steps % map.sizeY + map.sizeY / 2;
+            var srl0 = Search.Bfs(
+                    startFrom: new[] { new V(0, map.sizeY / 2) },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
+            var srl1 = Search.Bfs(
+                    startFrom: new[] { new V(map.sizeX - 1, map.sizeY / 2) },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
+            var srl2 = Search.Bfs(
+                    startFrom: new[] { new V(map.sizeX / 2, 0) },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
+            var srl3 = Search.Bfs(
+                    startFrom: new[] { new V(map.sizeX / 2, map.sizeY - 1) },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
+
+            result += srl0.Count(s => s.Distance <= left && s.Distance % 2 == left % 2) + srl1.Count(s => s.Distance <= left && s.Distance % 2 == left % 2) + srl2.Count(s => s.Distance <= left && s.Distance % 2 == left % 2) + srl3.Count(s => s.Distance <= left && s.Distance % 2 == left % 2);
+
+            var srll0 = Search.Bfs(
+                    startFrom: new[]
+                    {
+                        new V(0, 0),
+                    },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
+            var srll1 = Search.Bfs(
+                    startFrom: new[]
+                    {
+                        new V(0, map.sizeY - 1),
+                    },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
+            var srll2 = Search.Bfs(
+                    startFrom: new[]
+                    {
+                        new V(map.sizeX - 1, 0),
+                    },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
+            var srll3 = Search.Bfs(
+                    startFrom: new[]
+                    {
+                        new V(map.sizeX - 1, map.sizeY - 1),
+                    },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
+
+            var ll = left + map.sizeY / 2;
+            result += srll0.Count(s => s.Distance <= ll && s.Distance % 2 == ll % 2) * dif +
+                      srll1.Count(s => s.Distance <= ll && s.Distance % 2 == ll % 2) * dif +
+                      srll2.Count(s => s.Distance <= ll && s.Distance % 2 == ll % 2) * dif +
+                      srll3.Count(s => s.Distance <= ll && s.Distance % 2 == ll % 2) * dif;
+
+            var lll = left - map.sizeY / 2 - 1;
+            result += srll0.Count(s => s.Distance <= lll && s.Distance % 2 == lll % 2) * (dif + 1) +
+                      srll1.Count(s => s.Distance <= lll && s.Distance % 2 == lll % 2) * (dif + 1) +
+                      srll2.Count(s => s.Distance <= lll && s.Distance % 2 == lll % 2) * (dif + 1) +
+                      srll3.Count(s => s.Distance <= lll && s.Distance % 2 == lll % 2) * (dif + 1);
+
+            var llll = left - map.sizeY;
+            result += srl0.Count(s => s.Distance <= llll && s.Distance % 2 == llll % 2) * (dif + 1) +
+                      srl1.Count(s => s.Distance <= llll && s.Distance % 2 == llll % 2) * (dif + 1) +
+                      srl2.Count(s => s.Distance <= llll && s.Distance % 2 == llll % 2) * (dif + 1) +
+                      srl3.Count(s => s.Distance <= llll && s.Distance % 2 == llll % 2) * (dif + 1);
+            return result;
+        }
     }
 
     private static void Solve_20([Atom(" ->,")] (string name, string[] dest)[] input)
