@@ -36,6 +36,13 @@ public class Map<T>
         set => data[index] = value;
     }
 
+    public V TopCenter => (TopLeft + TopRight) / 2;
+    public V BottomCenter => (BottomLeft + BottomRight) / 2;
+    public V LeftCenter => (TopLeft + BottomLeft) / 2;
+    public V RightCenter => (TopRight + BottomRight) / 2;
+    public V TopLeft => new(0, 0);
+    public V TopRight => new(sizeX - 1, 0);
+    public V BottomLeft => new(0, sizeY - 1);
     public V BottomRight => new(sizeX - 1, sizeY - 1);
 
     public void Clear()

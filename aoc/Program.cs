@@ -66,7 +66,7 @@ public static class Program
 
         long SolvePart1()
         {
-            var cur = new [] { start };
+            var cur = new[] { start };
             for (var i = 0; i < 64; i++)
                 cur = cur.SelectMany(v => v.Area4()).Where(v => map[v] == '.').Distinct().ToArray();
 
@@ -76,122 +76,115 @@ public static class Program
         long SolvePart2()
         {
             const int steps = 26501365;
-            long dif = steps / map.sizeY - 1;
-            var res0 = 0L;
-            var res1 = 0L;
-            if (dif % 2 == 1)
+            long fullBlocksDist = steps / map.sizeY - 1;
+            var fullBlocksEven = 0L;
+            var fullBlocksOdd = 0L;
+            if (fullBlocksDist % 2 == 1)
             {
-                res0 += dif;
-                res1 += dif + 1;
+                fullBlocksEven += fullBlocksDist;
+                fullBlocksOdd += fullBlocksDist + 1;
             }
             else
             {
-                res0 += dif + 1;
-                res1 += dif;
+                fullBlocksEven += fullBlocksDist + 1;
+                fullBlocksOdd += fullBlocksDist;
             }
 
-            for (int i = 1; i <= dif; i++)
+            for (var i = 1; i <= fullBlocksDist; i++)
             {
-                var l = (dif - i) * 2 + 1;
-                if (dif % 2 == 1)
+                var rowLen = (fullBlocksDist - i) * 2 + 1;
+                if (fullBlocksDist % 2 == 1)
                 {
-                    res0 += l - 1;
-                    res1 += l + 1;
+                    fullBlocksEven += rowLen - 1;
+                    fullBlocksOdd += rowLen + 1;
                 }
                 else
                 {
-                    res0 += l + 1;
-                    res1 += l - 1;
+                    fullBlocksEven += rowLen + 1;
+                    fullBlocksOdd += rowLen - 1;
                 }
             }
 
-            var sr = Search.Bfs(
+            var searchFromCenter = Search.Bfs(
                     startFrom: new[] { start },
                     getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
                 )
                 .ToList();
+            var searchFromTopLeft = Search.Bfs(
+                    startFrom: new[] { map.TopLeft },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
+            var searchFromBottomLeft = Search.Bfs(
+                    startFrom: new[] { map.BottomLeft },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
+            var searchFromTopRight = Search.Bfs(
+                    startFrom: new[] { map.TopRight },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
+            var searchFromBottomRight = Search.Bfs(
+                    startFrom: new[] { map.BottomRight },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
+            var searchFromTopCenter = Search.Bfs(
+                    startFrom: new[] { map.TopCenter },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
+            var searchFromBottomCenter = Search.Bfs(
+                    startFrom: new[] { map.BottomCenter },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
+            var searchFromRightCenter = Search.Bfs(
+                    startFrom: new[] { map.RightCenter },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
+            var searchFromLeftCenter = Search.Bfs(
+                    startFrom: new[] { map.LeftCenter },
+                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
+                )
+                .ToList();
 
-            var sr0 = sr.Count(s => s.Distance % 2 == 0);
-            var sr1 = sr.Count(s => s.Distance % 2 == 1);
+            var fullFilledEven = searchFromCenter.Count(s => s.Distance % 2 == 0);
+            var fullFilledOdd = searchFromCenter.Count(s => s.Distance % 2 == 1);
 
             var result = 0L;
-            result += res0 * (steps % 2 == 0 ? sr0 : sr1);
-            result += res1 * (steps % 2 == 0 ? sr1 : sr0);
+            result += fullBlocksEven * (steps % 2 == 0 ? fullFilledEven : fullFilledOdd);
+            result += fullBlocksOdd * (steps % 2 == 0 ? fullFilledOdd : fullFilledEven);
 
-            var left = steps % map.sizeY + map.sizeY / 2;
-            var srl0 = Search.Bfs(
-                    startFrom: new[] { new V(0, map.sizeY / 2) },
-                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
-                )
-                .ToList();
-            var srl1 = Search.Bfs(
-                    startFrom: new[] { new V(map.sizeX - 1, map.sizeY / 2) },
-                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
-                )
-                .ToList();
-            var srl2 = Search.Bfs(
-                    startFrom: new[] { new V(map.sizeX / 2, 0) },
-                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
-                )
-                .ToList();
-            var srl3 = Search.Bfs(
-                    startFrom: new[] { new V(map.sizeX / 2, map.sizeY - 1) },
-                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
-                )
-                .ToList();
+            var extraStepsFromSideCenter = steps % map.sizeY + map.sizeY / 2;
+            var extraStepsFromCorner = extraStepsFromSideCenter + map.sizeY / 2;
+            var extraStepsFromCornerSmall = extraStepsFromSideCenter - map.sizeY / 2 - 1;
+            var extraStepsFromSideCenterSmall = extraStepsFromSideCenter - map.sizeY;
 
-            result += srl0.Count(s => s.Distance <= left && s.Distance % 2 == left % 2) + srl1.Count(s => s.Distance <= left && s.Distance % 2 == left % 2) + srl2.Count(s => s.Distance <= left && s.Distance % 2 == left % 2) + srl3.Count(s => s.Distance <= left && s.Distance % 2 == left % 2);
+            // add lage for 4 axis
+            result += searchFromTopCenter.Count(s => s.Distance <= extraStepsFromSideCenter && s.Distance % 2 == extraStepsFromSideCenter % 2) +
+                      searchFromBottomCenter.Count(s => s.Distance <= extraStepsFromSideCenter && s.Distance % 2 == extraStepsFromSideCenter % 2) +
+                      searchFromRightCenter.Count(s => s.Distance <= extraStepsFromSideCenter && s.Distance % 2 == extraStepsFromSideCenter % 2) +
+                      searchFromLeftCenter.Count(s => s.Distance <= extraStepsFromSideCenter && s.Distance % 2 == extraStepsFromSideCenter % 2);
 
-            var srll0 = Search.Bfs(
-                    startFrom: new[]
-                    {
-                        new V(0, 0),
-                    },
-                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
-                )
-                .ToList();
-            var srll1 = Search.Bfs(
-                    startFrom: new[]
-                    {
-                        new V(0, map.sizeY - 1),
-                    },
-                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
-                )
-                .ToList();
-            var srll2 = Search.Bfs(
-                    startFrom: new[]
-                    {
-                        new V(map.sizeX - 1, 0),
-                    },
-                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
-                )
-                .ToList();
-            var srll3 = Search.Bfs(
-                    startFrom: new[]
-                    {
-                        new V(map.sizeX - 1, map.sizeY - 1),
-                    },
-                    getNextStates: cur => cur.Area4().Where(v => map.Inside(v) && map[v] == '.')
-                )
-                .ToList();
+            // add large from corners
+            result += searchFromTopLeft.Count(s => s.Distance <= extraStepsFromCorner && s.Distance % 2 == extraStepsFromCorner % 2) * fullBlocksDist +
+                      searchFromBottomLeft.Count(s => s.Distance <= extraStepsFromCorner && s.Distance % 2 == extraStepsFromCorner % 2) * fullBlocksDist +
+                      searchFromTopRight.Count(s => s.Distance <= extraStepsFromCorner && s.Distance % 2 == extraStepsFromCorner % 2) * fullBlocksDist +
+                      searchFromBottomRight.Count(s => s.Distance <= extraStepsFromCorner && s.Distance % 2 == extraStepsFromCorner % 2) * fullBlocksDist;
 
-            var ll = left + map.sizeY / 2;
-            result += srll0.Count(s => s.Distance <= ll && s.Distance % 2 == ll % 2) * dif +
-                      srll1.Count(s => s.Distance <= ll && s.Distance % 2 == ll % 2) * dif +
-                      srll2.Count(s => s.Distance <= ll && s.Distance % 2 == ll % 2) * dif +
-                      srll3.Count(s => s.Distance <= ll && s.Distance % 2 == ll % 2) * dif;
+            result += searchFromTopLeft.Count(s => s.Distance <= extraStepsFromCornerSmall && s.Distance % 2 == extraStepsFromCornerSmall % 2) * (fullBlocksDist + 1) +
+                      searchFromBottomLeft.Count(s => s.Distance <= extraStepsFromCornerSmall && s.Distance % 2 == extraStepsFromCornerSmall % 2) * (fullBlocksDist + 1) +
+                      searchFromTopRight.Count(s => s.Distance <= extraStepsFromCornerSmall && s.Distance % 2 == extraStepsFromCornerSmall % 2) * (fullBlocksDist + 1) +
+                      searchFromBottomRight.Count(s => s.Distance <= extraStepsFromCornerSmall && s.Distance % 2 == extraStepsFromCornerSmall % 2) * (fullBlocksDist + 1);
 
-            var lll = left - map.sizeY / 2 - 1;
-            result += srll0.Count(s => s.Distance <= lll && s.Distance % 2 == lll % 2) * (dif + 1) +
-                      srll1.Count(s => s.Distance <= lll && s.Distance % 2 == lll % 2) * (dif + 1) +
-                      srll2.Count(s => s.Distance <= lll && s.Distance % 2 == lll % 2) * (dif + 1) +
-                      srll3.Count(s => s.Distance <= lll && s.Distance % 2 == lll % 2) * (dif + 1);
+            result += searchFromTopCenter.Count(s => s.Distance <= extraStepsFromSideCenterSmall && s.Distance % 2 == extraStepsFromSideCenterSmall % 2) * (fullBlocksDist + 1) +
+                      searchFromBottomCenter.Count(s => s.Distance <= extraStepsFromSideCenterSmall && s.Distance % 2 == extraStepsFromSideCenterSmall % 2) * (fullBlocksDist + 1) +
+                      searchFromRightCenter.Count(s => s.Distance <= extraStepsFromSideCenterSmall && s.Distance % 2 == extraStepsFromSideCenterSmall % 2) * (fullBlocksDist + 1) +
+                      searchFromLeftCenter.Count(s => s.Distance <= extraStepsFromSideCenterSmall && s.Distance % 2 == extraStepsFromSideCenterSmall % 2) * (fullBlocksDist + 1);
 
-            var llll = left - map.sizeY;
-            result += srl0.Count(s => s.Distance <= llll && s.Distance % 2 == llll % 2) * (dif + 1) +
-                      srl1.Count(s => s.Distance <= llll && s.Distance % 2 == llll % 2) * (dif + 1) +
-                      srl2.Count(s => s.Distance <= llll && s.Distance % 2 == llll % 2) * (dif + 1) +
-                      srl3.Count(s => s.Distance <= llll && s.Distance % 2 == llll % 2) * (dif + 1);
             return result;
         }
     }
