@@ -59,6 +59,9 @@ public class V3 : IEquatable<V3>
 
     public V3 Rotate(int dir) => Rotations3.Rotate(this, dir);
     public V3 RotateBack(int dir) => Rotations3.RotateBack(this, dir);
+    public static V3 FromZ(long z) => new V3(0, 0, z);
 
+    public V XY() => new V(X, Y);
+    
     public bool InCube(Cube c) => X >= c.MinX && X <= c.MaxX && Y >= c.MinY && Y <= c.MaxY && Z >= c.MinZ && Z <= c.MaxZ;
 }

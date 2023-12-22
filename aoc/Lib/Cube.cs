@@ -67,6 +67,7 @@ public class Cube : IEquatable<Cube>
         return !Equals(left, right);
     }
 
+    public Cube Shift(V3 shift) => new(Min + shift, Max + shift);
     public Cube Grow(long delta) => new(Min - new V3(delta, delta, delta), Max + new V3(delta, delta, delta));
 
     public bool IsEmpty() => MinX > MaxX || MinY > MaxY || MinZ > MaxZ;

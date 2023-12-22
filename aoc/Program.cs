@@ -60,102 +60,62 @@ public static class Program
         SolvePart2().Out("Part 2: ");
         return;
 
-        Cube[] Fall(Cube[] cubes)
-        {
-            var result = new List<Cube>();
-            foreach (var cube in cubes.OrderBy(c => c.MinZ))
-            {
-                var supporter = cube.LayerAtMinZ().Select(
-                        v => result
-                            .SelectMany(r => r.All())
-                            .Where(cv => cv.X == v.X && cv.Y == v.Y)
-                            .MaxBy(cv => cv.Z)
-                    )
-                    .Where(sv => sv is not null)
-                    .MaxBy(sv => sv!.Z);
-                var delta = supporter is null ? cube.MinZ - 1 : cube.MinZ - supporter.Z - 1;
-                result.Add(new Cube(cube.Min - new V3(0, 0, delta), cube.Max - new V3(0, 0, delta)));
-            }
-
-            return result.ToArray();
-        }
-
         long SolvePart1()
         {
-            var cubes = input
-                .Select(l => l.BoundingBox())
-                .ToArray();
-
-            cubes = Fall(cubes);
-            
-            var links = new Dictionary<int, List<int>>();
-            foreach (var (cube, index) in cubes.WithIndex())
-            {
-                var supporters = cube.LayerAtMinZ()
-                    .Select(
-                        v => cubes.Select((c, otherIndex) => (c, otherIndex))
-                            .Where(s => s.otherIndex != index)
-                            .SingleOrDefault(o => o.c.All().Any(ov => ov == v + new V3(0, 0, -1)))
-                    )
-                    .Where(s => s.c is not null)
-                    .Distinct()
-                    .ToArray();
-                if (supporters.Length == 1)
-                {
-                    if (!links.TryGetValue(supporters[0].otherIndex, out var list))
-                        links.Add(supporters[0].otherIndex, list = new List<int>());
-                    list.Add(index);
-                }
-            }
-            
-            return cubes.Length - links.Count;
+            var space = FallCubes(input.Select(line => line.BoundingBox()));
+            return CalcFallCounts(space).Values.Count(c => c == 0);
         }
 
         long SolvePart2()
         {
-            var cubes = input
-                .Select(l => l.BoundingBox())
-                .ToArray();
+            var space = FallCubes(input.Select(line => line.BoundingBox()));
+            return CalcFallCounts(space).Values.Sum();
+        }
 
-            cubes = Fall(cubes);
-            
-            var links = new Dictionary<int, List<int>>();
-            var sup = new Dictionary<int, List<int>>();
-            foreach (var (cube, index) in cubes.WithIndex())
+        Dictionary<V3, int> FallCubes(IEnumerable<Cube> cubes)
+        {
+            var space = new Dictionary<V3, int>();
+            var height = new Dictionary<V, long>().ToDefault();
+            foreach (var (cube, index) in cubes.OrderBy(cube => cube.MinZ).WithIndex())
             {
-                var supporters = cube.LayerAtMinZ()
-                    .Select(
-                        v => cubes.Select((c, otherIndex) => (c, otherIndex))
-                            .Where(s => s.otherIndex != index)
-                            .SingleOrDefault(o => o.c.All().Any(ov => ov == v + new V3(0, 0, -1)))
-                    )
-                    .Where(s => s.c is not null)
-                    .Distinct()
-                    .ToArray();
-                sup.Add(index, supporters.Select(x => x.otherIndex).ToList());
-                if (supporters.Length == 1)
+                var placeAtZ = cube.LayerAtMinZ().Select(v => height[v.XY()]).Max() + 1;
+                var shift = V3.FromZ(placeAtZ - cube.MinZ);
+                foreach (var v in cube.Shift(shift).All())
                 {
-                    if (!links.TryGetValue(supporters[0].otherIndex, out var list))
-                        links.Add(supporters[0].otherIndex, list = new List<int>());
-                    list.Add(index);
+                    space[v] = index;
+                    height[v.XY()] = Math.Max(height[v.XY()], v.Z);
                 }
             }
 
-            var res = 0L;
-            for (int i = 0; i < cubes.Length; i++)
+            return space;
+        }
+
+        Dictionary<int, long> CalcFallCounts(Dictionary<V3, int> space)
+        {
+            var allIndexes = space.Values.Distinct().ToArray();
+
+            var supporters = space
+                .Select(kvp => (index: kvp.Value, vBelow: kvp.Key - V3.FromZ(1)))
+                .Where(s => space.ContainsKey(s.vBelow))
+                .Select(s => (s.index, below: space[s.vBelow]))
+                .Where(s => s.index != s.below)
+                .GroupBy(s => s.index, s => s.below)
+                .ToDictionary(g => g.Key, g => g.Distinct().ToArray());
+
+            var fallCounts = new Dictionary<int, long>();
+            foreach (var index in allIndexes)
             {
-                var falls = new []{i}.ToHashSet();
-                for (int k = 0; k < cubes.Length; k++)
+                var falls = new HashSet<int> { index };
+                foreach (var other in allIndexes)
                 {
-                    if (sup[k].Any() && falls.IsSupersetOf(sup[k]))
-                        falls.Add(k);
+                    if (supporters.TryGetValue(other, out var sup) && falls.IsSupersetOf(sup))
+                        falls.Add(other);
                 }
 
-                res += falls.Count - 1;
-
+                fallCounts[index] = falls.Count - 1;
             }
 
-            return res;
+            return fallCounts;
         }
     }
 
