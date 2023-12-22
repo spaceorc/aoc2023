@@ -14,6 +14,6 @@ public static class V3Helpers
         var maxY = list.Max(x => x.Y);
         var minZ = list.Min(x => x.Z);
         var maxZ = list.Max(x => x.Z);
-        return new Cube(minX, minY, minZ, maxX, maxY, maxZ);
+        return new Cube(minX, maxX, minY, maxY, minZ, maxZ);
     }
 }

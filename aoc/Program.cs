@@ -29,7 +29,8 @@ public static class Program
         // Runner.RunFile("day14.txt", Day14OptimizedRefactored.SolvePart2);
         // Console.WriteLine($"Part 2 optimized refactored time = {Stopwatch.GetElapsedTime(t3)}");
 
-        Runner.RunFile("day21.txt", Solve_21);
+        Runner.RunFile("day22.txt", Solve_22);
+        // Runner.RunFile("day21.txt", Solve_21);
         // Runner.RunFile("day20.txt", Solve_20);
         // Runner.RunFile("day19.txt", Solve_19);
         // Runner.RunFile("day19.txt", Solve_19_IL_Part1);
@@ -51,6 +52,111 @@ public static class Program
         // Runner.RunFile("day3.txt", Solve_3);
         // Runner.RunFile("day2.txt", Solve_2);
         // Runner.RunFile("day1.txt", Solve_1);
+    }
+
+    private static void Solve_22([Atom("~,")] V3[][] input)
+    {
+        SolvePart1().Out("Part 1: ");
+        SolvePart2().Out("Part 2: ");
+        return;
+
+        Cube[] Fall(Cube[] cubes)
+        {
+            var result = new List<Cube>();
+            foreach (var cube in cubes.OrderBy(c => c.MinZ))
+            {
+                var supporter = cube.LayerAtMinZ().Select(
+                        v => result
+                            .SelectMany(r => r.All())
+                            .Where(cv => cv.X == v.X && cv.Y == v.Y)
+                            .MaxBy(cv => cv.Z)
+                    )
+                    .Where(sv => sv is not null)
+                    .MaxBy(sv => sv!.Z);
+                var delta = supporter is null ? cube.MinZ - 1 : cube.MinZ - supporter.Z - 1;
+                result.Add(new Cube(cube.Min - new V3(0, 0, delta), cube.Max - new V3(0, 0, delta)));
+            }
+
+            return result.ToArray();
+        }
+
+        long SolvePart1()
+        {
+            var cubes = input
+                .Select(l => l.BoundingBox())
+                .ToArray();
+
+            cubes = Fall(cubes);
+            
+            var links = new Dictionary<int, List<int>>();
+            foreach (var (cube, index) in cubes.WithIndex())
+            {
+                var supporters = cube.LayerAtMinZ()
+                    .Select(
+                        v => cubes.Select((c, otherIndex) => (c, otherIndex))
+                            .Where(s => s.otherIndex != index)
+                            .SingleOrDefault(o => o.c.All().Any(ov => ov == v + new V3(0, 0, -1)))
+                    )
+                    .Where(s => s.c is not null)
+                    .Distinct()
+                    .ToArray();
+                if (supporters.Length == 1)
+                {
+                    if (!links.TryGetValue(supporters[0].otherIndex, out var list))
+                        links.Add(supporters[0].otherIndex, list = new List<int>());
+                    list.Add(index);
+                }
+            }
+            
+            return cubes.Length - links.Count;
+        }
+
+        long SolvePart2()
+        {
+            var cubes = input
+                .Select(l => l.BoundingBox())
+                .ToArray();
+
+            cubes = Fall(cubes);
+            
+            var links = new Dictionary<int, List<int>>();
+            var sup = new Dictionary<int, List<int>>();
+            foreach (var (cube, index) in cubes.WithIndex())
+            {
+                var supporters = cube.LayerAtMinZ()
+                    .Select(
+                        v => cubes.Select((c, otherIndex) => (c, otherIndex))
+                            .Where(s => s.otherIndex != index)
+                            .SingleOrDefault(o => o.c.All().Any(ov => ov == v + new V3(0, 0, -1)))
+                    )
+                    .Where(s => s.c is not null)
+                    .Distinct()
+                    .ToArray();
+                sup.Add(index, supporters.Select(x => x.otherIndex).ToList());
+                if (supporters.Length == 1)
+                {
+                    if (!links.TryGetValue(supporters[0].otherIndex, out var list))
+                        links.Add(supporters[0].otherIndex, list = new List<int>());
+                    list.Add(index);
+                }
+            }
+
+            var res = 0L;
+            for (int i = 0; i < cubes.Length; i++)
+            {
+                var falls = new []{i}.ToHashSet();
+                for (int k = 0; k < cubes.Length; k++)
+                {
+                    if (sup[k].Any() && falls.IsSupersetOf(sup[k]))
+                        falls.Add(k);
+                }
+
+                res += falls.Count - 1;
+
+            }
+
+            return res;
+        }
     }
 
     private static void Solve_21(Map<char> map)

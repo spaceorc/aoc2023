@@ -74,7 +74,7 @@ public class Cube : IEquatable<Cube>
 
     public override string ToString()
     {
-        return $"{MinX}..{MaxX}, {MinY}..{MaxY}, {MinZ}..{MaxZ}";
+        return $"{Min}..{Max}";
     }
 
     public Cube[] Subtract(Cube b)
@@ -207,6 +207,13 @@ public class Cube : IEquatable<Cube>
         for (var y = MinY; y <= MaxY; y++)
         for (var z = MinZ; z <= MaxZ; z++)
             yield return new V3(x, y, z);
+    }
+
+    public IEnumerable<V3> LayerAtMinZ()
+    {
+        for (var x = MinX; x <= MaxX; x++)
+        for (var y = MinY; y <= MaxY; y++)
+            yield return new V3(x, y, MinZ);
     }
 
     public bool Contains(V3 other) => other.InCube(this);
