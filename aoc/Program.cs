@@ -74,24 +74,13 @@ public static class Program
             return FindLongestPath(start, end, edges);
         }
 
-
-        Dictionary<int, Dictionary<int, long>> ReverseEdges(Dictionary<int, Dictionary<int, long>> edges)
-        {
-            return edges
-                .SelectMany(fromToPair => fromToPair.Value.Select(toDistPair => (from: fromToPair.Key, to: toDistPair.Key, dist: toDistPair.Value)))
-                .GroupBy(x => x.to)
-                .ToDictionary(g => g.Key, g => g.ToDictionary(x => x.from, x => x.dist));
-        }
-
         long FindLongestPath(int start, int end, Dictionary<int, Dictionary<int, long>> edges)
         {
-            edges = ReverseEdges(edges);
-
-            return Calc(end, 1L << end, new());
+            return Calc(start, 1L << start, new());
 
             long Calc(int cur, long used, Dictionary<(int, long), long> cache)
             {
-                if (cur == start)
+                if (cur == end)
                     return 0;
 
                 var key = (cur, used);
