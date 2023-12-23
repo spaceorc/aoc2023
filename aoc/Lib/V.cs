@@ -17,7 +17,7 @@ public record V(long X, long Y)
     public static readonly V down = new(0, 1);
     public static readonly V left = new(-1, 0);
     public static readonly V right = new(1, 0);
-    private static readonly V[] dirs = { up, right, down, left };
+    public static readonly V[] dirs = { up, right, down, left };
 
     public static V Dir(Dir dir) => dirs[(int)dir];
 
