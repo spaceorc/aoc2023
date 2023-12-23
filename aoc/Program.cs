@@ -76,9 +76,10 @@ public static class Program
 
         long FindLongestPath(int start, int end, Dictionary<int, Dictionary<int, long>> edges)
         {
-            return Calc(start, 1L << start, new());
+            var cache = new Dictionary<(int, long), long>();
+            return Calc(start, 1L << start);
 
-            long Calc(int cur, long used, Dictionary<(int, long), long> cache)
+            long Calc(int cur, long used)
             {
                 if (cur == end)
                     return 0;
@@ -92,7 +93,7 @@ public static class Program
                 {
                     if ((used & (1L << next)) != 0)
                         continue;
-                    res = Math.Max(res, Calc(next, used | (1L << next), cache) + dist);
+                    res = Math.Max(res, Calc(next, used | (1L << next)) + dist);
                 }
 
                 cache[key] = res;
