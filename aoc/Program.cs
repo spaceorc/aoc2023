@@ -59,7 +59,9 @@ public static class Program
     private static void Solve_23(Map<char> map)
     {
         SolvePart1().Out("Part 1: ");
+        var t = Stopwatch.GetTimestamp();
         SolvePart2().Out("Part 2: ");
+        Stopwatch.GetElapsedTime(t).Out("Part 2 time: ");
         return;
 
         long SolvePart1()
@@ -76,7 +78,6 @@ public static class Program
 
         long FindLongestPath(int start, int end, Dictionary<int, Dictionary<int, long>> edges)
         {
-            var cache = new Dictionary<(int, long), long>();
             return Calc(start, 1L << start);
 
             long Calc(int cur, long used)
@@ -84,19 +85,13 @@ public static class Program
                 if (cur == end)
                     return 0;
 
-                var key = (cur, used);
-                if (cache.TryGetValue(key, out var res))
-                    return res;
-
-                res = long.MinValue;
+                var res = long.MinValue;
                 foreach (var (next, dist) in edges[cur])
                 {
-                    if ((used & (1L << next)) != 0)
-                        continue;
-                    res = Math.Max(res, Calc(next, used | (1L << next)) + dist);
+                    if ((used & (1L << next)) == 0)
+                        res = Math.Max(res, Calc(next, used | (1L << next)) + dist);
                 }
 
-                cache[key] = res;
                 return res;
             }
         }
