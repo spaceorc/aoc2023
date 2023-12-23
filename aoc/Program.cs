@@ -101,12 +101,9 @@ public static class Program
                 res = long.MinValue;
                 foreach (var (next, dist) in edges[cur])
                 {
-                    var nextIndex = next;
-                    if ((used & (1L << nextIndex)) != 0)
+                    if ((used & (1L << next)) != 0)
                         continue;
-                    var nres = Calc(next, used | (1L << nextIndex), cache) + dist;
-                    if (nres > res)
-                        res = nres;
+                    res = Math.Max(res, Calc(next, used | (1L << next), cache) + dist);
                 }
 
                 cache[key] = res;
