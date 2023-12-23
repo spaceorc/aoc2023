@@ -59,9 +59,7 @@ public static class Program
     private static void Solve_23(Map<char> map)
     {
         SolvePart1().Out("Part 1: ");
-        var t = Stopwatch.GetTimestamp();
         SolvePart2().Out("Part 2: ");
-        Console.WriteLine(Stopwatch.GetElapsedTime(t));
         return;
 
         long SolvePart1()
