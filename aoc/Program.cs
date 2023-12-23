@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Emit;
 using aoc.Lib;
@@ -58,96 +59,39 @@ public static class Program
     private static void Solve_23(Map<char> map)
     {
         SolvePart1().Out("Part 1: ");
+        var t = Stopwatch.GetTimestamp();
         SolvePart2().Out("Part 2: ");
+        Console.WriteLine(Stopwatch.GetElapsedTime(t));
         return;
 
         long SolvePart1()
         {
-            var used = new Dictionary<V, long>();
-            var start = map.TopBorder().Single(v => map[v] == '.');
-            var end = map.BottomBorder().Single(v => map[v] == '.');
-            used[start] = 0;
-            return Calc(start);
-
-            long Calc(V cur)
-            {
-                var added = new List<V>();
-                while (true)
-                {
-                    if (cur == end)
-                    {
-                        var resuls = used[cur];
-                        foreach (var a in added)
-                            used.Remove(a);
-
-                        return resuls;
-                    }
-
-                    var nears = new List<V>();
-                    foreach (var d in V.dirs)
-                    {
-                        var n = cur + d;
-                        if (!map.Inside(n) || used.ContainsKey(n) || map[n] == '#')
-                            continue;
-                        if (map[n] is '>' && d == V.left)
-                            continue;
-                        if (map[n] is '<' && d == V.right)
-                            continue;
-                        if (map[n] is '^' && d == V.down)
-                            continue;
-                        if (map[n] is 'v' && d == V.up)
-                            continue;
-                        nears.Add(n);
-                    }
-
-                    if (nears.Count == 1)
-                    {
-                        used.Add(nears[0], used[cur] + 1);
-                        added.Add(nears[0]);
-                        cur = nears[0];
-                        continue;
-                    }
-
-                    var res = long.MinValue;
-                    foreach (var n in nears)
-                    {
-                        used.Add(n, used[cur] + 1);
-                        res = Math.Max(res, Calc(n));
-                        used.Remove(n);
-                    }
-
-                    foreach (var a in added)
-                        used.Remove(a);
-                    return res;
-                }
-            }
+            var (start, end, edges) = BuildGraph(useSlopes: true);
+            return FindLongestPath(start, end, edges);
         }
 
         long SolvePart2()
         {
-            var start = map.TopBorder().Single(v => map[v] == '.');
-            var end = map.BottomBorder().Single(v => map[v] == '.');
+            var (start, end, edges) = BuildGraph(useSlopes: false);
+            return FindLongestPath(start, end, edges);
+        }
 
-            var crosses = map.All().Where(v => map[v] != '#' && v.Area4().Count(n => map.Inside(n) && map[n] is not '#') > 2).Append(start).Append(end).ToHashSet();
-            var crossIndexes = crosses.WithIndex().ToDictionary(x => x.item, x => x.index);
-            var edges = new Dictionary<V, Dictionary<V, long>>();
-            foreach (var cross in crosses)
-            {
-                edges.Add(cross, new Dictionary<V, long>());
-                foreach (var pathItem in Search
-                             .Bfs(
-                                 new[] { cross },
-                                 v => v != cross && crosses.Contains(v) ? Array.Empty<V>() : v.Area4().Where(n => map.Inside(n) && map[n] is not '#')
-                             )
-                             .Where(s => s.State != cross && crosses.Contains(s.State)))
-                {
-                    edges[cross].Add(pathItem.State, pathItem.Distance);
-                }
-            }
 
-            return Calc(end, 1L << crossIndexes[end], new());
+        Dictionary<int, Dictionary<int, long>> ReverseEdges(Dictionary<int, Dictionary<int, long>> edges)
+        {
+            return edges
+                .SelectMany(fromToPair => fromToPair.Value.Select(toDistPair => (from: fromToPair.Key, to: toDistPair.Key, dist: toDistPair.Value)))
+                .GroupBy(x => x.to)
+                .ToDictionary(g => g.Key, g => g.ToDictionary(x => x.from, x => x.dist));
+        }
 
-            long Calc(V cur, long used, Dictionary<(V, long), long> cache)
+        long FindLongestPath(int start, int end, Dictionary<int, Dictionary<int, long>> edges)
+        {
+            edges = ReverseEdges(edges);
+
+            return Calc(end, 1L << end, new());
+
+            long Calc(int cur, long used, Dictionary<(int, long), long> cache)
             {
                 if (cur == start)
                     return 0;
@@ -159,7 +103,7 @@ public static class Program
                 res = long.MinValue;
                 foreach (var (next, dist) in edges[cur])
                 {
-                    var nextIndex = crossIndexes[next];
+                    var nextIndex = next;
                     if ((used & (1L << nextIndex)) != 0)
                         continue;
                     var nres = Calc(next, used | (1L << nextIndex), cache) + dist;
@@ -171,31 +115,7 @@ public static class Program
                 return res;
             }
         }
-        
-        long FindLongestPath(int start, int end, Dictionary<int, Dictionary<int, long>> edges)
-        {
-            return Calc(end, 1L << end, new());
 
-            long Calc(int cur, long used, Dictionary<(int, long), long> cache)
-            {
-                if (cur == start)
-                    return 0;
-
-                var key = (cur, used);
-                if (cache.TryGetValue(key, out var result))
-                    return result;
-
-                result = edges[cur]
-                    .Where(next => (used & (1L << next.Key)) == 0)
-                    .Select(next => Calc(next.Key, used | (1L << next.Key), cache))
-                    .DefaultIfEmpty(long.MinValue)
-                    .Max();
-
-                cache[key] = result;
-                return result;
-            }
-        }
-        
         (int start, int end, Dictionary<int, Dictionary<int, long>> edges) BuildGraph(bool useSlopes)
         {
             var start = map.TopBorder().Single(v => map[v] == '.');
@@ -213,17 +133,19 @@ public static class Program
                                      ? Array.Empty<V>()
                                      : v
                                          .Area4()
-                                         .Where(n => map.Inside(n) && 
-                                                     map[n] switch
-                                                     {
-                                                         '#' => false,
-                                                         '.' => true,
-                                                         _ when !useSlopes => true,
-                                                         '>' => n - v == V.right,
-                                                         '<' => n - v == V.left,
-                                                         '^' => n - v == V.up,
-                                                         'v' => n - v == V.down,
-                                                     })
+                                         .Where(
+                                             n => map.Inside(n) &&
+                                                  map[n] switch
+                                                  {
+                                                      '#' => false,
+                                                      '.' => true,
+                                                      _ when !useSlopes => true,
+                                                      '>' => n - v == V.right,
+                                                      '<' => n - v == V.left,
+                                                      '^' => n - v == V.up,
+                                                      'v' => n - v == V.down,
+                                                  }
+                                         )
                              )
                              .Where(s => s.State != cross && crosses.Contains(s.State)))
                 {
