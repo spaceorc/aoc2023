@@ -217,4 +217,10 @@ public class Matrix
         
         return I;
     }
+
+    public V3Rat ColAsV3(int col) => new V3Rat(data[0, col], data[1, col], data[2, col]);
+    public V3Rat RowAsV3(int row) => new V3Rat(data[row, 0], data[row, 1], data[row, 2]);
+
+    public VRat ColAsV(int col) => new VRat(data[0, col], data[1, col]);
+    public VRat RowAsV(int row) => new VRat(data[row, 0], data[row, 1]);
 }
