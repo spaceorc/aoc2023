@@ -11,7 +11,7 @@ namespace aoc.Lib
 
 		public readonly BigInteger Numerator;
 		public readonly BigInteger Denomerator;
-		private readonly bool Reduced;
+		private readonly bool reduced;
 
         public double ToDouble()
         {
@@ -43,17 +43,17 @@ namespace aoc.Lib
                 throw new ArgumentException();
 			Numerator = numerator;
 			Denomerator = denomerator;
-			Reduced = reduced;
+			this.reduced = reduced;
 		}
 
-		public static BigInteger LCM(BigInteger a, BigInteger b)
+		public static BigInteger Lcm(BigInteger a, BigInteger b)
 		{
 			return a * b / BigInteger.GreatestCommonDivisor(a, b);
 		}
 
 		public Rational Reduce()
 		{
-			if(Reduced)
+			if(reduced)
 				return this;
 			if(Numerator == BigInteger.Zero)
 				return new Rational(BigInteger.Zero, BigInteger.One, true);
@@ -63,7 +63,7 @@ namespace aoc.Lib
 			return d < 0 ? new Rational(-n, -d, true) : new Rational(n, d, true);
 		}
 
-        public Rational Abs() => IsNegative ? -this : this;
+        public readonly Rational Abs() => IsNegative ? -this : this;
 
 		public readonly int ToInt()
 		{
@@ -81,10 +81,10 @@ namespace aoc.Lib
 			return Denomerator == BigInteger.One;
 		}
 
-		public bool IsPositive => Sign > 0;
-        public bool IsNegative => Sign < 0;
-        public bool IsZero => Numerator.IsZero;
-        public int Sign => Numerator.Sign * Denomerator.Sign;
+		public readonly bool IsPositive => Sign > 0;
+        public readonly bool IsNegative => Sign < 0;
+        public readonly bool IsZero => Numerator.IsZero;
+        public readonly int Sign => Numerator.Sign * Denomerator.Sign;
 
 		public override string ToString()
 		{
@@ -145,7 +145,7 @@ namespace aoc.Lib
 
 		public static Rational operator -(Rational r)
 		{
-			return new Rational(-r.Numerator, r.Denomerator, r.Reduced);
+			return new Rational(-r.Numerator, r.Denomerator, r.reduced);
 		}
 		public static implicit operator Rational(int r)
 		{
@@ -219,6 +219,15 @@ namespace aoc.Lib
 			return r2 < r1;
 		}
 
+		public static Rational Max(Rational a, Rational b)
+		{
+			return a > b ? a : b;
+		}
+		
+		public static Rational Max(params Rational[] values)
+		{
+			return values.Max();
+		}
 	}
 
     public static class RationalExtensions
@@ -226,6 +235,11 @@ namespace aoc.Lib
         public static Rational Sum(this IEnumerable<Rational> source)
         {
             return source.Aggregate(Rational.Zero, (current, value) => current + value);
+        }
+        
+        public static Rational Max(this IEnumerable<Rational> source)
+        {
+            return source.Aggregate(Rational.Max);
         }
 
         public static Rational Sum<T>(this IEnumerable<T> source, Func<T, Rational> selector)

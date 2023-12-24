@@ -179,18 +179,14 @@ public static class Program
 
         Rational SolvePart2()
         {
-            var (t1, x1, y1, z1) = GetPosAndTime(1, 2);
-            var (t2, x2, y2, z2) = GetPosAndTime(1, 3);
-            var vx = (x2 - x1) / (t2 - t1); 
-            var vy = (y2 - y1) / (t2 - t1); 
-            var vz = (z2 - z1) / (t2 - t1);
-            var x = x1 - t1 * vx;
-            var y = y1 - t1 * vy;
-            var z = z1 - t1 * vz;
-            return x + y + z;
+            var (t1, p1) = GetPosAndTime(1, 2);
+            var (t2, p2) = GetPosAndTime(1, 3);
+            var v = (p2 - p1) / (t2 - t1); 
+            var p = p1 - t1 * v;
+            return p.X + p.Y + p.Z;
         }
 
-        (Rational time, Rational x, Rational y, Rational z) GetPosAndTime(int first, int second)
+        (Rational time, V3Rat pos) GetPosAndTime(int first, int second)
         {
             var p1 = input[first].pos - input[0].pos;
             var p2 = input[second].pos - input[0].pos;
@@ -217,10 +213,8 @@ public static class Program
             var res = Mult(inverted, vector);
             
             var t = res[2][0];
-            var posX = input[second].pos.X + t * input[second].vel.X;
-            var posY = input[second].pos.Y + t * input[second].vel.Y;
-            var posZ = input[second].pos.Z + t * input[second].vel.Z;
-            return (t, posX, posY, posZ);
+            var pos = new V3Rat(input[second].pos) + t * new V3Rat(input[second].vel);
+            return (t, pos);
         }
 
         Rational[][] Mult(Rational[][] a, Rational[][] b)
