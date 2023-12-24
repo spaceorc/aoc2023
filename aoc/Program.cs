@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Reflection.Emit;
 using aoc.Lib;
@@ -30,7 +31,8 @@ public static class Program
         // Runner.RunFile("day14.txt", Day14OptimizedRefactored.SolvePart2);
         // Console.WriteLine($"Part 2 optimized refactored time = {Stopwatch.GetElapsedTime(t3)}");
 
-        Runner.RunFile("day23.txt", Solve_23);
+        Runner.RunFile("day24.txt", Solve_24);
+        // Runner.RunFile("day23.txt", Solve_23);
         // Runner.RunFile("day22.txt", Solve_22);
         // Runner.RunFile("day21.txt", Solve_21);
         // Runner.RunFile("day20.txt", Solve_20);
@@ -54,6 +56,242 @@ public static class Program
         // Runner.RunFile("day3.txt", Solve_3);
         // Runner.RunFile("day2.txt", Solve_2);
         // Runner.RunFile("day1.txt", Solve_1);
+    }
+
+    private static void Solve_24([Atom(" ,@")] (V3 pos, V3 vel)[] input)
+    {
+        SolvePart1().Out("Part 1: ");
+        SolvePart2().Out("Part 2: ");
+        return;
+
+        long SolvePart1()
+        {
+            long from = 200000000000000L;
+            long to = 400000000000000L;
+            // long from = 7;
+            // long to = 27;
+            return input.Combinations(2).Count(list => Intersects(list[0], list[1]));
+
+            bool Intersects((V3 pos, V3 vel) a, (V3 pos, V3 vel) b)
+            {
+                // Console.WriteLine();
+                // Console.WriteLine($"{a} {b}");
+                if (a.vel.X == 0)
+                {
+                    if (b.vel.X == 0)
+                    {
+                        // Console.WriteLine("both vertical");
+                        return false;
+                    }
+
+                    var t = new Rational(a.pos.X - b.pos.X) / b.vel.X;
+                    if (t < 0)
+                    {
+                        // Console.WriteLine("past");
+                        return false;
+                    }
+
+                    var x = a.pos.X;
+                    var y = b.pos.Y + t * b.vel.Y;
+                    // Console.WriteLine($"intersects at: {x} {y.ToDouble().ToString(CultureInfo.InvariantCulture)}");
+                    return x >= from && x <= to && y >= from && y <= to;
+                }
+
+                if (b.vel.X == 0)
+                {
+                    var t = new Rational(b.pos.X - a.pos.X) / a.vel.X;
+                    if (t < 0)
+                    {
+                        // Console.WriteLine("past");
+                        return false;
+                    }
+
+                    var x = b.pos.X;
+                    var y = a.pos.Y + t * a.vel.Y;
+                    // Console.WriteLine($"intersects at: {x} {y.ToDouble().ToString(CultureInfo.InvariantCulture)}");
+                    return x >= from && x <= to && y >= from && y <= to;
+                }
+
+                // (y - ay) * avx = (x - ax) * avy
+                // (y - by) * bvx = (x - bx) * bvy
+
+                // y = (x - ax) * avy / avx + ay
+                // y = (x - bx) * bvy / bvx + by
+                // (x - ax) * avy / avx - (x - bx) * bvy / bvx = (by - ay)
+                // x * (AD - BD) - ax * AD + bx * BD = by - ay
+                // x * A + B = C
+                {
+                    var AD = new Rational(a.vel.Y) / a.vel.X;
+                    var BD = new Rational(b.vel.Y) / b.vel.X;
+                    var A = AD - BD;
+                    if (A == 0)
+                    {
+                        // Console.WriteLine("parallel");
+                        return false;
+                    }
+
+                    var B = -a.pos.X * AD + b.pos.X * BD;
+                    var C = new Rational(b.pos.Y - a.pos.Y);
+                    var x = (C - B) / A;
+                    var y = (x - a.pos.X) * AD + a.pos.Y;
+                    if (x < a.pos.X && a.vel.X > 0)
+                    {
+                        // Console.WriteLine("past");
+                        return false;
+                    }
+
+                    if (x > a.pos.X && a.vel.X < 0)
+                    {
+                        // Console.WriteLine("past");
+                        return false;
+                    }
+
+                    if (x < b.pos.X && b.vel.X > 0)
+                    {
+                        // Console.WriteLine("past");
+                        return false;
+                    }
+
+                    if (x > b.pos.X && b.vel.X < 0)
+                    {
+                        // Console.WriteLine("past");
+                        return false;
+                    }
+
+                    // Console.WriteLine($"intersects at: {x.ToDouble().ToString(CultureInfo.InvariantCulture)} {y.ToDouble().ToString(CultureInfo.InvariantCulture)}");
+                    return x >= from && x <= to && y >= from && y <= to;
+                }
+                // // dx0 + dvx * t = 0, t = - dx0 / dvx
+                // var dx0 = b.pos.X - a.pos.X;
+                // var dvx = b.vel.X - a.vel.X;
+                // var tx = dvx == 0 ? Rational.Zero : new Rational(-dx0) / dvx;
+                // var dy0 = b.pos.Y - a.pos.Y;
+                // var dvy = b.vel.Y - a.vel.Y;
+                // var ty = dvy == 0 ? Rational.Zero : new Rational(-dy0) / dvy;
+                // // if (tx != 0 && ty != 0 && tx != ty)
+                // //     return false;
+                // var t = tx == 0 ? ty : tx;
+                // var x = a.pos.X + t * a.vel.X;
+                // var y = a.pos.Y + t * a.vel.Y;
+                // return x >= from && x <= to && y >= from && y <= to;
+            }
+        }
+
+        Rational SolvePart2()
+        {
+            var (t1, x1, y1, z1) = GetPosAndTime(1, 2);
+            var (t2, x2, y2, z2) = GetPosAndTime(1, 3);
+            var vx = (x2 - x1) / (t2 - t1); 
+            var vy = (y2 - y1) / (t2 - t1); 
+            var vz = (z2 - z1) / (t2 - t1);
+            var x = x1 - t1 * vx;
+            var y = y1 - t1 * vy;
+            var z = z1 - t1 * vz;
+            return x + y + z;
+        }
+
+        (Rational time, Rational x, Rational y, Rational z) GetPosAndTime(int a, int b)
+        {
+            var p1 = input[a].pos - input[0].pos;
+            var p2 = input[b].pos - input[0].pos;
+            var v1 = input[a].vel - input[0].vel;
+            var v2 = input[b].vel - input[0].vel;
+            // find intersection of plane and line: a * P1 + b * V1 = P2 + t * V2;
+            // | P1x V1x -V2x |   | a |   | P2x |
+            // | P1y V1y -V2y | * | b | = | P2y |
+            // | P1z V1z -V2z |   | t |   | P2z |
+            var matrix = new Rational[][]
+            {
+                [p1.X, v1.X, -v2.X],
+                [p1.Y, v1.Y, -v2.Y],
+                [p1.Z, v1.Z, -v2.Z],
+            };
+            var vector = new Rational[][]
+            {
+                [p2.X],
+                [p2.Y],
+                [p2.Z],
+            };
+            
+            var inverted = Invert(matrix);
+            var res = Mult(inverted, vector);
+            
+            var t2 = res[2][0];
+            var posAt2x = input[b].pos.X + t2 * input[b].vel.X;
+            var posAt2y = input[b].pos.Y + t2 * input[b].vel.Y;
+            var posAt2z = input[b].pos.Z + t2 * input[b].vel.Z;
+            return (t2, posAt2x, posAt2y, posAt2z);
+        }
+
+        Rational[][] Mult(Rational[][] a, Rational[][] b)
+        {
+            var res = a.Select(_ => b[0].Select(_ => Rational.Zero).ToArray()).ToArray();
+            for (int r = 0; r < res.Length; r++)
+            for (int c = 0; c < res[0].Length; c++)
+            for (int ac = 0; ac < a[0].Length; ac++)
+            {
+                res[r][c] += a[r][ac] * b[ac][c];
+            }
+
+            return res;
+        }
+
+        Rational[][] Invert(Rational[][] matrix)
+        {
+            matrix = matrix.Select(r => r.ToArray()).ToArray();
+            var I = matrix.Select((row, r) => row.Select((_, c) => r == c ? new Rational(1) : 0).ToArray()).ToArray();
+            for (int r = 0; r < matrix.Length; r++)
+            {
+                if (matrix[r][r] == 0)
+                {
+                    for (int nr = r + 1; nr < matrix.Length; nr++)
+                    for (int c = 0; c < matrix.Length; c++)
+                    {
+                        matrix[r][c] += matrix[nr][c];
+                        I[r][c] += I[nr][c];
+                    }
+                }
+
+                if (matrix[r][r] == 0)
+                    throw new Exception("Irreversible matrix");
+
+                for (int nr = r; nr < matrix.Length; nr++)
+                {
+                    var div = matrix[nr][r];
+                    if (div == 0 || div == 1)
+                        continue;
+                    for (int c = 0; c < matrix.Length; c++)
+                    {
+                        matrix[nr][c] /= div;
+                        I[nr][c] /= div;
+                    }
+                }
+
+                for (int nr = r + 1; nr < matrix.Length; nr++)
+                {
+                    if (matrix[nr][r] == 0)
+                        continue;
+                    for (int c = 0; c < matrix.Length; c++)
+                    {
+                        matrix[nr][c] -= matrix[r][c];
+                        I[nr][c] -= I[r][c];
+                    }
+                }
+            }
+
+            for (int r = 0; r < matrix.Length; r++)
+            for (int r2 = 0; r2 < r; r2++)
+            {
+                var mult = matrix[r2][r];
+                for (int c = 0; c < matrix.Length; c++)
+                {
+                    matrix[r2][c] -= mult * matrix[r][c];
+                    I[r2][c] -= mult * I[r][c];
+                }
+            }
+
+            return I;
+        }
     }
 
     private static void Solve_23(Map<char> map)
