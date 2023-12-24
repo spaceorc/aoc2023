@@ -137,7 +137,7 @@ public static class Program
         {
             var (t1, p1) = GetPosAndTime(1, 2);
             var (t2, p2) = GetPosAndTime(1, 3);
-            var v = (p2 - p1) / (t2 - t1); 
+            var v = (p2 - p1) / (t2 - t1);
             var p = p1 - t1 * v;
             return p.X + p.Y + p.Z;
         }
@@ -164,10 +164,10 @@ public static class Program
                 [p2.Y],
                 [p2.Z],
             };
-            
+
             var inverted = Invert(matrix);
             var res = Mult(inverted, vector);
-            
+
             var t = res[2][0];
             var pos = input[second].pos + t * input[second].vel;
             return (t, pos);
@@ -179,9 +179,7 @@ public static class Program
             for (int r = 0; r < res.Length; r++)
             for (int c = 0; c < res[0].Length; c++)
             for (int ac = 0; ac < a[0].Length; ac++)
-            {
                 res[r][c] += a[r][ac] * b[ac][c];
-            }
 
             return res;
         }
