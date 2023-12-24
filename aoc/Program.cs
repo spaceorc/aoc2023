@@ -190,12 +190,12 @@ public static class Program
             return x + y + z;
         }
 
-        (Rational time, Rational x, Rational y, Rational z) GetPosAndTime(int a, int b)
+        (Rational time, Rational x, Rational y, Rational z) GetPosAndTime(int first, int second)
         {
-            var p1 = input[a].pos - input[0].pos;
-            var p2 = input[b].pos - input[0].pos;
-            var v1 = input[a].vel - input[0].vel;
-            var v2 = input[b].vel - input[0].vel;
+            var p1 = input[first].pos - input[0].pos;
+            var p2 = input[second].pos - input[0].pos;
+            var v1 = input[first].vel - input[0].vel;
+            var v2 = input[second].vel - input[0].vel;
             // find intersection of plane and line: a * P1 + b * V1 = P2 + t * V2;
             // | P1x V1x -V2x |   | a |   | P2x |
             // | P1y V1y -V2y | * | b | = | P2y |
@@ -216,11 +216,11 @@ public static class Program
             var inverted = Invert(matrix);
             var res = Mult(inverted, vector);
             
-            var t2 = res[2][0];
-            var posAt2x = input[b].pos.X + t2 * input[b].vel.X;
-            var posAt2y = input[b].pos.Y + t2 * input[b].vel.Y;
-            var posAt2z = input[b].pos.Z + t2 * input[b].vel.Z;
-            return (t2, posAt2x, posAt2y, posAt2z);
+            var t = res[2][0];
+            var posX = input[second].pos.X + t * input[second].vel.X;
+            var posY = input[second].pos.Y + t * input[second].vel.Y;
+            var posZ = input[second].pos.Z + t * input[second].vel.Z;
+            return (t, posX, posY, posZ);
         }
 
         Rational[][] Mult(Rational[][] a, Rational[][] b)
