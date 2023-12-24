@@ -38,6 +38,7 @@ public class V3 : IEquatable<V3>
     public static bool operator !=(V3 a, V3 b) => !(a == b);
     public static V3 operator +(V3 a, V3 b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
     public static V3 operator -(V3 a, V3 b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+    public static V3 operator -(V3 b) => new(-b.X, -b.Y, -b.Z);
     public static V3 operator *(V3 a, long k) => new(a.X * k, a.Y * k, a.Z * k);
     public static V3 operator *(long k, V3 a) => a * k;
     public static V3 operator /(V3 a, long k) => new(a.X / k, a.Y / k, a.Z / k);
@@ -64,7 +65,7 @@ public class V3 : IEquatable<V3>
     public V3 RotateBack(int dir) => Rotations3.RotateBack(this, dir);
     public static V3 FromZ(long z) => new V3(0, 0, z);
 
-    public V XY() => new V(X, Y);
+    public V XY() => new(X, Y);
     
     public V3Rat ToRational() => new(X, Y, Z);
     

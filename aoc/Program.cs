@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Reflection.Emit;
 using aoc.Lib;
@@ -72,64 +71,24 @@ public static class Program
 
             bool Intersects((V3Rat pos, V3Rat vel) a, (V3Rat pos, V3Rat vel) b)
             {
-                if (a.vel.X == 0)
-                {
-                    if (b.vel.X == 0)
-                        return false;
+                // A + VA * ta = B + VB * tb
+                // |VAx -VBx| * |ta| = |(B-A)x|
+                // |VAy -VBy|   |tb|   |(B-A)y|
 
-                    var t = (a.pos.X - b.pos.X) / b.vel.X;
-                    if (t < 0)
-                        return false;
+                var matrix = Matrix.Cols(a.vel.XY(), -b.vel.XY());
+                var vector = Matrix.Col(b.pos.XY() - a.pos.XY());
+                var inverted = matrix.Invert();
+                if (inverted == null)
+                    return false;
 
-                    var x = a.pos.X;
-                    var y = b.pos.Y + t * b.vel.Y;
-                    return x >= from && x <= to && y >= from && y <= to;
-                }
+                var res = inverted * vector;
+                var ta = res[0, 0];
+                var tb = res[1, 0];
+                if (ta < 0 || tb < 0)
+                    return false;
 
-                if (b.vel.X == 0)
-                {
-                    var t = (b.pos.X - a.pos.X) / a.vel.X;
-                    if (t < 0)
-                        return false;
-
-                    var x = b.pos.X;
-                    var y = a.pos.Y + t * a.vel.Y;
-                    return x >= from && x <= to && y >= from && y <= to;
-                }
-
-                // (y - ay) * avx = (x - ax) * avy
-                // (y - by) * bvx = (x - bx) * bvy
-
-                // y = (x - ax) * avy / avx + ay
-                // y = (x - bx) * bvy / bvx + by
-                // (x - ax) * avy / avx - (x - bx) * bvy / bvx = (by - ay)
-                // x * (AD - BD) - ax * AD + bx * BD = by - ay
-                // x * A + B = C
-                {
-                    var AD = a.vel.Y / a.vel.X;
-                    var BD = b.vel.Y / b.vel.X;
-                    var A = AD - BD;
-                    if (A == 0)
-                        return false;
-
-                    var B = -a.pos.X * AD + b.pos.X * BD;
-                    var C = b.pos.Y - a.pos.Y;
-                    var x = (C - B) / A;
-                    var y = (x - a.pos.X) * AD + a.pos.Y;
-                    if (x < a.pos.X && a.vel.X > 0)
-                        return false;
-
-                    if (x > a.pos.X && a.vel.X < 0)
-                        return false;
-
-                    if (x < b.pos.X && b.vel.X > 0)
-                        return false;
-
-                    if (x > b.pos.X && b.vel.X < 0)
-                        return false;
-
-                    return x >= from && x <= to && y >= from && y <= to;
-                }
+                var pos = a.pos + ta * a.vel;
+                return pos.X >= from && pos.X <= to && pos.Y >= from && pos.Y <= to;
             }
         }
 
@@ -148,97 +107,20 @@ public static class Program
             var p2 = input[second].pos - input[0].pos;
             var v1 = input[first].vel - input[0].vel;
             var v2 = input[second].vel - input[0].vel;
+
             // find intersection of plane and line: a * P1 + b * V1 = P2 + t * V2;
-            // | P1x V1x -V2x |   | a |   | P2x |
-            // | P1y V1y -V2y | * | b | = | P2y |
-            // | P1z V1z -V2z |   | t |   | P2z |
-            var matrix = new Rational[][]
-            {
-                [p1.X, v1.X, -v2.X],
-                [p1.Y, v1.Y, -v2.Y],
-                [p1.Z, v1.Z, -v2.Z],
-            };
-            var vector = new Rational[][]
-            {
-                [p2.X],
-                [p2.Y],
-                [p2.Z],
-            };
+            // |P1x V1x -V2x|   |a|   |P2x|
+            // |P1y V1y -V2y| * |b| = |P2y|
+            // |P1z V1z -V2z|   |t|   |P2z|
 
-            var inverted = Invert(matrix);
-            var res = Mult(inverted, vector);
+            var matrix = Matrix.Cols(p1, v1, -v2);
+            var vector = Matrix.Col(p2);
 
-            var t = res[2][0];
+            var res = matrix.Invert()! * vector;
+
+            var t = res[2, 0];
             var pos = input[second].pos + t * input[second].vel;
             return (t, pos);
-        }
-
-        Rational[][] Mult(Rational[][] a, Rational[][] b)
-        {
-            var res = a.Select(_ => b[0].Select(_ => Rational.Zero).ToArray()).ToArray();
-            for (int r = 0; r < res.Length; r++)
-            for (int c = 0; c < res[0].Length; c++)
-            for (int ac = 0; ac < a[0].Length; ac++)
-                res[r][c] += a[r][ac] * b[ac][c];
-
-            return res;
-        }
-
-        Rational[][] Invert(Rational[][] matrix)
-        {
-            matrix = matrix.Select(r => r.ToArray()).ToArray();
-            var I = matrix.Select((row, r) => row.Select((_, c) => r == c ? new Rational(1) : 0).ToArray()).ToArray();
-            for (int r = 0; r < matrix.Length; r++)
-            {
-                if (matrix[r][r] == 0)
-                {
-                    for (int nr = r + 1; nr < matrix.Length; nr++)
-                    for (int c = 0; c < matrix.Length; c++)
-                    {
-                        matrix[r][c] += matrix[nr][c];
-                        I[r][c] += I[nr][c];
-                    }
-                }
-
-                if (matrix[r][r] == 0)
-                    throw new Exception("Irreversible matrix");
-
-                for (int nr = r; nr < matrix.Length; nr++)
-                {
-                    var div = matrix[nr][r];
-                    if (div == 0 || div == 1)
-                        continue;
-                    for (int c = 0; c < matrix.Length; c++)
-                    {
-                        matrix[nr][c] /= div;
-                        I[nr][c] /= div;
-                    }
-                }
-
-                for (int nr = r + 1; nr < matrix.Length; nr++)
-                {
-                    if (matrix[nr][r] == 0)
-                        continue;
-                    for (int c = 0; c < matrix.Length; c++)
-                    {
-                        matrix[nr][c] -= matrix[r][c];
-                        I[nr][c] -= I[r][c];
-                    }
-                }
-            }
-
-            for (int r = 0; r < matrix.Length; r++)
-            for (int r2 = 0; r2 < r; r2++)
-            {
-                var mult = matrix[r2][r];
-                for (int c = 0; c < matrix.Length; c++)
-                {
-                    matrix[r2][c] -= mult * matrix[r][c];
-                    I[r2][c] -= mult * I[r][c];
-                }
-            }
-
-            return I;
         }
     }
 

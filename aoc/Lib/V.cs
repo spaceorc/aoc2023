@@ -60,4 +60,6 @@ public record V(long X, long Y)
 
     public V RotateCW() => new(-Y, X);
     public V RotateCCW() => new(Y, -X);
+
+    public VRat ToRational() => new(X, Y);
 }

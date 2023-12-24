@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace aoc.Lib;
 
@@ -28,6 +26,7 @@ public class V3Rat : IEquatable<V3Rat>
     public static bool operator !=(V3Rat a, V3Rat b) => !(a == b);
     public static V3Rat operator +(V3Rat a, V3Rat b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
     public static V3Rat operator -(V3Rat a, V3Rat b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+    public static V3Rat operator -(V3Rat b) => new(-b.X, -b.Y, -b.Z);
     public static V3Rat operator *(V3Rat a, long k) => new(a.X * k, a.Y * k, a.Z * k);
     public static V3Rat operator *(long k, V3Rat a) => a * k;
     public static V3Rat operator /(V3Rat a, long k) => new(a.X / k, a.Y / k, a.Z / k);
@@ -38,6 +37,8 @@ public class V3Rat : IEquatable<V3Rat>
     public Rational MLen() => X.Abs() + Y.Abs() + Z.Abs();
     public Rational CLen() => Rational.Max(X.Abs(), Y.Abs(), Z.Abs());
     public static Rational DProd(V3Rat a, V3Rat b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+
+    public VRat XY() => new(X, Y);
 
     public override string ToString() => $"{X} {Y} {Z}";
 }
