@@ -58,7 +58,7 @@ public static class Program
         // Runner.RunFile("day1.txt", Solve_1);
     }
 
-    private static void Solve_24([Atom(" ,@")] (V3 pos, V3 vel)[] input)
+    private static void Solve_24([Atom(" ,@")] (V3Rat pos, V3Rat vel)[] input)
     {
         SolvePart1().Out("Part 1: ");
         SolvePart2().Out("Part 2: ");
@@ -66,49 +66,34 @@ public static class Program
 
         long SolvePart1()
         {
-            long from = 200000000000000L;
-            long to = 400000000000000L;
-            // long from = 7;
-            // long to = 27;
+            const long from = 200000000000000L;
+            const long to = 400000000000000L;
             return input.Combinations(2).Count(list => Intersects(list[0], list[1]));
 
-            bool Intersects((V3 pos, V3 vel) a, (V3 pos, V3 vel) b)
+            bool Intersects((V3Rat pos, V3Rat vel) a, (V3Rat pos, V3Rat vel) b)
             {
-                // Console.WriteLine();
-                // Console.WriteLine($"{a} {b}");
                 if (a.vel.X == 0)
                 {
                     if (b.vel.X == 0)
-                    {
-                        // Console.WriteLine("both vertical");
                         return false;
-                    }
 
-                    var t = new Rational(a.pos.X - b.pos.X) / b.vel.X;
+                    var t = (a.pos.X - b.pos.X) / b.vel.X;
                     if (t < 0)
-                    {
-                        // Console.WriteLine("past");
                         return false;
-                    }
 
                     var x = a.pos.X;
                     var y = b.pos.Y + t * b.vel.Y;
-                    // Console.WriteLine($"intersects at: {x} {y.ToDouble().ToString(CultureInfo.InvariantCulture)}");
                     return x >= from && x <= to && y >= from && y <= to;
                 }
 
                 if (b.vel.X == 0)
                 {
-                    var t = new Rational(b.pos.X - a.pos.X) / a.vel.X;
+                    var t = (b.pos.X - a.pos.X) / a.vel.X;
                     if (t < 0)
-                    {
-                        // Console.WriteLine("past");
                         return false;
-                    }
 
                     var x = b.pos.X;
                     var y = a.pos.Y + t * a.vel.Y;
-                    // Console.WriteLine($"intersects at: {x} {y.ToDouble().ToString(CultureInfo.InvariantCulture)}");
                     return x >= from && x <= to && y >= from && y <= to;
                 }
 
@@ -121,59 +106,30 @@ public static class Program
                 // x * (AD - BD) - ax * AD + bx * BD = by - ay
                 // x * A + B = C
                 {
-                    var AD = new Rational(a.vel.Y) / a.vel.X;
-                    var BD = new Rational(b.vel.Y) / b.vel.X;
+                    var AD = a.vel.Y / a.vel.X;
+                    var BD = b.vel.Y / b.vel.X;
                     var A = AD - BD;
                     if (A == 0)
-                    {
-                        // Console.WriteLine("parallel");
                         return false;
-                    }
 
                     var B = -a.pos.X * AD + b.pos.X * BD;
-                    var C = new Rational(b.pos.Y - a.pos.Y);
+                    var C = b.pos.Y - a.pos.Y;
                     var x = (C - B) / A;
                     var y = (x - a.pos.X) * AD + a.pos.Y;
                     if (x < a.pos.X && a.vel.X > 0)
-                    {
-                        // Console.WriteLine("past");
                         return false;
-                    }
 
                     if (x > a.pos.X && a.vel.X < 0)
-                    {
-                        // Console.WriteLine("past");
                         return false;
-                    }
 
                     if (x < b.pos.X && b.vel.X > 0)
-                    {
-                        // Console.WriteLine("past");
                         return false;
-                    }
 
                     if (x > b.pos.X && b.vel.X < 0)
-                    {
-                        // Console.WriteLine("past");
                         return false;
-                    }
 
-                    // Console.WriteLine($"intersects at: {x.ToDouble().ToString(CultureInfo.InvariantCulture)} {y.ToDouble().ToString(CultureInfo.InvariantCulture)}");
                     return x >= from && x <= to && y >= from && y <= to;
                 }
-                // // dx0 + dvx * t = 0, t = - dx0 / dvx
-                // var dx0 = b.pos.X - a.pos.X;
-                // var dvx = b.vel.X - a.vel.X;
-                // var tx = dvx == 0 ? Rational.Zero : new Rational(-dx0) / dvx;
-                // var dy0 = b.pos.Y - a.pos.Y;
-                // var dvy = b.vel.Y - a.vel.Y;
-                // var ty = dvy == 0 ? Rational.Zero : new Rational(-dy0) / dvy;
-                // // if (tx != 0 && ty != 0 && tx != ty)
-                // //     return false;
-                // var t = tx == 0 ? ty : tx;
-                // var x = a.pos.X + t * a.vel.X;
-                // var y = a.pos.Y + t * a.vel.Y;
-                // return x >= from && x <= to && y >= from && y <= to;
             }
         }
 
@@ -213,7 +169,7 @@ public static class Program
             var res = Mult(inverted, vector);
             
             var t = res[2][0];
-            var pos = new V3Rat(input[second].pos) + t * new V3Rat(input[second].vel);
+            var pos = input[second].pos + t * input[second].vel;
             return (t, pos);
         }
 

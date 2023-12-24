@@ -66,5 +66,7 @@ public class V3 : IEquatable<V3>
 
     public V XY() => new V(X, Y);
     
+    public V3Rat ToRational() => new(X, Y, Z);
+    
     public bool InCube(Cube c) => X >= c.MinX && X <= c.MaxX && Y >= c.MinY && Y <= c.MaxY && Z >= c.MinZ && Z <= c.MaxZ;
 }

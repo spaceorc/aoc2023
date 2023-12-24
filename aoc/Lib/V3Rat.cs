@@ -13,10 +13,6 @@ public class V3Rat : IEquatable<V3Rat>
     public readonly Rational Y;
     public readonly Rational Z;
 
-    public V3Rat(V3 v) : this(v.X, v.Y, v.Z)
-    {
-    }
-
     public V3Rat(Rational x, Rational y, Rational z)
     {
         X = x;
