@@ -70,6 +70,9 @@ public static class Program
                 }
             }
 
+            foreach (var ((a, b), count) in stats.OrderByDescending(x => x.Value).Take(10))
+                Console.WriteLine($"{a} <--> {b}: {count}");
+            
             var cut = stats.OrderByDescending(x => x.Value).Select(x => x.Key).Take(3).ToArray();
             foreach (var (a, b) in cut)
             {
