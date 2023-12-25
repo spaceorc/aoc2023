@@ -54,22 +54,19 @@ public static class Program
             var edges = input.SelectMany(line => line.links.SelectMany(link => new [] {(line.name, link), (link, line.name)}))
                 .GroupBy(x => x.Item1, x => x.Item2)
                 .ToDictionary(x => x.Key, x => x.ToArray());
+            
             for (int i = 0; i < 10000; i++)
             {
                 var n1 = nodes[Random.Shared.Next(nodes.Length)];
                 var n2 = nodes[Random.Shared.Next(nodes.Length)];
                 var first = Search.Bfs(new[] { n1 }, cur => edges[cur]).First(x => x.State == n2);
                 
-                foreach (var (s, _, prev) in first.PathBackX())
+                foreach (var pair in first.PathBack().SlidingWindow(2))
                 {
-                    if (prev != null)
-                    {
-                        var a = s;
-                        var b = prev.State;
-                        if (a.CompareTo(b) > 0)
-                            (a, b) = (b, a);
-                        stats[(a, b)]++;
-                    }
+                    if (pair[0].CompareTo(pair[1]) < 0)
+                        stats[(pair[0], pair[1])]++;
+                    else
+                        stats[(pair[1], pair[0])]++;
                 }
             }
 
@@ -80,15 +77,8 @@ public static class Program
                 edges[b] = edges[b].Without(a).ToArray();
             }
             
-            var c1 = Search.Bfs(
-                startFrom: new[]{cut[0].Item1},
-                getNextStates: cur => edges[cur]
-            ).LongCount();
-            var c2 = Search.Bfs(
-                startFrom: new[]{cut[0].Item2},
-                getNextStates: cur => edges[cur]
-            ).LongCount();
-            
+            var c1 = Search.Bfs(new[]{cut[0].Item1}, cur => edges[cur]).LongCount();
+            var c2 = Search.Bfs(new[]{cut[0].Item2}, cur => edges[cur]).LongCount();
             return c1 * c2;
         }
     }
