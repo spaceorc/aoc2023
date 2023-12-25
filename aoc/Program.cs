@@ -14,23 +14,8 @@ public static class Program
 {
     private static void Main()
     {
-        // Runner.RunFile("day14.txt", Day14.SolvePart1);
-        // Runner.RunFile("day14.txt", Day14.SolvePart2);
-        // var t1 = Stopwatch.GetTimestamp();
-        // Runner.RunFile("day14.txt", Day14.SolvePart2);
-        // Console.WriteLine($"Part 2 time = {Stopwatch.GetElapsedTime(t1)}");
-        //
-        // Runner.RunFile("day14.txt", Day14Optimized.SolvePart2);
-        // var t2 = Stopwatch.GetTimestamp();
-        // Runner.RunFile("day14.txt", Day14Optimized.SolvePart2);
-        // Console.WriteLine($"Part 2 optimized time = {Stopwatch.GetElapsedTime(t2)}");
-        //
-        // Runner.RunFile("day14.txt", Day14OptimizedRefactored.SolvePart2);
-        // var t3 = Stopwatch.GetTimestamp();
-        // Runner.RunFile("day14.txt", Day14OptimizedRefactored.SolvePart2);
-        // Console.WriteLine($"Part 2 optimized refactored time = {Stopwatch.GetElapsedTime(t3)}");
-
-        Runner.RunFile("day24.txt", Solve_24);
+        Runner.RunFile("day25.txt", Solve_25);
+        // Runner.RunFile("day24.txt", Solve_24);
         // Runner.RunFile("day23.txt", Solve_23);
         // Runner.RunFile("day22.txt", Solve_22);
         // Runner.RunFile("day21.txt", Solve_21);
@@ -55,6 +40,57 @@ public static class Program
         // Runner.RunFile("day3.txt", Solve_3);
         // Runner.RunFile("day2.txt", Solve_2);
         // Runner.RunFile("day1.txt", Solve_1);
+    }
+
+    private static void Solve_25((string name, string[] links)[] input)
+    {
+        SolvePart1().Out("Part 1: ");
+        return;
+
+        long SolvePart1()
+        {
+            var stats = new Dictionary<(string, string), long>().ToDefault();
+            var nodes = input.SelectMany(line => line.links.Append(line.name)).Distinct().ToArray();
+            var edges = input.SelectMany(line => line.links.SelectMany(link => new [] {(line.name, link), (link, line.name)}))
+                .GroupBy(x => x.Item1, x => x.Item2)
+                .ToDictionary(x => x.Key, x => x.ToArray());
+            for (int i = 0; i < 10000; i++)
+            {
+                var n1 = nodes[Random.Shared.Next(nodes.Length)];
+                var n2 = nodes[Random.Shared.Next(nodes.Length)];
+                var first = Search.Bfs(new[] { n1 }, cur => edges[cur]).First(x => x.State == n2);
+                
+                foreach (var (s, _, prev) in first.PathBackX())
+                {
+                    if (prev != null)
+                    {
+                        var a = s;
+                        var b = prev.State;
+                        if (a.CompareTo(b) > 0)
+                            (a, b) = (b, a);
+                        stats[(a, b)]++;
+                    }
+                }
+            }
+
+            var cut = stats.OrderByDescending(x => x.Value).Select(x => x.Key).Take(3).ToArray();
+            foreach (var (a, b) in cut)
+            {
+                edges[a] = edges[a].Without(b).ToArray();
+                edges[b] = edges[b].Without(a).ToArray();
+            }
+            
+            var c1 = Search.Bfs(
+                startFrom: new[]{cut[0].Item1},
+                getNextStates: cur => edges[cur]
+            ).LongCount();
+            var c2 = Search.Bfs(
+                startFrom: new[]{cut[0].Item2},
+                getNextStates: cur => edges[cur]
+            ).LongCount();
+            
+            return c1 * c2;
+        }
     }
 
     private static void Solve_24([Atom(" ,@")] (V3Rat pos, V3Rat vel)[] input)
